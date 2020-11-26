@@ -29,14 +29,42 @@ SOFTWARE.
 
 namespace neural_network { namespace algebra {
 
+	template <class _Metrics, const size_t _Dim>
+	struct _dimension
+	{
+		typedef typename std::conditional <
+			_Dim == 0,
+			typename _Metrics,
+			typename _dimension<typename _Metrics::_Base, (_Dim - 1)>::metrics >::type metrics;
+
+		enum { size = metrics::dimension_size };
+	};
+
+	template <class _Metrics>
+	struct _dimension<_Metrics, 0>
+	{
+		typedef typename _Metrics metrics;
+		enum { size = metrics::dimension_size };
+	};
+
+	template <const size_t... _Metrics>
+	class tensor;
+
 	template <const size_t _Size, const size_t... _Args>
-	struct _metrics : public _metrics<_Args...>
+	struct metrics : public metrics<_Args...>
 	{
 	public:
-		typedef typename _metrics<_Size, _Args...> _Self;
-		typedef typename _metrics<_Args...> _Base;
+		static_assert(0 < _Size, "0-size metrics are not supported.");
 
-		enum { rank = _Base::rank + 1, size = _Size * _Base::size };
+		typedef typename metrics<_Size, _Args...> _Self;
+		typedef typename metrics<_Args...> _Base;
+
+		typedef typename tensor< _Size, _Args...> tensor_type;
+
+		enum { 
+			rank = _Base::rank + 1,
+			dimension_size = _Size,
+			data_size = _Size * _Base::data_size };
 
 		template <typename ..._Other>
 		static bool is_valid_index(const size_t index, _Other... args)
@@ -47,23 +75,25 @@ namespace neural_network { namespace algebra {
 		template <typename ..._Other>
 		static size_t offset(const size_t index, _Other... args)
 		{
-			return index * _Base::size + _Base::offset(args...);
-		}
-
-		template <const size_t _Dim>
-		static size_t dimension_size()
-		{
-			return _Dim == 0 ? _Size : _Base::dimension_size<(_Dim - 1)>();
+			return index * _Base::data_size + _Base::offset(args...);
 		}
 	};
 
 	template <const size_t _Size>
-	class _metrics<_Size>
+	class metrics<_Size>
 	{
 	public:
-		typedef typename _metrics<_Size> _Self;
+		static_assert(0 < _Size, "0-size metrics are not supported.");
 
-		enum { rank = 1, size = _Size };
+		typedef typename metrics<_Size> _Self;
+		typedef typename metrics<_Size> _Base;
+
+		typedef typename tensor< _Size> tensor_type;
+
+		enum { 
+			rank = 1,
+			dimension_size = _Size,
+			data_size = _Size };
 
 		static bool is_valid_index(const size_t index)
 		{
@@ -74,21 +104,19 @@ namespace neural_network { namespace algebra {
 		{
 			return index;
 		}
-
-		template <const size_t _Dim>
-		static size_t dimension_size()
-		{
-			return _Dim == 0 ? _Size : 0;
-		}
 	};
 
-	template <const size_t _Size, const size_t... _Args>
+	template <const size_t... _Metrics>
 	class tensor
 	{
 	public:
-		typedef typename _metrics<_Size, _Args...> _Metrics;
+		typedef typename tensor<_Metrics...> _Self;
+		typedef typename metrics<_Metrics...> metrics;
 
-		enum { rank = _Metrics::rank, data_size = _Metrics::size };
+		enum { 
+			rank = metrics::rank,
+			dimension_size = metrics::dimension_size,
+			data_size = metrics::data_size };
 
 		typedef typename std::array<double, data_size> _Data;
 
@@ -98,28 +126,59 @@ namespace neural_network { namespace algebra {
 			m_pData->fill(0.0);
 		}
 
+		tensor(const _Self& other)
+			: m_pData(other.m_pData)
+		{}
+
+		_Self& operator=(const _Self& other)
+		{
+			m_pData = other.m_pData;
+			return (*this);
+		}
+
 		template <typename ..._Idx>
 		const double& operator()(_Idx... idx) const
 		{
-			if (false == _Metrics::is_valid_index(idx...))
+			if (false == metrics::is_valid_index(idx...))
 				throw std::invalid_argument("Index out of range.");
 
-			return *(m_pData->cbegin() + _Metrics::offset(idx...));
+			return *(m_pData->cbegin() + metrics::offset(idx...));
 		}
 
 		template <typename ..._Idx>
 		double& operator()(_Idx... idx)
 		{
-			if (false == _Metrics::is_valid_index(idx...))
+			if (false == metrics::is_valid_index(idx...))
 				throw std::invalid_argument("Index out of range.");
 
-			return *(m_pData->begin() + _Metrics::offset(idx...));
+			return *(m_pData->begin() + metrics::offset(idx...));
 		}
 
 		template <const size_t _Dim>
 		const size_t size() const
 		{
-			return _Metrics::dimension_size< _Dim >();
+			static_assert(_Dim < _Self::rank, "Requested dimension is larger than tensor rank.");
+
+			return _dimension<metrics, _Dim>::size;
+		}
+
+		template <class Operator>
+		void transform(_Self& dst, Operator op) const
+		{
+			std::transform(
+				m_pData->cbegin(), m_pData->cend(),
+				dst.m_pData->begin(),
+				op);
+		}
+
+		template <class Operator>
+		void transform(const _Self& other, _Self& dst, Operator op) const
+		{
+			std::transform(
+				m_pData->cbegin(), m_pData->cend(),
+				other.m_pData->cbegin(),
+				dst.m_pData->begin(),
+				op);
 		}
 
 	private:

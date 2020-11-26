@@ -25,25 +25,22 @@ SOFTWARE.
 #include "stdafx.h"
 
 #include "unittest.h"
+#include "..\src\connected.h"
 
-void run_tests()
+void test_connected()
 {
-	try
-	{
-		test_tensor();
+	scenario sc("Test for neural_network::fully_connected_layer");
 
-		test_activation();
+	typedef neural_network::algebra::metrics<3> _3;
+	typedef neural_network::algebra::metrics<5> _5;
+	typedef neural_network::fully_connected<_5, _3> connected;
 
-		test_connected();
+	_5::tensor_type tmp;
+	connected layer;
+	
+	_3::tensor_type ret = layer.process(tmp);
+	layer.compute_gradient(ret);
+	layer.update_weights(0.9);
 
-		test::log("===========================================");
-		test::log("All unit tests PASS");
-	}
-	catch (const std::exception& e)
-	{
-		test::log("===========================================");
-		test::log((std::string("Unexpected exception during unit tests: ") + e.what()).c_str());
-		test::log("===========================================");
-		test::log("Unit tests FAILED");
-	}
+	sc.pass();
 }

@@ -42,7 +42,6 @@ void test_tensor()
 		tensor t;
 
 		test::assert(t.size<0>() == 4, "Invalid size<0> of 1-dimension tensor.");
-		test::assert(t.size<1>() == 0, "Invalid size<1> of 1-dimension tensor.");
 
 		for (int i = 0; i < t.size<0>(); ++i)
 			test::assert(0.0 == t(i), "Invalid initial value (i) of 1-dimension tensor.");
@@ -67,7 +66,6 @@ void test_tensor()
 
 		test::assert(t.size<0>() == 4, "Invalid size<0> of 2-dimension tensor.");
 		test::assert(t.size<1>() == 3, "Invalid size<1> of 2-dimension tensor.");
-		test::assert(t.size<2>() == 0, "Invalid size<2> of 2-dimension tensor.");
 
 		for (int i = 0; i < t.size<0>(); ++i)
 			for (int j = 0; j < t.size<1>(); ++j)
@@ -98,7 +96,6 @@ void test_tensor()
 		test::assert(t.size<0>() == 4, "Invalid size<0> of 3-dimension tensor.");
 		test::assert(t.size<1>() == 3, "Invalid size<1> of 3-dimension tensor.");
 		test::assert(t.size<2>() == 2, "Invalid size<2> of 3-dimension tensor.");
-		test::assert(t.size<3>() == 0, "Invalid size<3> of 3-dimension tensor.");
 
 		for (int i = 0; i < t.size<0>(); ++i)
 			for (int j = 0; j < t.size<1>(); ++j)

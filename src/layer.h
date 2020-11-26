@@ -22,28 +22,35 @@ SOFTWARE.
 
 */
 
-#include "stdafx.h"
+#pragma once
 
-#include "unittest.h"
+#include "tensor.h"
 
-void run_tests()
-{
-	try
+namespace neural_network {
+
+	template <typename _InputMetrics, typename _OutputMetrics>
+	class layer_base
 	{
-		test_tensor();
+	public:
+		typedef typename _InputMetrics::tensor_type input;
+		typedef typename _OutputMetrics::tensor_type output;
 
-		test_activation();
+		layer_base()
+			: m_output(), m_gradient()
+		{}
 
-		test_connected();
+		const output& get_output() const
+		{
+			return m_output;
+		}
 
-		test::log("===========================================");
-		test::log("All unit tests PASS");
-	}
-	catch (const std::exception& e)
-	{
-		test::log("===========================================");
-		test::log((std::string("Unexpected exception during unit tests: ") + e.what()).c_str());
-		test::log("===========================================");
-		test::log("Unit tests FAILED");
-	}
+		const input& get_gradient() const
+		{
+			return m_gradient;
+		}
+
+	protected:
+		output m_output;
+		input m_gradient;
+	};
 }

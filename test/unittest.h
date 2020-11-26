@@ -185,5 +185,7 @@ struct scenario
 };
 
 void test_tensor();
+void test_activation();
+void test_connected();
 
 void run_tests();
