@@ -146,6 +146,7 @@
     <ClInclude Include="..\src\activation.h" />
     <ClInclude Include="..\src\connected.h" />
     <ClInclude Include="..\src\layer.h" />
+    <ClInclude Include="..\src\reshape.h" />
     <ClInclude Include="..\src\tensor.h" />
     <ClInclude Include="..\test\unittest.h" />
     <ClInclude Include="stdafx.h" />
@@ -154,6 +155,7 @@
   <ItemGroup>
     <ClCompile Include="..\test\activation.cpp" />
     <ClCompile Include="..\test\connected.cpp" />
+    <ClCompile Include="..\test\reshape.cpp" />
     <ClCompile Include="..\test\tensor.cpp" />
     <ClCompile Include="..\test\unittest.cpp" />
     <ClCompile Include="NeuralNet.cpp" />

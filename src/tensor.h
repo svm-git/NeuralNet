@@ -119,6 +119,7 @@ namespace neural_network { namespace algebra {
 			data_size = metrics::data_size };
 
 		typedef typename std::array<double, data_size> _Data;
+		typedef typename std::shared_ptr<_Data> _DataPtr;
 
 		tensor()
 			: m_pData(std::make_shared<_Data>())
@@ -128,6 +129,10 @@ namespace neural_network { namespace algebra {
 
 		tensor(const _Self& other)
 			: m_pData(other.m_pData)
+		{}
+
+		tensor(const _DataPtr& ptr)
+			: m_pData(ptr)
 		{}
 
 		_Self& operator=(const _Self& other)
@@ -179,6 +184,14 @@ namespace neural_network { namespace algebra {
 				other.m_pData->cbegin(),
 				dst.m_pData->begin(),
 				op);
+		}
+
+		template <class _Other>
+		typename _Other::tensor_type reshape() const
+		{
+			static_assert(metrics::data_size == _Other::data_size, "Reshape data size must match this data size.");
+
+			return _Other::tensor_type(m_pData);
 		}
 
 	private:

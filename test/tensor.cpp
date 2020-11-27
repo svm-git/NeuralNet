@@ -116,6 +116,14 @@ void test_tensor()
 		test::check_exception<std::invalid_argument>(
 			[&t]() { t(1, 1, 2);  },
 			"Invalid 3rd index of 3-dimension tensor.");
+
+		typedef neural_network::algebra::metrics<4, 6> _Reshaped;
+
+		_Reshaped::tensor_type r = t.reshape<_Reshaped>();
+
+		static_assert(_Reshaped::tensor_type::rank == 2, "Invalid tensor rank after reshape.");
+		test::assert(r.size<0>() == 4, "Invalid size<0> of reshaped 2-dimension tensor.");
+		test::assert(r.size<1>() == 6, "Invalid size<1> of reshaped 2-dimension tensor.");
 	}
 
 	sc.pass();

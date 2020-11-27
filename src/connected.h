@@ -80,7 +80,7 @@ namespace neural_network {
 
 			for (size_t j = 0; j < grad.size<0>(); ++j)
 			{
-				m_biasGradient(j) = m_bias(j) * grad(j);
+				m_biasGradient(j) = grad(j);
 			}
 
 			return m_gradient;

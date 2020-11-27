@@ -39,6 +39,9 @@
     <ClInclude Include="..\src\connected.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\reshape.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -57,6 +60,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\test\connected.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\test\reshape.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

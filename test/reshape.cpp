@@ -25,27 +25,30 @@ SOFTWARE.
 #include "stdafx.h"
 
 #include "unittest.h"
+#include "..\src\reshape.h"
 
-void run_tests()
+void test_reshape()
 {
-	try
-	{
-		test_tensor();
+	scenario sc("Test for neural_network::reshape layer");
 
-		test_activation();
+	typedef neural_network::algebra::metrics<3, 2, 1> _3_x_2_x_1;
+	typedef neural_network::algebra::metrics<6> _6;
+	
+	typedef neural_network::reshape<_3_x_2_x_1, _6> reshape;
 
-		test_connected();
+	_3_x_2_x_1::tensor_type i;
 
-		test_reshape();
+	reshape layer;
 
-		test::log("===========================================");
-		test::log("All unit tests PASS");
-	}
-	catch (const std::exception& e)
-	{
-		test::log("===========================================");
-		test::log((std::string("Unexpected exception during unit tests: ") + e.what()).c_str());
-		test::log("===========================================");
-		test::log("Unit tests FAILED");
-	}
+	auto r = layer.process(i);
+
+	test::assert(r.size<0>() == 6, "Invalid size of reshaped tensor.");
+
+	auto g = layer.compute_gradient(r);
+
+	test::assert(g.size<0>() == 3, "Invalid size<0> of reshaped gradient tensor.");
+	test::assert(g.size<1>() == 2, "Invalid size<1> of reshaped gradient tensor.");
+	test::assert(g.size<2>() == 1, "Invalid size<2> of reshaped gradient tensor.");
+
+	sc.pass();
 }

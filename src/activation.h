@@ -53,9 +53,6 @@ namespace neural_network {
 		typedef typename relu_activation<_Metrics> _Self;
 		typedef typename activation_base<_Metrics> _Base;
 
-		typedef typename _Base::input input;
-		typedef typename _Base::output output;
-	
 		relu_activation()
 			: _Base()
 		{}
@@ -94,9 +91,6 @@ namespace neural_network {
 	public:
 		typedef typename logistic_activation<_Metrics> _Self;
 		typedef typename activation_base<_Metrics> _Base;
-
-		typedef typename _Base::input input;
-		typedef typename _Base::output output;
 
 		logistic_activation()
 			: _Base()
