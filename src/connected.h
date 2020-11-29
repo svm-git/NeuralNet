@@ -43,9 +43,18 @@ namespace neural_network {
 			algebra::_dimension<_OutputMetrics, 0>::size>::tensor_type _Weights;
 		typedef typename algebra::metrics<algebra::_dimension<_OutputMetrics, 0>::size>::tensor_type _Bias;
 	
-		fully_connected(const double regularization = 0.000001)
-			: m_input(), m_weights(), m_bias(), m_biasGradient(), m_regularization(regularization), _Base()
-		{}
+		fully_connected(
+			const double regularization = 0.000001)
+			: _Base(), m_input(), m_weights(), m_bias(), m_biasGradient(), m_regularization(regularization)
+		{
+		}
+
+		fully_connected(
+			std::function<double(const double&)> initializer,
+			const double regularization = 0.000001)
+				: _Base(), m_input(), m_weights(initializer), m_bias(initializer), m_biasGradient(), m_regularization(regularization)
+		{
+		}
 
 		const output& process(const input& input)
 		{
@@ -112,4 +121,12 @@ namespace neural_network {
 		_Bias m_biasGradient;
 		const double m_regularization;
 	};
+
+	template <class _Input, class _Output, class... _Args>
+	fully_connected<_Input, _Output> make_fully_connected_layer(
+		_Args&&... args)
+	{
+		typedef fully_connected<_Input, _Output> _Ltype;
+		return (_Ltype(std::forward<_Args>(args)...));
+	}
 }

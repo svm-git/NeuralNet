@@ -24,39 +24,56 @@ SOFTWARE.
 
 #pragma once
 
-#include "layer.h"
+#include "tensor.h"
 
 namespace neural_network {
 
-	template <typename _InputMetrics, typename _OutputMetrics>
-	class reshape : public layer_base < _InputMetrics, _OutputMetrics >
+	template <typename _ValueMetrics>
+	class squared_error_loss
 	{
 	public:
-		typedef typename reshape<_InputMetrics, _OutputMetrics> _Self;
-		typedef typename layer_base<_InputMetrics, _OutputMetrics> _Base;
+		typedef typename squared_error_loss<_ValueMetrics> _Self;
+		typedef typename _ValueMetrics::tensor_type value;
 
-		const output& process(const input& input)
+		squared_error_loss()
+			: m_gradient()
+		{}
+
+		const double compute(
+			const value& result,
+			const value& truth)
 		{
-			m_output = input.reshape<output::metrics>();
-			return m_output;
+			double loss = 0.0;
+
+			value tmp;
+			result.transform(
+				truth,
+				tmp,
+				[&loss](const double& r, const double& t)
+				{
+					loss += std::pow((r - t), 2.0);
+					return r;
+				});
+
+			return loss;
 		}
 
-		const input& compute_gradient(const output& grad)
+		const value& compute_gradient(
+			const value& result,
+			const value& truth)
 		{
-			m_gradient = grad.reshape<input::metrics>();
+			result.transform(
+				truth,
+				m_gradient,
+				[](const double& r, const double& t)
+				{
+					return (r - t);
+				});
+
 			return m_gradient;
 		}
-
-		void update_weights(
-			const double rate)
-		{}
+	
+	private:
+		value m_gradient;
 	};
-
-	template <class _Input, class _Output, class... _Args>
-	reshape<_Input, _Output> make_reshape_layer(
-		_Args&&... args)
-	{
-		typedef reshape<_Input, _Output> _Ltype;
-		return (_Ltype(std::forward<_Args>(args)...));
-	}
 }

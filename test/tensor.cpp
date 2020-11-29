@@ -24,12 +24,21 @@ SOFTWARE.
 
 #include "stdafx.h"
 
+#include <random>
+
 #include "unittest.h"
 #include "..\src\tensor.h"
 
 void test_tensor()
 {
 	scenario sc("Test for neural_network::algebra::tensor");
+
+	const double minRnd = 0.5;
+	const double maxRnd = 1.5;
+
+	std::random_device rd;
+	std::mt19937 gen(rd());
+	std::uniform_real_distribution<double> distr(minRnd, maxRnd);
 
 	{
 		typedef neural_network::algebra::tensor<4> tensor;
@@ -52,6 +61,14 @@ void test_tensor()
 		test::check_exception<std::invalid_argument>(
 			[&t]() { t(4);  },
 			"Invalid index of 1-dimension tensor.");
+
+		tensor t2([&distr, &gen](const double&) { return distr(gen); });
+
+		for (int i = 0; i < t2.size<0>(); ++i)
+		{
+			test::assert(minRnd <= t2(i), "Invalid initial value (i) of randomly initialized 1-dimension tensor.");
+			test::assert(t2(i) <= maxRnd, "Invalid initial value (i) of randomly initialized 1-dimension tensor.");
+		}
 	}
 
 	{
@@ -81,6 +98,15 @@ void test_tensor()
 		test::check_exception<std::invalid_argument>(
 			[&t]() { t(1, 4);  },
 			"Invalid first index of 2-dimension tensor.");
+
+		tensor t2([&distr, &gen](const double&) { return distr(gen); });
+
+		for (int i = 0; i < t2.size<0>(); ++i)
+			for (int j = 0; j < t2.size<1>(); ++j)
+			{
+				test::assert(minRnd <= t2(i, j), "Invalid initial value (i, j) of randomly initialized 2-dimension tensor.");
+				test::assert(t2(i, j) <= maxRnd, "Invalid initial value (i, j) of randomly initialized 2-dimension tensor.");
+			}
 	}
 
 	{
@@ -124,6 +150,16 @@ void test_tensor()
 		static_assert(_Reshaped::tensor_type::rank == 2, "Invalid tensor rank after reshape.");
 		test::assert(r.size<0>() == 4, "Invalid size<0> of reshaped 2-dimension tensor.");
 		test::assert(r.size<1>() == 6, "Invalid size<1> of reshaped 2-dimension tensor.");
+
+		tensor t2([&distr, &gen](const double&) { return distr(gen); });
+
+		for (int i = 0; i < t2.size<0>(); ++i)
+			for (int j = 0; j < t2.size<1>(); ++j)
+				for (int k = 0; k < t2.size<2>(); ++k)
+				{
+					test::assert(minRnd <= t2(i, j, k), "Invalid initial value (i, j, k) of randomly initialized 3-dimension tensor.");
+					test::assert(t2(i, j, k) <= maxRnd, "Invalid initial value (i, j, k) of randomly initialized 3-dimension tensor.");
+				}
 	}
 
 	sc.pass();

@@ -38,6 +38,8 @@ void run_tests()
 
 		test_reshape();
 
+		test_network();
+
 		test::log("===========================================");
 		test::log("All unit tests PASS");
 	}

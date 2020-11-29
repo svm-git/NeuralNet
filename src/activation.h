@@ -130,4 +130,20 @@ namespace neural_network {
 			return 1.0 / (1.0 + std::exp(-x));
 		}
 	};
+
+	template <class _Input, class... _Args>
+	logistic_activation<_Input> make_logistic_activation_layer(
+		_Args&&... args)
+	{
+		typedef logistic_activation<_Input> _Ltype;
+		return (_Ltype(std::forward<_Args>(args)...));
+	}
+
+	template <class _Input, class... _Args>
+	relu_activation<_Input> make_relu_activation_layer(
+		_Args&&... args)
+	{
+		typedef relu_activation<_Input> _Ltype;
+		return (_Ltype(std::forward<_Args>(args)...));
+	}
 }

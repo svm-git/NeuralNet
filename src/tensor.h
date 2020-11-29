@@ -26,6 +26,7 @@ SOFTWARE.
 
 #include <memory>
 #include <array>
+#include <functional>
 
 namespace neural_network { namespace algebra {
 
@@ -125,6 +126,15 @@ namespace neural_network { namespace algebra {
 			: m_pData(std::make_shared<_Data>())
 		{
 			m_pData->fill(0.0);
+		}
+
+		tensor(std::function<double(const double&)> initializer)
+			: m_pData(std::make_shared<_Data>())
+		{
+			std::transform(
+				m_pData->cbegin(), m_pData->cend(),
+				m_pData->begin(),
+				initializer);
 		}
 
 		tensor(const _Self& other)
