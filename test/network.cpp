@@ -40,6 +40,8 @@ void test_network()
 	std::mt19937 gen(rd());
 	std::uniform_real_distribution<double> distr(-0.5, 0.5);
 
+	auto random_values = [&distr, &gen]() { return distr(gen); };
+
 	typedef neural_network::algebra::metrics<4> _4;
 	typedef neural_network::algebra::metrics<5> _5;
 	typedef neural_network::algebra::metrics<10> _10;
@@ -51,21 +53,19 @@ void test_network()
 		neural_network::make_reshape_layer<_5x2, _10>(),
 
 		neural_network::make_fully_connected_layer<_10, _5>(
-			[&distr, &gen](const double&) { return distr(gen); },
-			0.00001),
+			random_values, 0.00003),
 
 		neural_network::make_relu_activation_layer<_5>(),
 
 		neural_network::make_fully_connected_layer<_5, _4>(
-			[&distr, &gen](const double&) { return distr(gen); },
-			0.00005),
+			random_values, 0.00005),
 
 		neural_network::make_logistic_activation_layer<_4>(),
 
 		neural_network::make_reshape_layer<_4, _2x2>()
 	);
 
-	_5x2::tensor_type input([&distr, &gen](const double&) { return distr(gen); });
+	_5x2::tensor_type input(random_values);
 	_2x2::tensor_type truth;
 
 	truth(0, 0) = 1.0;
@@ -79,19 +79,18 @@ void test_network()
 	}
 
 	double rate = 7;
-	bool improvement = true;
 	int retry = 0;
 	int epoch = 0;
 	int iteration = 0;
 
-	while (improvement && retry < 15)
+	while (retry < 20 && iteration < 1000000)
 	{
 		++iteration;
 		double pretrained = loss.compute(
 			net.process(input),
 			truth);
 
-		neural_network::train(net, input, truth, loss, rate);
+		net.train(input, truth, loss, rate);
 
 		double posttrained = loss.compute(
 			net.process(input),
@@ -103,9 +102,13 @@ void test_network()
 		}
 		else
 		{
-			rate = rate * 0.7;
+			if (5 < retry)
+			{
+				rate = rate * 0.9;
+				++epoch;
+			}
+
 			++retry;
-			++epoch;
 		}
 	}
 

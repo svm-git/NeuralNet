@@ -148,6 +148,7 @@
     <ClInclude Include="..\src\layer.h" />
     <ClInclude Include="..\src\loss.h" />
     <ClInclude Include="..\src\network.h" />
+    <ClInclude Include="..\src\pooling.h" />
     <ClInclude Include="..\src\reshape.h" />
     <ClInclude Include="..\src\tensor.h" />
     <ClInclude Include="..\test\unittest.h" />
@@ -158,6 +159,7 @@
     <ClCompile Include="..\test\activation.cpp" />
     <ClCompile Include="..\test\connected.cpp" />
     <ClCompile Include="..\test\network.cpp" />
+    <ClCompile Include="..\test\pooling.cpp" />
     <ClCompile Include="..\test\reshape.cpp" />
     <ClCompile Include="..\test\tensor.cpp" />
     <ClCompile Include="..\test\unittest.cpp" />

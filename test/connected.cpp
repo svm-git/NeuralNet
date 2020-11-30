@@ -33,10 +33,9 @@ void test_connected()
 
 	typedef neural_network::algebra::metrics<3> _3;
 	typedef neural_network::algebra::metrics<5> _5;
-	typedef neural_network::fully_connected<_5, _3> connected;
 
 	_5::tensor_type tmp;
-	connected layer;
+	auto layer = neural_network::make_fully_connected_layer<_5, _3>();
 	
 	_3::tensor_type ret = layer.process(tmp);
 	layer.compute_gradient(ret);

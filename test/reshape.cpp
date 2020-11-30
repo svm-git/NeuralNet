@@ -38,7 +38,7 @@ void test_reshape()
 
 	_3_x_2_x_1::tensor_type i;
 
-	reshape layer;
+	reshape layer = neural_network::make_reshape_layer<_3_x_2_x_1, _6>();
 
 	auto r = layer.process(i);
 

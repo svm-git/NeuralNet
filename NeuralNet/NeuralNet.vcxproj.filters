@@ -48,6 +48,9 @@
     <ClInclude Include="..\src\loss.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\pooling.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -72,6 +75,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\test\network.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\test\pooling.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

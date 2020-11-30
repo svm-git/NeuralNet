@@ -41,7 +41,7 @@ void test_activation()
 		static_assert(std::is_same<_1d_relu::output, neural_network::algebra::tensor<3>>::value, "Invalid 1D-RELU output type.");
 
 		_3::tensor_type tmp;
-		_1d_relu relu;
+		_1d_relu relu = neural_network::make_relu_activation_layer<_3>();
 
 		relu.process(tmp);
 		relu.compute_gradient(tmp);
@@ -57,7 +57,7 @@ void test_activation()
 		static_assert(std::is_same<_2d_relu::output, neural_network::algebra::tensor<3, 2>>::value, "Invalid 2D-RELU output type.");
 
 		_3_x_2::tensor_type tmp;
-		_2d_relu relu;
+		_2d_relu relu = neural_network::make_relu_activation_layer<_3_x_2>();
 
 		relu.process(tmp);
 		relu.compute_gradient(tmp);
@@ -73,7 +73,7 @@ void test_activation()
 		static_assert(std::is_same<_3d_relu::output, neural_network::algebra::tensor<3, 2, 1>>::value, "Invalid 3D-RELU output type.");
 
 		_3_x_2_x_1::tensor_type tmp;
-		_3d_relu relu;
+		_3d_relu relu = neural_network::make_relu_activation_layer<_3_x_2_x_1>();
 
 		relu.process(tmp);
 		relu.compute_gradient(tmp);
@@ -89,7 +89,7 @@ void test_activation()
 		static_assert(std::is_same<_1d_logistic::output, neural_network::algebra::tensor<3>>::value, "Invalid 1D-Logistic output type.");
 
 		_3::tensor_type tmp;
-		_1d_logistic logistic;
+		_1d_logistic logistic = neural_network::make_logistic_activation_layer<_3>();
 
 		logistic.process(tmp);
 		logistic.compute_gradient(tmp);
@@ -105,7 +105,7 @@ void test_activation()
 		static_assert(std::is_same<_2d_logistic::output, neural_network::algebra::tensor<3, 2>>::value, "Invalid 2D-Logistic output type.");
 
 		_3_x_2::tensor_type tmp;
-		_2d_logistic logistic;
+		_2d_logistic logistic = neural_network::make_logistic_activation_layer<_3_x_2>();
 
 		logistic.process(tmp);
 		logistic.compute_gradient(tmp);
@@ -121,7 +121,7 @@ void test_activation()
 		static_assert(std::is_same<_3d_logistic::output, neural_network::algebra::tensor<3, 2, 1>>::value, "Invalid 3D-Logistic output type.");
 
 		_3_x_2_x_1::tensor_type tmp;
-		_3d_logistic logistic;
+		_3d_logistic logistic = neural_network::make_logistic_activation_layer<_3_x_2_x_1>();
 
 		logistic.process(tmp);
 		logistic.compute_gradient(tmp);

@@ -50,7 +50,7 @@ namespace neural_network {
 		}
 
 		fully_connected(
-			std::function<double(const double&)> initializer,
+			std::function<double()> initializer,
 			const double regularization = 0.000001)
 				: _Base(), m_input(), m_weights(initializer), m_bias(initializer), m_biasGradient(), m_regularization(regularization)
 		{

@@ -51,7 +51,8 @@ namespace neural_network {
 				tmp,
 				[&loss](const double& r, const double& t)
 				{
-					loss += std::pow((r - t), 2.0);
+					auto delta = (r - t);
+					loss += (delta * delta);
 					return r;
 				});
 

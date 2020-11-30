@@ -67,6 +67,17 @@ namespace neural_network { namespace algebra {
 			dimension_size = _Size,
 			data_size = _Size * _Base::data_size };
 
+		template <const size_t _Dim>
+		struct expand
+		{
+			typedef typename metrics<_Dim, _Size, _Args...> type;
+		};
+
+		struct shrink
+		{
+			typedef typename _Base type;
+		};
+
 		template <typename ..._Other>
 		static bool is_valid_index(const size_t index, _Other... args)
 		{
@@ -95,6 +106,12 @@ namespace neural_network { namespace algebra {
 			rank = 1,
 			dimension_size = _Size,
 			data_size = _Size };
+
+		template <const size_t _Dim>
+		struct expand
+		{
+			typedef typename metrics<_Dim, _Size> type;
+		};
 
 		static bool is_valid_index(const size_t index)
 		{
@@ -128,12 +145,11 @@ namespace neural_network { namespace algebra {
 			m_pData->fill(0.0);
 		}
 
-		tensor(std::function<double(const double&)> initializer)
+		tensor(std::function<double()> initializer)
 			: m_pData(std::make_shared<_Data>())
 		{
-			std::transform(
-				m_pData->cbegin(), m_pData->cend(),
-				m_pData->begin(),
+			std::generate(
+				m_pData->begin(), m_pData->end(),
 				initializer);
 		}
 

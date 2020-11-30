@@ -27,9 +27,26 @@ SOFTWARE.
 #include "connected.h"
 #include "activation.h"
 #include "reshape.h"
+#include "pooling.h"
 #include "loss.h"
 
 namespace neural_network {
+
+	template <class _Net, class _Loss>
+	void _train_impl(
+		_Net& net,
+		const typename _Net::input& input,
+		const typename _Net::output& truth,
+		_Loss& loss,
+		const double rate)
+	{
+		net.compute_gradient(
+			loss.compute_gradient(
+				net.process(input),
+				truth));
+
+		net.update_weights(-std::abs(rate));
+	}
 
 	template <class _Layer, class... _Args>
 	class network : protected network <_Args...>
@@ -67,6 +84,16 @@ namespace neural_network {
 			m_layer.update_weights(rate);
 		}
 
+		template <class _Loss>
+		void train(
+			const typename input& input,
+			const typename output& truth,
+			_Loss& loss,
+			const double rate)
+		{
+			_train_impl(*this, input, truth, loss, rate);
+		}
+
 	private:
 		_Layer m_layer;
 	};
@@ -101,6 +128,16 @@ namespace neural_network {
 			m_layer.update_weights(rate);
 		}
 
+		template <class _Loss>
+		void train(
+			const typename input& input,
+			const typename output& truth,
+			_Loss& loss,
+			const double rate)
+		{
+			_train_impl(*this, input, truth, loss, rate);
+		}
+
 	private:
 		_Layer m_layer;
 	};
@@ -111,21 +148,5 @@ namespace neural_network {
 	{
 		typedef network<typename std::_Unrefwrap<_Layers>::type...> _Ntype;
 		return (_Ntype(std::forward<_Layers>(args)...));
-	}
-
-	template <class _Net, class _Loss>
-	void train(
-		_Net& net,
-		const typename _Net::input& input,
-		const typename _Net::output& truth,
-		_Loss& loss,
-		const double rate)
-	{
-		auto result = net.process(input);
-
-		net.compute_gradient(
-			loss.compute_gradient(result, truth));
-
-		net.update_weights(-std::abs(rate));
 	}
 }

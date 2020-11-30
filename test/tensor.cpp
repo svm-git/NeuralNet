@@ -40,6 +40,8 @@ void test_tensor()
 	std::mt19937 gen(rd());
 	std::uniform_real_distribution<double> distr(minRnd, maxRnd);
 
+	auto random_values = [&distr, &gen]() { return distr(gen); };
+
 	{
 		typedef neural_network::algebra::tensor<4> tensor;
 
@@ -62,13 +64,23 @@ void test_tensor()
 			[&t]() { t(4);  },
 			"Invalid index of 1-dimension tensor.");
 
-		tensor t2([&distr, &gen](const double&) { return distr(gen); });
+		tensor t2(random_values);
 
 		for (int i = 0; i < t2.size<0>(); ++i)
 		{
 			test::assert(minRnd <= t2(i), "Invalid initial value (i) of randomly initialized 1-dimension tensor.");
 			test::assert(t2(i) <= maxRnd, "Invalid initial value (i) of randomly initialized 1-dimension tensor.");
 		}
+
+		typedef tensor::metrics::expand<5>::type expanded;
+		static_assert(expanded::rank == 2, "Invalid rank of tensor expanded from 1-dimension tensor.");
+
+		expanded::tensor_type e;
+		test::assert(e.size<0>() == 5, "Invalid size<0> of tensor expanded from 1-dimension tensor.");
+		test::assert(e.size<1>() == 4, "Invalid size<1> of tensor expanded from 1-dimension tensor.");
+
+		static_assert(std::is_same<expanded::shrink::type, tensor::metrics>::value, "Invalid type of expanded metric shrinked back to 1-dimenstion.");
+		static_assert(std::is_same<expanded::shrink::type::tensor_type, tensor>::value, "Invalid type of expanded tensor shrinked back to 1-dimenstion.");
 	}
 
 	{
@@ -99,7 +111,7 @@ void test_tensor()
 			[&t]() { t(1, 4);  },
 			"Invalid first index of 2-dimension tensor.");
 
-		tensor t2([&distr, &gen](const double&) { return distr(gen); });
+		tensor t2(random_values);
 
 		for (int i = 0; i < t2.size<0>(); ++i)
 			for (int j = 0; j < t2.size<1>(); ++j)
@@ -107,6 +119,17 @@ void test_tensor()
 				test::assert(minRnd <= t2(i, j), "Invalid initial value (i, j) of randomly initialized 2-dimension tensor.");
 				test::assert(t2(i, j) <= maxRnd, "Invalid initial value (i, j) of randomly initialized 2-dimension tensor.");
 			}
+
+		typedef tensor::metrics::expand<5>::type expanded;
+		static_assert(expanded::rank == 3, "Invalid rank of tensor expanded from 2-dimension tensor.");
+
+		expanded::tensor_type e;
+		test::assert(e.size<0>() == 5, "Invalid size<0> of tensor expanded from 2-dimension tensor.");
+		test::assert(e.size<1>() == 4, "Invalid size<1> of tensor expanded from 2-dimension tensor.");
+		test::assert(e.size<2>() == 3, "Invalid size<2> of tensor expanded from 2-dimension tensor.");
+
+		static_assert(std::is_same<expanded::shrink::type, tensor::metrics>::value, "Invalid type of expanded metric shrinked back to 2-dimenstion.");
+		static_assert(std::is_same<expanded::shrink::type::tensor_type, tensor>::value, "Invalid type of expanded tensor shrinked back to 2-dimenstion.");
 	}
 
 	{
@@ -151,7 +174,7 @@ void test_tensor()
 		test::assert(r.size<0>() == 4, "Invalid size<0> of reshaped 2-dimension tensor.");
 		test::assert(r.size<1>() == 6, "Invalid size<1> of reshaped 2-dimension tensor.");
 
-		tensor t2([&distr, &gen](const double&) { return distr(gen); });
+		tensor t2(random_values);
 
 		for (int i = 0; i < t2.size<0>(); ++i)
 			for (int j = 0; j < t2.size<1>(); ++j)
@@ -160,6 +183,18 @@ void test_tensor()
 					test::assert(minRnd <= t2(i, j, k), "Invalid initial value (i, j, k) of randomly initialized 3-dimension tensor.");
 					test::assert(t2(i, j, k) <= maxRnd, "Invalid initial value (i, j, k) of randomly initialized 3-dimension tensor.");
 				}
+
+		typedef tensor::metrics::expand<5>::type expanded;
+		static_assert(expanded::rank == 4, "Invalid rank of tensor expanded from 3-dimension tensor.");
+
+		expanded::tensor_type e;
+		test::assert(e.size<0>() == 5, "Invalid size<0> of tensor expanded from 3-dimension tensor.");
+		test::assert(e.size<1>() == 4, "Invalid size<1> of tensor expanded from 3-dimension tensor.");
+		test::assert(e.size<2>() == 3, "Invalid size<2> of tensor expanded from 3-dimension tensor.");
+		test::assert(e.size<3>() == 2, "Invalid size<3> of tensor expanded from 3-dimension tensor.");
+
+		static_assert(std::is_same<expanded::shrink::type, tensor::metrics>::value, "Invalid type of expanded metric shrinked back to 3-dimenstion.");
+		static_assert(std::is_same<expanded::shrink::type::tensor_type, tensor>::value, "Invalid type of expanded tensor shrinked back to 3-dimenstion.");
 	}
 
 	sc.pass();
