@@ -42,6 +42,8 @@ void run_tests()
 
 		test_network();
 
+		test_ensemble();
+
 		test::log("===========================================");
 		test::log("All unit tests PASS");
 	}

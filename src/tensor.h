@@ -220,6 +220,11 @@ namespace neural_network { namespace algebra {
 			return _Other::tensor_type(m_pData);
 		}
 
+		void fill(const double val)
+		{
+			m_pData->fill(val);
+		}
+
 	private:
 		std::shared_ptr<_Data> m_pData;
 	};

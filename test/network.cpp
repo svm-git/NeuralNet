@@ -30,6 +30,7 @@ SOFTWARE.
 #include <sstream>
 
 #include "unittest.h"
+#include "training.h"
 #include "..\src\network.h"
 
 void test_network()
@@ -72,55 +73,11 @@ void test_network()
 
 	neural_network::squared_error_loss<_2x2> loss;
 
-	{
-		std::stringstream ss;
-		ss << "Initial network loss:" << loss.compute(net.process(input), truth) << ".";
-		test::verbose(ss.str().c_str());
-	}
+	double initialLoss = 0.0, finalLoss = 0.0;
 
-	double rate = 7;
-	int retry = 0;
-	int epoch = 0;
-	int iteration = 0;
+	train_test_network(net, input, truth, loss, initialLoss, finalLoss);
 
-	while (retry < 20 && iteration < 1000000)
-	{
-		++iteration;
-		double pretrained = loss.compute(
-			net.process(input),
-			truth);
-
-		net.train(input, truth, loss, rate);
-
-		double posttrained = loss.compute(
-			net.process(input),
-			truth);
-
-		if (posttrained < pretrained)
-		{
-			retry = 0;
-		}
-		else
-		{
-			if (5 < retry)
-			{
-				rate = rate * 0.9;
-				++epoch;
-			}
-
-			++retry;
-		}
-	}
-
-	double cost = loss.compute(
-		net.process(input),
-		truth);
-
-	{
-		std::stringstream ss;
-		ss << "Training converged at epoch=" << epoch << "; iteration=" << iteration << "; rate=" << rate << "; final loss=" << cost << ".";
-		test::verbose(ss.str().c_str());
-	}
+	test::assert(finalLoss < initialLoss, "Training did not improve the network.");
 
 	sc.pass();
 }

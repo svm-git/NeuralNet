@@ -29,6 +29,7 @@ SOFTWARE.
 #include "reshape.h"
 #include "pooling.h"
 #include "loss.h"
+#include "ensemble.h"
 
 namespace neural_network {
 

@@ -51,6 +51,12 @@
     <ClInclude Include="..\src\pooling.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\ensemble.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\test\training.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -78,6 +84,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\test\pooling.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\test\ensemble.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
