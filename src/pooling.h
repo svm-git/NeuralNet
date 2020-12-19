@@ -27,19 +27,19 @@ SOFTWARE.
 #include "layer.h"
 
 namespace neural_network {
-
+	
 	template <class _Metrics>
-	class _1d_max_pooling_impl
+	class _scalar_max_pooling_impl
 	{
 	public:
-		typedef typename _1d_max_pooling_impl<_Metrics> _Self;
+		typedef typename _scalar_max_pooling_impl<_Metrics> _Self;
 
 		typedef typename _Metrics::tensor_type input;
 		typedef algebra::metrics<1>::tensor_type output;
 
-		static_assert(_Metrics::rank == 1, "Invalid metric rank for 1D max pooing.");
+		static_assert(_Metrics::rank == 1, "Invalid metric rank for scalar max pooling.");
 
-		_1d_max_pooling_impl()
+		_scalar_max_pooling_impl()
 			: m_mask()
 		{}
 	
@@ -83,17 +83,20 @@ namespace neural_network {
 	};
 
 	template <class _Metrics>
-	class _2d_max_pooing_impl
+	class _generic_max_pooling_impl
 	{
 	public:
-		typedef typename _2d_max_pooing_impl<_Metrics> _Self;
+		typedef typename _generic_max_pooling_impl<_Metrics> _Self;
 
 		typedef typename _Metrics::tensor_type input;
 		typedef typename _Metrics::shrink::type::tensor_type output;
 
-		static_assert(_Metrics::rank == 2, "Invalid metric rank for 2D max pooing.");
+		typedef typename algebra::metrics<_Metrics::dimension_size, output::data_size>::tensor_type reshaped_input;
+		typedef typename algebra::metrics<output::data_size>::tensor_type reshaped_output;
 
-		_2d_max_pooing_impl()
+		static_assert(2 <= _Metrics::rank, "Metric rank is too small for generic max pooling.");
+
+		_generic_max_pooling_impl()
 			: m_mask()
 		{}
 
@@ -101,18 +104,21 @@ namespace neural_network {
 			const input& input,
 			output& result)
 		{
-			for (size_t j = 0; j < input.size<1>(); ++j)
+			reshaped_input rin = input.reshape<reshaped_input::metrics>();
+			reshaped_output rout = result.reshape<reshaped_output::metrics>();
+
+			for (size_t j = 0; j < rin.size<1>(); ++j)
 			{
 				m_mask(0, j) = 0.0;
 
-				double max = input(0, j);
+				double max = rin(0, j);
 				size_t imax = 0;
 
-				for (size_t i = 1; i < input.size<0>(); ++i)
+				for (size_t i = 1; i < rin.size<0>(); ++i)
 				{
 					m_mask(i, j) = 0.0;
 
-					auto e = input(i, j);
+					auto e = rin(i, j);
 					if (max < e)
 					{
 						max = e;
@@ -121,7 +127,7 @@ namespace neural_network {
 				}
 
 				m_mask(imax, j) = 1.0;
-				result(j) = max;
+				rout(j) = max;
 			}
 		}
 
@@ -129,174 +135,29 @@ namespace neural_network {
 			const output& grad,
 			input& result)
 		{
-			for (size_t i = 0; i < result.size<0>(); ++i)
+			reshaped_input rresult = result.reshape<reshaped_input::metrics>();
+			reshaped_output rgrad = grad.reshape<reshaped_output::metrics>();
+
+			for (size_t i = 0; i < rresult.size<0>(); ++i)
 			{
-				for (size_t j = 0; j < result.size<1>(); ++j)
+				for (size_t j = 0; j < rresult.size<1>(); ++j)
 				{
-					result(i, j) = (0.0 < m_mask(i, j)) ? grad(j) : 0.0;
+					rresult(i, j) = (0.0 < m_mask(i, j)) ? rgrad(j) : 0.0;
 				}
 			}
 		}
 
 	private:
-		input m_mask;
-	};
-
-	template <class _Metrics>
-	class _3d_max_pooing_impl
-	{
-	public:
-		typedef typename _3d_max_pooing_impl<_Metrics> _Self;
-
-		typedef typename _Metrics::tensor_type input;
-		typedef typename _Metrics::shrink::type::tensor_type output;
-
-		static_assert(_Metrics::rank == 3, "Invalid metric rank for 3D max pooing.");
-
-		_3d_max_pooing_impl()
-			: m_mask()
-		{}
-
-		void process(
-			const input& input,
-			output& result)
-		{
-			for (size_t j = 0; j < input.size<1>(); ++j)
-			{
-				for (size_t k = 0; k < input.size<2>(); ++k)
-				{
-					m_mask(0, j, k) = 0.0;
-
-					double max = input(0, j, k);
-					size_t imax = 0;
-
-					for (size_t i = 1; i < input.size<0>(); ++i)
-					{
-						m_mask(i, j, k) = 0.0;
-
-						auto e = input(i, j, k);
-						if (max < e)
-						{
-							max = e;
-							imax = i;
-						}
-					}
-
-					m_mask(imax, j, k) = 1.0;
-					result(j, k) = max;
-				}
-			}
-		}
-
-		void compute_gradient(
-			const output& grad,
-			input& result)
-		{
-			for (size_t i = 0; i < result.size<0>(); ++i)
-			{
-				for (size_t j = 0; j < result.size<1>(); ++j)
-				{
-					for (size_t k = 0; k < result.size<2>(); ++k)
-					{
-						result(i, j, k) = (0.0 < m_mask(i, j, k)) ? grad(j, k) : 0.0;
-					}
-				}
-			}
-		}
-
-	private:
-		input m_mask;
-	};
-
-	template <class _Metrics>
-	class _4d_max_pooing_impl
-	{
-	public:
-		typedef typename _4d_max_pooing_impl<_Metrics> _Self;
-
-		typedef typename _Metrics::tensor_type input;
-		typedef typename _Metrics::shrink::type::tensor_type output;
-
-		static_assert(_Metrics::rank == 4, "Invalid metric rank for 4D max pooing.");
-
-		_4d_max_pooing_impl()
-			: m_mask()
-		{}
-
-		void process(
-			const input& input,
-			output& result)
-		{
-			for (size_t j = 0; j < input.size<1>(); ++j)
-			{
-				for (size_t k = 0; k < input.size<2>(); ++k)
-				{
-					for (size_t l = 0; l < input.size<3>(); ++l)
-					{
-						m_mask(0, j, k, l) = 0.0;
-
-						double max = input(0, j, k, l);
-						size_t imax = 0;
-
-						for (size_t i = 1; i < input.size<0>(); ++i)
-						{
-							m_mask(i, j, k, l) = 0.0;
-
-							auto e = input(i, j, k, l);
-							if (max < e)
-							{
-								max = e;
-								imax = i;
-							}
-						}
-
-						m_mask(imax, j, k, l) = 1.0;
-						result(j, k, l) = max;
-					}
-				}
-			}
-		}
-
-		void compute_gradient(
-			const output& grad,
-			input& result)
-		{
-			for (size_t i = 0; i < result.size<0>(); ++i)
-			{
-				for (size_t j = 0; j < result.size<1>(); ++j)
-				{
-					for (size_t k = 0; k < result.size<2>(); ++k)
-					{
-						for (size_t l = 0; l < result.size<3>(); ++l)
-						{
-							result(i, j, k, l) = (0.0 < m_mask(i, j, k, l)) ? grad(j, k, l) : 0.0;
-						}
-					}
-				}
-			}
-		}
-
-	private:
-		input m_mask;
+		reshaped_input m_mask;
 	};
 
 	template <class _Metrics>
 	struct _max_pooling_impl
 	{
-		static_assert(1 <= _Metrics::rank == 1 && _Metrics::rank <= 4, "Max pooling is supported only for 1D, 2D, 3D or 4D tensors.");
-
 		typedef typename std::conditional<
 			_Metrics::rank == 1, 
-			_1d_max_pooling_impl<_Metrics>,
-			typename std::conditional<
-				_Metrics::rank == 2, 
-				_2d_max_pooing_impl<_Metrics>,
-				typename std::conditional<
-					_Metrics::rank == 3,
-					_3d_max_pooing_impl<_Metrics>,
-					_4d_max_pooing_impl<_Metrics>
-				>::type
-			>::type
+			_scalar_max_pooling_impl<_Metrics>,
+			_generic_max_pooling_impl<_Metrics>
 		>::type type;
 	};
 
@@ -332,7 +193,7 @@ namespace neural_network {
 	private:
 		impl m_impl;
 	};
-
+	
 	template <class _Input, class... _Args>
 	max_pooling<_Input> make_max_pooling_layer(
 		_Args&&... args)
