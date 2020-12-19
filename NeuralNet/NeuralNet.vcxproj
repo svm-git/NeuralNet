@@ -124,13 +124,14 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
+      <WarningLevel>Level4</WarningLevel>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
+      <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -144,7 +145,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\activation.h" />
+    <ClInclude Include="..\src\ai.h" />
     <ClInclude Include="..\src\connected.h" />
+    <ClInclude Include="..\src\convolution.h" />
+    <ClInclude Include="..\src\core.h" />
     <ClInclude Include="..\src\ensemble.h" />
     <ClInclude Include="..\src\layer.h" />
     <ClInclude Include="..\src\loss.h" />
@@ -160,6 +164,8 @@
   <ItemGroup>
     <ClCompile Include="..\test\activation.cpp" />
     <ClCompile Include="..\test\connected.cpp" />
+    <ClCompile Include="..\test\convolution.cpp" />
+    <ClCompile Include="..\test\core.cpp" />
     <ClCompile Include="..\test\ensemble.cpp" />
     <ClCompile Include="..\test\network.cpp" />
     <ClCompile Include="..\test\pooling.cpp" />

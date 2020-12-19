@@ -31,7 +31,7 @@ SOFTWARE.
 
 #include "unittest.h"
 #include "training.h"
-#include "..\src\network.h"
+#include "..\src\ai.h"
 
 void test_network()
 {

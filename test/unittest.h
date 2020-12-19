@@ -185,10 +185,12 @@ struct scenario
 };
 
 void test_tensor();
+void test_core();
 void test_activation();
 void test_connected();
 void test_reshape();
 void test_pooling();
+void test_convolution();
 void test_network();
 void test_ensemble();
 

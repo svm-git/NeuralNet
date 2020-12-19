@@ -32,6 +32,8 @@ void run_tests()
 	{
 		test_tensor();
 
+		test_core();
+
 		test_activation();
 
 		test_connected();
@@ -39,6 +41,8 @@ void run_tests()
 		test_reshape();
 
 		test_pooling();
+
+		test_convolution();
 
 		test_network();
 

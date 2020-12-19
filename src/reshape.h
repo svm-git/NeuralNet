@@ -48,7 +48,7 @@ namespace neural_network {
 		}
 
 		void update_weights(
-			const double rate)
+			const double /*rate*/)
 		{}
 	};
 

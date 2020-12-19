@@ -22,7 +22,13 @@ SOFTWARE.
 
 */
 
-#include "stdafx.h"
+#pragma once
 
-// TODO: reference any additional headers you need in STDAFX.H
-// and not in this file
+#include "connected.h"
+#include "activation.h"
+#include "reshape.h"
+#include "pooling.h"
+#include "convolution.h"
+#include "loss.h"
+#include "network.h"
+#include "ensemble.h"

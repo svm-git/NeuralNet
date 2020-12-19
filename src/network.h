@@ -24,13 +24,6 @@ SOFTWARE.
 
 #pragma once
 
-#include "connected.h"
-#include "activation.h"
-#include "reshape.h"
-#include "pooling.h"
-#include "loss.h"
-#include "ensemble.h"
-
 namespace neural_network {
 
 	template <class _Net, class _Loss>

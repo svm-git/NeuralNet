@@ -119,7 +119,7 @@ namespace neural_network {
 		_Weights m_weights;
 		_Bias m_bias;
 		_Bias m_biasGradient;
-		const double m_regularization;
+		double m_regularization;
 	};
 
 	template <class _Input, class _Output, class... _Args>

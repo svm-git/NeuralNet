@@ -26,10 +26,9 @@ SOFTWARE.
 
 #include "..\test\unittest.h"
 
-int _tmain(int argc, _TCHAR* argv[])
+int _tmain(int /*argc*/, _TCHAR* /*argv[]*/)
 {
 	run_tests();
 
 	return 0;
 }
-
