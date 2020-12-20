@@ -113,5 +113,65 @@ void test_pooling()
 		layer.update_weights(0.1);
 	}
 
+	{
+		test::verbose("1D Max Pooling With Core Tests");
+
+		typedef neural_network::algebra::metrics<1> _1;
+		typedef neural_network::algebra::metrics<3> _3;
+		typedef neural_network::algebra::metrics<4> _4;
+
+		auto layer = neural_network::make_max_pooling_layer<_4, _3, _1>();
+
+		_4::tensor_type input(random_values);
+
+		auto tmp = layer.process(input);
+
+		test::assert(tmp.size<0>() == 2, "Invalid size of 1D max pooling output tensor.");
+
+		layer.compute_gradient(tmp);
+		layer.update_weights(0.1);
+	}
+
+	{
+		test::verbose("2D Max Pooling With Core Tests");
+
+		typedef neural_network::algebra::metrics<2, 2> _2x2;
+		typedef neural_network::algebra::metrics<3, 2> _3x2;
+		typedef neural_network::algebra::metrics<7, 8> _7x8;
+
+		auto layer = neural_network::make_max_pooling_layer<_7x8, _3x2, _2x2>();
+
+		_7x8::tensor_type input(random_values);
+
+		auto tmp = layer.process(input);
+
+		test::assert(tmp.size<0>() == 3, "Invalid size of 2D max pooling output tensor.");
+		test::assert(tmp.size<1>() == 4, "Invalid size of 2D max pooling output tensor.");
+
+		layer.compute_gradient(tmp);
+		layer.update_weights(0.1);
+	}
+
+	{
+		test::verbose("3D Max Pooling With Core Tests");
+
+		typedef neural_network::algebra::metrics<2, 2, 1> _2x2x1;
+		typedef neural_network::algebra::metrics<3, 3, 3> _3x3x3;
+		typedef neural_network::algebra::metrics<19, 19, 3> _19x19x3;
+
+		auto layer = neural_network::make_max_pooling_layer<_19x19x3, _3x3x3, _2x2x1>();
+
+		_19x19x3::tensor_type input(random_values);
+
+		auto tmp = layer.process(input);
+
+		test::assert(tmp.size<0>() == 9, "Invalid size of 3D max pooling output tensor.");
+		test::assert(tmp.size<1>() == 9, "Invalid size of 3D max pooling output tensor.");
+		test::assert(tmp.size<2>() == 1, "Invalid size of 3D max pooling output tensor.");
+
+		layer.compute_gradient(tmp);
+		layer.update_weights(0.1);
+	}
+
 	sc.pass();
 }

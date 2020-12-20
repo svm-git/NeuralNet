@@ -25,6 +25,7 @@ SOFTWARE.
 #pragma once
 
 #include "layer.h"
+#include "core.h"
 
 namespace neural_network {
 	
@@ -199,6 +200,318 @@ namespace neural_network {
 		_Args&&... args)
 	{
 		typedef max_pooling<_Input> _Ltype;
+		return (_Ltype(std::forward<_Args>(args)...));
+	}
+
+	template <class _Metrics, class _Core, class _Stride>
+	class _1d_max_pooling_impl
+	{
+	public:
+		static_assert(_Metrics::rank == 1, "Invalid metric rank for 1D max pooling.");
+
+		typedef typename _1d_max_pooling_impl<_Metrics, _Core, _Stride> _Self;
+
+		typedef typename _Metrics::tensor_type input;
+		typedef typename algebra::_apply_core_with_stride<_Metrics, _Core, _Stride, _Metrics::rank>::metrics::tensor_type output;
+
+		_1d_max_pooling_impl()
+			: m_mask()
+		{}
+
+		void process(
+			const input& input,
+			output& result)
+		{
+			m_mask.fill(0.0);
+
+			for (size_t stride = 0; stride < result.size<0>(); ++stride)
+			{
+				const size_t baseX = stride * algebra::_dimension<_Stride, 0>::size;
+
+				double max = input(baseX);
+				size_t maxX = baseX;
+
+				for (size_t x = 1; x < algebra::_dimension<_Core, 0>::size; ++x)
+				{
+					auto e = input(baseX + x);
+					if (max < e)
+					{
+						max = e;
+						maxX = baseX + x;
+					}
+				}
+
+				result(stride) = max;
+				m_mask(maxX) += 1.0;
+			}
+		}
+
+		void compute_gradient(
+			const output& grad,
+			input& result)
+		{
+			result.fill(0.0);
+
+			for (size_t stride = 0; stride < grad.size<0>(); ++stride)
+			{
+				double g = grad(stride);
+
+				const size_t baseX = stride * algebra::_dimension<_Stride, 0>::size;
+
+				for (size_t x = 0; x < algebra::_dimension<_Core, 0>::size; ++x)
+				{
+					if (0.0 < m_mask(baseX + x))
+					{
+						result(baseX + x) += g;
+					}
+				}
+			}
+		}
+
+	private:
+		input m_mask;
+	};
+
+	template <class _Metrics, class _Core, class _Stride>
+	class _2d_max_pooling_impl
+	{
+	public:
+		static_assert(_Metrics::rank == 2, "Invalid metric rank for 2D max pooling.");
+
+		typedef typename _2d_max_pooling_impl<_Metrics, _Core, _Stride> _Self;
+
+		typedef typename _Metrics::tensor_type input;
+		typedef typename algebra::_apply_core_with_stride<_Metrics, _Core, _Stride, _Metrics::rank>::metrics::tensor_type output;
+
+		_2d_max_pooling_impl()
+			: m_mask()
+		{}
+
+		void process(
+			const input& input,
+			output& result)
+		{
+			m_mask.fill(0.0);
+
+			for (size_t strideX = 0; strideX < result.size<0>(); ++strideX)
+			{
+				for (size_t strideY = 0; strideY < result.size<1>(); ++strideY)
+				{
+					const size_t baseX = strideX * algebra::_dimension<_Stride, 0>::size;
+					const size_t baseY = strideY * algebra::_dimension<_Stride, 1>::size;
+
+					double max = input(baseX, baseY);
+					size_t maxX = baseX;
+					size_t maxY = baseY;
+
+					for (size_t x = 0; x < algebra::_dimension<_Core, 0>::size; ++x)
+					{
+						for (size_t y = 0; y < algebra::_dimension<_Core, 1>::size; ++y)
+						{
+							auto e = input(baseX + x, baseY + y);
+							if (max < e)
+							{
+								max = e;
+								maxX = baseX + x;
+								maxY = baseY + y;
+							}
+						}
+					}
+
+					result(strideX, strideY) = max;
+					m_mask(maxX, maxY) += 1.0;
+				}
+			}
+		}
+
+		void compute_gradient(
+			const output& grad,
+			input& result)
+		{
+			result.fill(0.0);
+
+			for (size_t strideX = 0; strideX < grad.size<0>(); ++strideX)
+			{
+				for (size_t strideY = 0; strideY < grad.size<1>(); ++strideY)
+				{
+					double g = grad(strideX, strideY);
+
+					const size_t baseX = strideX * algebra::_dimension<_Stride, 0>::size;
+					const size_t baseY = strideY * algebra::_dimension<_Stride, 1>::size;
+
+					for (size_t x = 0; x < algebra::_dimension<_Core, 0>::size; ++x)
+					{
+						for (size_t y = 0; y < algebra::_dimension<_Core, 1>::size; ++y)
+						{
+							if (0.0 < m_mask(baseX + x, baseY + y))
+							{
+								result(baseX + x, baseY + y) += g;
+							}
+						}
+					}
+				}
+			}
+		}
+
+	private:
+		input m_mask;
+	};
+
+	template <class _Metrics, class _Core, class _Stride>
+	class _3d_max_pooling_impl
+	{
+	public:
+		static_assert(_Metrics::rank == 3, "Invalid metric rank for 3D max pooling.");
+
+		typedef typename _3d_max_pooling_impl<_Metrics, _Core, _Stride> _Self;
+
+		typedef typename _Metrics::tensor_type input;
+		typedef typename algebra::_apply_core_with_stride<_Metrics, _Core, _Stride, _Metrics::rank>::metrics::tensor_type output;
+
+		_3d_max_pooling_impl()
+			: m_mask()
+		{}
+
+		void process(
+			const input& input,
+			output& result)
+		{
+			m_mask.fill(0.0);
+
+			for (size_t strideX = 0; strideX < result.size<0>(); ++strideX)
+			{
+				for (size_t strideY = 0; strideY < result.size<1>(); ++strideY)
+				{
+					for (size_t strideZ = 0; strideZ < result.size<2>(); ++strideZ)
+					{
+						const size_t baseX = strideX * algebra::_dimension<_Stride, 0>::size;
+						const size_t baseY = strideY * algebra::_dimension<_Stride, 1>::size;
+						const size_t baseZ = strideZ * algebra::_dimension<_Stride, 2>::size;
+
+						double max = input(baseX, baseY, baseZ);
+						size_t maxX = baseX;
+						size_t maxY = baseY;
+						size_t maxZ = baseZ;
+
+						for (size_t x = 0; x < algebra::_dimension<_Core, 0>::size; ++x)
+						{
+							for (size_t y = 0; y < algebra::_dimension<_Core, 1>::size; ++y)
+							{
+								for (size_t z = 0; z < algebra::_dimension<_Core, 2>::size; ++z)
+								{
+									auto e = input(baseX + x, baseY + y, baseZ + z);
+									if (max < e)
+									{
+										max = e;
+										maxX = baseX + x;
+										maxY = baseY + y;
+										maxZ = baseZ + z;
+									}
+								}
+							}
+						}
+
+						result(strideX, strideY, strideZ) = max;
+						m_mask(maxX, maxY, maxZ) += 1.0;
+					}
+				}
+			}
+		}
+
+		void compute_gradient(
+			const output& grad,
+			input& result)
+		{
+			result.fill(0.0);
+
+			for (size_t strideX = 0; strideX < grad.size<0>(); ++strideX)
+			{
+				for (size_t strideY = 0; strideY < grad.size<1>(); ++strideY)
+				{
+					for (size_t strideZ = 0; strideZ < grad.size<2>(); ++strideZ)
+					{
+						double g = grad(strideX, strideY, strideZ);
+
+						const size_t baseX = strideX * algebra::_dimension<_Stride, 0>::size;
+						const size_t baseY = strideY * algebra::_dimension<_Stride, 1>::size;
+						const size_t baseZ = strideZ * algebra::_dimension<_Stride, 2>::size;
+
+						for (size_t x = 0; x < algebra::_dimension<_Core, 0>::size; ++x)
+						{
+							for (size_t y = 0; y < algebra::_dimension<_Core, 1>::size; ++y)
+							{
+								for (size_t z = 0; z < algebra::_dimension<_Core, 2>::size; ++z)
+								{
+									if (0.0 < m_mask(baseX + x, baseY + y, baseZ + z))
+									{
+										result(baseX + x, baseY + y, baseZ + z) += g;
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+
+	private:
+		input m_mask;
+	};
+
+	template <class _Metrics, class _Core, class _Stride>
+	struct _max_pooling_core_impl
+	{
+		static_assert(1 <= _Metrics::rank == 1 && _Metrics::rank <= 3, "Max pooling with core is supported only for 1D, 2D or 3D tensors.");
+
+		typedef typename std::conditional<
+			_Metrics::rank == 1,
+			_1d_max_pooling_impl<_Metrics, _Core, _Stride>,
+			typename std::conditional<
+				_Metrics::rank == 2,
+				_2d_max_pooling_impl<_Metrics, _Core, _Stride>,
+				_3d_max_pooling_impl<_Metrics, _Core, _Stride>
+			>::type
+		>::type type;
+	};
+
+	template <class _InputMetrics, class _Core, class _Stride>
+	class max_pooling_with_core : public layer_base<_InputMetrics, typename _max_pooling_core_impl<_InputMetrics, _Core, _Stride>::type::output::metrics>
+	{
+	public:
+		typedef typename max_pooling_with_core<_InputMetrics, _Core, _Stride> _Self;
+		typedef typename _max_pooling_core_impl<_InputMetrics, _Core, _Stride>::type impl;
+
+		typedef typename layer_base<_InputMetrics, typename impl::output::metrics> _Base;
+
+		max_pooling_with_core()
+			: _Base(), m_impl()
+		{}
+
+		const output& process(const input& input)
+		{
+			m_impl.process(input, m_output);
+			return m_output;
+		}
+
+		const input& compute_gradient(const output& grad)
+		{
+			m_impl.compute_gradient(grad, m_gradient);
+			return m_gradient;
+		}
+
+		void update_weights(
+			const double /*rate*/)
+		{}
+
+	private:
+		impl m_impl;
+	};
+
+	template <class _Input, class _Core, class _Stride, class... _Args>
+	max_pooling_with_core<_Input, _Core, _Stride> make_max_pooling_layer(
+		_Args&&... args)
+	{
+		typedef max_pooling_with_core<_Input, _Core, _Stride> _Ltype;
 		return (_Ltype(std::forward<_Args>(args)...));
 	}
 }

@@ -34,42 +34,6 @@ void test_core()
 {
 	scenario sc("Test for convolution/pooling core utility classes");
 
-	typedef neural_network::algebra::metrics<5, 4, 3, 2, 1> _5x4x3x2x1;
-	typedef neural_network::algebra::metrics<4, 3, 2, 1> _4x3x2x1;
-	typedef neural_network::algebra::metrics<3, 2, 1> _3x2x1;
-	typedef neural_network::algebra::metrics<2, 1> _2x1;
-	typedef neural_network::algebra::metrics<1> _1;
-
-	typedef neural_network::algebra::metrics<2, 2, 1> _2x2x1;
-	typedef neural_network::algebra::metrics<2, 2, 2, 1> _2x2x2x1;
-	typedef neural_network::algebra::metrics<2, 2, 2, 2, 1> _2x2x2x2x1;
-
-	static_assert(std::is_same<neural_network::algebra::_shrink_to_core<_5x4x3x2x1, _2x2x2x2x1>::metrics, _5x4x3x2x1>::value, "Invalid metrics after shrinking to rank 5");
-	static_assert(std::is_same<neural_network::algebra::_shrink_to_core<_5x4x3x2x1, _2x2x2x1>::metrics, _4x3x2x1>::value, "Invalid metrics after shrinking to rank 4");
-	static_assert(std::is_same<neural_network::algebra::_shrink_to_core<_5x4x3x2x1, _2x2x1>::metrics, _3x2x1>::value, "Invalid metrics after shrinking to rank 3");
-	static_assert(std::is_same<neural_network::algebra::_shrink_to_core<_5x4x3x2x1, _2x1>::metrics, _2x1>::value, "Invalid metrics after shrinking to rank 2");
-	static_assert(std::is_same<neural_network::algebra::_shrink_to_core<_5x4x3x2x1, _1>::metrics, _1>::value, "Invalid metrics after shrinking to rank 1");
-
-	static_assert(std::is_same<neural_network::algebra::_reshape_to_core<_5x4x3x2x1, _2x2x2x2x1>::metrics, neural_network::algebra::metrics<1, 5, 4, 3, 2, 1>>::value, "Invalid metrics after reshaping rank 5 to core rank 5");
-	static_assert(std::is_same<neural_network::algebra::_reshape_to_core<_5x4x3x2x1, _2x2x2x1>::metrics, neural_network::algebra::metrics<5, 4, 3, 2, 1>>::value, "Invalid metrics after reshaping rank 5 to core rank 4");
-	static_assert(std::is_same<neural_network::algebra::_reshape_to_core<_5x4x3x2x1, _2x2x1>::metrics, neural_network::algebra::metrics<5 * 4, 3, 2, 1>>::value, "Invalid metrics after reshaping rank 5 to core rank 3");
-	static_assert(std::is_same<neural_network::algebra::_reshape_to_core<_5x4x3x2x1, _2x1>::metrics, neural_network::algebra::metrics<5 * 4 * 3, 2, 1>>::value, "Invalid metrics after reshaping rank 5 to core rank 2");
-	static_assert(std::is_same<neural_network::algebra::_reshape_to_core<_5x4x3x2x1, _1>::metrics, neural_network::algebra::metrics<5 * 4 * 3 * 2, 1>>::value, "Invalid metrics after reshaping rank 5 to core rank 1");
-
-	static_assert(std::is_same<neural_network::algebra::_reshape_to_core<_4x3x2x1, _2x2x2x1>::metrics, neural_network::algebra::metrics<1, 4, 3, 2, 1>>::value, "Invalid metrics after reshaping rank 4 to core rank 4");
-	static_assert(std::is_same<neural_network::algebra::_reshape_to_core<_4x3x2x1, _2x2x1>::metrics, neural_network::algebra::metrics<4, 3, 2, 1>>::value, "Invalid metrics after reshaping rank 4 to core rank 3");
-	static_assert(std::is_same<neural_network::algebra::_reshape_to_core<_4x3x2x1, _2x1>::metrics, neural_network::algebra::metrics<4 * 3, 2, 1>>::value, "Invalid metrics after reshaping rank 4 to core rank 2");
-	static_assert(std::is_same<neural_network::algebra::_reshape_to_core<_4x3x2x1, _1>::metrics, neural_network::algebra::metrics<4 * 3 * 2, 1>>::value, "Invalid metrics after reshaping rank 4 to core rank 1");
-
-	static_assert(std::is_same<neural_network::algebra::_reshape_to_core<_3x2x1, _2x2x1>::metrics, neural_network::algebra::metrics<1, 3, 2, 1>>::value, "Invalid metrics after reshaping rank 3 to core rank 3");
-	static_assert(std::is_same<neural_network::algebra::_reshape_to_core<_3x2x1, _2x1>::metrics, neural_network::algebra::metrics<3, 2, 1>>::value, "Invalid metrics after reshaping rank 3 to core rank 2");
-	static_assert(std::is_same<neural_network::algebra::_reshape_to_core<_3x2x1, _1>::metrics, neural_network::algebra::metrics<3 * 2, 1>>::value, "Invalid metrics after reshaping rank 3 to core rank 1");
-
-	static_assert(std::is_same<neural_network::algebra::_reshape_to_core<_2x1, _2x1>::metrics, neural_network::algebra::metrics<1, 2, 1>>::value, "Invalid metrics after reshaping rank 2 to core rank 2");
-	static_assert(std::is_same<neural_network::algebra::_reshape_to_core<_2x1, _1>::metrics, neural_network::algebra::metrics<2, 1>>::value, "Invalid metrics after reshaping rank 2 to core rank 1");
-
-	static_assert(std::is_same<neural_network::algebra::_reshape_to_core<_1, _1>::metrics, neural_network::algebra::metrics<1, 1>>::value, "Invalid metrics after reshaping rank 1 to core rank 1");
-
 	{
 		typedef neural_network::algebra::metrics<2> _2;
 		typedef neural_network::algebra::metrics<3> _3;
