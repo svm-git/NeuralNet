@@ -155,7 +155,9 @@
     <ClInclude Include="..\src\network.h" />
     <ClInclude Include="..\src\pooling.h" />
     <ClInclude Include="..\src\reshape.h" />
+    <ClInclude Include="..\src\serialization.h" />
     <ClInclude Include="..\src\tensor.h" />
+    <ClInclude Include="..\test\serializationtest.h" />
     <ClInclude Include="..\test\training.h" />
     <ClInclude Include="..\test\unittest.h" />
     <ClInclude Include="stdafx.h" />
@@ -170,6 +172,7 @@
     <ClCompile Include="..\test\network.cpp" />
     <ClCompile Include="..\test\pooling.cpp" />
     <ClCompile Include="..\test\reshape.cpp" />
+    <ClCompile Include="..\test\serialization.cpp" />
     <ClCompile Include="..\test\tensor.cpp" />
     <ClCompile Include="..\test\unittest.cpp" />
     <ClCompile Include="NeuralNet.cpp" />

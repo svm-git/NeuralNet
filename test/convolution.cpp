@@ -27,7 +27,8 @@ SOFTWARE.
 #include <random>
 
 #include "unittest.h"
-#include "training.h"
+#include "serializationtest.h"
+
 #include "..\src\convolution.h"
 
 void test_convolution()
@@ -53,6 +54,8 @@ void test_convolution()
 		auto output = layer.process(input);
 		auto grad = layer.compute_gradient(output);
 		layer.update_weights(0.001);
+
+		test_layer_serialization("1D Convolution Layer Serialization Tests", layer);
 	}
 
 	{
@@ -67,6 +70,8 @@ void test_convolution()
 		auto output = layer.process(input);
 		auto grad = layer.compute_gradient(output);
 		layer.update_weights(0.001);
+
+		test_layer_serialization("2D Convolution Layer Serialization Tests", layer);
 	}
 
 	{
@@ -83,6 +88,8 @@ void test_convolution()
 		auto output = layer.process(input);
 		auto grad = layer.compute_gradient(output);
 		layer.update_weights(0.001);
+
+		test_layer_serialization("3D Convolution Layer Serialization Tests", layer);
 	}
 
 	sc.pass();

@@ -34,6 +34,8 @@ void run_tests()
 
 		test_core();
 
+		test_serialization();
+
 		test_activation();
 
 		test_connected();

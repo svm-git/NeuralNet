@@ -25,6 +25,8 @@ SOFTWARE.
 #include "stdafx.h"
 
 #include "unittest.h"
+#include "serializationtest.h"
+
 #include "..\src\reshape.h"
 
 void test_reshape()
@@ -49,6 +51,8 @@ void test_reshape()
 	test::assert(g.size<0>() == 3, "Invalid size<0> of reshaped gradient tensor.");
 	test::assert(g.size<1>() == 2, "Invalid size<1> of reshaped gradient tensor.");
 	test::assert(g.size<2>() == 1, "Invalid size<2> of reshaped gradient tensor.");
+
+	test_layer_serialization("Reshape Layer Serialization Tests", layer);
 
 	sc.pass();
 }

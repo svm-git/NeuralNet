@@ -26,13 +26,60 @@ SOFTWARE.
 
 #include "layer.h"
 #include "core.h"
+#include "serialization.h"
 
 namespace neural_network {
 
-	template <class _Metrics, class _Core, class _Stride, const size_t _Kernels>
-	class _1d_convolution_impl
+	template <class _Kernels, class _Bias>
+	struct _convolution_kernels
 	{
-	public:
+		typedef typename _convolution_kernels<_Kernels, _Bias> _Self;
+		typedef typename serialization::chunk_serializer<
+			serialization::chunk_types::convolution_layer,
+			serialization::composite_serializer<
+				serialization::tensor_serializer<_Kernels>,
+				serialization::tensor_serializer<_Bias>
+			>
+		> _serializer_impl;
+
+		_convolution_kernels()
+			: m_kernels(), m_bias()
+		{}
+
+		_convolution_kernels(
+			std::function<double()> initializer)
+			: m_kernels(initializer), m_bias(initializer)
+		{
+		}
+
+		struct serializer
+		{
+			typedef _Self value;
+
+			enum : size_t { serialized_data_size = _serializer_impl::serialized_data_size };
+
+			static void read(
+				std::istream& in,
+				value& layer)
+			{
+				_serializer_impl::read(in, layer.m_kernels, layer.m_bias);
+			}
+
+			static void write(
+				std::ostream& out,
+				const value& layer)
+			{
+				_serializer_impl::write(out, layer.m_kernels, layer.m_bias);
+			}
+		};
+	
+		_Kernels m_kernels;
+		_Bias m_bias;
+	};
+
+	template <class _Metrics, class _Core, class _Stride, const size_t _Kernels>
+	struct _1d_convolution_impl
+	{
 		static_assert(_Metrics::rank == 1, "Invalid metric rank for 1D convolution.");
 
 		typedef typename _1d_convolution_impl<_Metrics, _Core, _Stride, _Kernels> _Self;
@@ -42,14 +89,16 @@ namespace neural_network {
 		typedef typename _convolution::template expand<_Kernels>::type::tensor_type output;
 		typedef typename _Core::template expand<_Kernels>::type::tensor_type kernel_weights;
 		typedef typename algebra::metrics<_Kernels>::tensor_type bias;
+		typedef typename _convolution_kernels<kernel_weights, bias> _Weights;
+		typedef typename _Weights::serializer serializer;
 
 		_1d_convolution_impl()
-			: m_kernels(), m_bias()
+			: m_weights()
 		{}
 
 		_1d_convolution_impl(
 			std::function<double()> initializer)
-			: m_kernels(initializer), m_bias(initializer)
+			: m_weights(initializer)
 		{
 		}
 
@@ -65,12 +114,12 @@ namespace neural_network {
 
 					const size_t baseX = stride * algebra::_dimension<_Stride, 0>::size;
 
-					for (size_t x = 0; x < m_kernels.size<1>(); ++x)
+					for (size_t x = 0; x < m_weights.m_kernels.size<1>(); ++x)
 					{
-						sum += m_kernels(kernel, x) * input(baseX + x);
+						sum += m_weights.m_kernels(kernel, x) * input(baseX + x);
 					}
 
-					result(kernel, stride) = sum + m_bias(kernel);
+					result(kernel, stride) = sum + m_weights.m_bias(kernel);
 				}
 			}
 		}
@@ -95,7 +144,7 @@ namespace neural_network {
 
 					for (size_t i = 0; i < algebra::_dimension<_Core, 0>::size; ++i)
 					{
-						result(baseX + i) += g * m_kernels(kernel, i);
+						result(baseX + i) += g * m_weights.m_kernels(kernel, i);
 					}
 				}
 
@@ -109,31 +158,28 @@ namespace neural_network {
 			const bias& biasGradient,
 			const double rate)
 		{
-			for (size_t kernel = 0; kernel < m_bias.size<0>(); ++kernel)
+			for (size_t kernel = 0; kernel < m_weights.m_bias.size<0>(); ++kernel)
 			{
 				for (size_t stride = 0; stride < algebra::_dimension<_convolution, 0>::size; ++stride)
 				{
 					const size_t baseX = stride * algebra::_dimension<_Stride, 0>::size;
 
-					for (size_t x = 0; x < m_kernels.size<1>(); ++x)
+					for (size_t x = 0; x < m_weights.m_kernels.size<1>(); ++x)
 					{
-						m_kernels(kernel, x) += in(baseX + x) * gradient(baseX + x) * rate;
+						m_weights.m_kernels(kernel, x) += in(baseX + x) * gradient(baseX + x) * rate;
 					}
 				}
 
-				m_bias(kernel) += biasGradient(kernel) * rate;
+				m_weights.m_bias(kernel) += biasGradient(kernel) * rate;
 			}
 		}
 
-	private:
-		kernel_weights m_kernels;
-		bias m_bias;
+		_Weights m_weights;
 	};
 
 	template <class _Metrics, class _Core, class _Stride, const size_t _Kernels>
-	class _2d_convolution_impl
+	struct _2d_convolution_impl
 	{
-	public:
 		static_assert(_Metrics::rank == 2, "Invalid metric rank for 2D convolution.");
 
 		typedef typename _2d_convolution_impl<_Metrics, _Core, _Stride, _Kernels> _Self;
@@ -143,14 +189,16 @@ namespace neural_network {
 		typedef typename _convolution::template expand<_Kernels>::type::tensor_type output;
 		typedef typename _Core::template expand<_Kernels>::type::tensor_type kernel_weights;
 		typedef typename algebra::metrics<_Kernels>::tensor_type bias;
+		typedef typename _convolution_kernels<kernel_weights, bias> _Weights;
+		typedef typename _Weights::serializer serializer;
 
 		_2d_convolution_impl()
-			: m_kernels(), m_bias()
+			: m_weights()
 		{}
 
 		_2d_convolution_impl(
 			std::function<double()> initializer)
-			: m_kernels(initializer), m_bias(initializer)
+			: m_weights(initializer)
 		{
 		}
 
@@ -169,15 +217,15 @@ namespace neural_network {
 						const size_t baseX = strideX * algebra::_dimension<_Stride, 0>::size;
 						const size_t baseY = strideY * algebra::_dimension<_Stride, 1>::size;
 
-						for (size_t x = 0; x < m_kernels.size<1>(); ++x)
+						for (size_t x = 0; x < m_weights.m_kernels.size<1>(); ++x)
 						{
-							for (size_t y = 0; y < m_kernels.size<2>(); ++y)
+							for (size_t y = 0; y < m_weights.m_kernels.size<2>(); ++y)
 							{
-								sum += m_kernels(kernel, x, y) * input(baseX + x, baseY + y);
+								sum += m_weights.m_kernels(kernel, x, y) * input(baseX + x, baseY + y);
 							}
 						}
 
-						result(kernel, strideX, strideY) = sum + m_bias(kernel);
+						result(kernel, strideX, strideY) = sum + m_weights.m_bias(kernel);
 					}
 				}
 			}
@@ -208,7 +256,7 @@ namespace neural_network {
 						{
 							for (size_t j = 0; j < algebra::_dimension<_Core, 1>::size; ++j)
 							{
-								result(baseX + i, baseY + j) += g * m_kernels(kernel, i, j);
+								result(baseX + i, baseY + j) += g * m_weights.m_kernels(kernel, i, j);
 							}
 						}
 					}
@@ -224,7 +272,7 @@ namespace neural_network {
 			bias& biasGradient,
 			const double rate)
 		{
-			for (size_t kernel = 0; kernel < m_bias.size<0>(); ++kernel)
+			for (size_t kernel = 0; kernel < m_weights.m_bias.size<0>(); ++kernel)
 			{
 				for (size_t strideX = 0; strideX < algebra::_dimension<_convolution, 0>::size; ++strideX)
 				{
@@ -233,29 +281,26 @@ namespace neural_network {
 						const size_t baseX = strideX * algebra::_dimension<_Stride, 0>::size;
 						const size_t baseY = strideY * algebra::_dimension<_Stride, 1>::size;
 
-						for (size_t x = 0; x < m_kernels.size<1>(); ++x)
+						for (size_t x = 0; x < m_weights.m_kernels.size<1>(); ++x)
 						{ 
-							for (size_t y = 0; y < m_kernels.size<2>(); ++y)
+							for (size_t y = 0; y < m_weights.m_kernels.size<2>(); ++y)
 							{
-								m_kernels(kernel, x, y) += in(baseX + x, baseY + y) * gradient(baseX + x, baseY + y) * rate;
+								m_weights.m_kernels(kernel, x, y) += in(baseX + x, baseY + y) * gradient(baseX + x, baseY + y) * rate;
 							}
 						}
 					}
 				}
 
-				m_bias(kernel) += biasGradient(kernel) * rate;
+				m_weights.m_bias(kernel) += biasGradient(kernel) * rate;
 			}
 		}
 
-	private:
-		kernel_weights m_kernels;
-		bias m_bias;
+		_Weights m_weights;
 	};
 
 	template <class _Metrics, class _Core, class _Stride, const size_t _Kernels>
-	class _3d_convolution_impl
+	struct _3d_convolution_impl
 	{
-	public:
 		static_assert(_Metrics::rank == 3, "Invalid metric rank for 3D convolution.");
 
 		typedef typename _3d_convolution_impl<_Metrics, _Core, _Stride, _Kernels> _Self;
@@ -265,14 +310,16 @@ namespace neural_network {
 		typedef typename _convolution::template expand<_Kernels>::type::tensor_type output;
 		typedef typename _Core::template expand<_Kernels>::type::tensor_type kernel_weights;
 		typedef typename algebra::metrics<_Kernels>::tensor_type bias;
+		typedef typename _convolution_kernels<kernel_weights, bias> _Weights;
+		typedef typename _Weights::serializer serializer;
 
 		_3d_convolution_impl()
-			: m_kernels(), m_bias()
+			: m_weights()
 		{}
 
 		_3d_convolution_impl(
 			std::function<double()> initializer)
-			: m_kernels(initializer), m_bias(initializer)
+			: m_weights(initializer)
 		{
 		}
 
@@ -294,18 +341,18 @@ namespace neural_network {
 							const size_t baseY = strideY * algebra::_dimension<_Stride, 1>::size;
 							const size_t baseZ = strideZ * algebra::_dimension<_Stride, 2>::size;
 
-							for (size_t x = 0; x < m_kernels.size<1>(); ++x)
+							for (size_t x = 0; x < m_weights.m_kernels.size<1>(); ++x)
 							{
-								for (size_t y = 0; y < m_kernels.size<2>(); ++y)
+								for (size_t y = 0; y < m_weights.m_kernels.size<2>(); ++y)
 								{
-									for (size_t z = 0; z < m_kernels.size<3>(); ++z)
+									for (size_t z = 0; z < m_weights.m_kernels.size<3>(); ++z)
 									{
-										sum += m_kernels(kernel, x, y, z) * input(baseX + x, baseY + y, baseZ + z);
+										sum += m_weights.m_kernels(kernel, x, y, z) * input(baseX + x, baseY + y, baseZ + z);
 									}
 								}
 							}
 
-							result(kernel, strideX, strideY, strideZ) = sum + m_bias(kernel);
+							result(kernel, strideX, strideY, strideZ) = sum + m_weights.m_bias(kernel);
 						}
 					}
 				}
@@ -342,7 +389,7 @@ namespace neural_network {
 								{
 									for (size_t k = 0; k < algebra::_dimension<_Core, 2>::size; ++k)
 									{
-										result(baseX + i, baseY + j, baseZ + k) += g * m_kernels(kernel, i, j, k);
+										result(baseX + i, baseY + j, baseZ + k) += g * m_weights.m_kernels(kernel, i, j, k);
 									}
 								}
 							}
@@ -360,7 +407,7 @@ namespace neural_network {
 			const bias& biasGradient,
 			const double rate)
 		{
-			for (size_t kernel = 0; kernel < m_bias.size<0>(); ++kernel)
+			for (size_t kernel = 0; kernel < m_weights.m_bias.size<0>(); ++kernel)
 			{
 				for (size_t strideX = 0; strideX < algebra::_dimension<_convolution, 0>::size; ++strideX)
 				{
@@ -372,13 +419,13 @@ namespace neural_network {
 							const size_t baseY = strideY * algebra::_dimension<_Stride, 1>::size;
 							const size_t baseZ = strideZ * algebra::_dimension<_Stride, 2>::size;
 
-							for (size_t x = 0; x < m_kernels.size<1>(); ++x)
+							for (size_t x = 0; x < m_weights.m_kernels.size<1>(); ++x)
 							{
-								for (size_t y = 0; y < m_kernels.size<2>(); ++y)
+								for (size_t y = 0; y < m_weights.m_kernels.size<2>(); ++y)
 								{
-									for (size_t z = 0; z < m_kernels.size<3>(); ++z)
+									for (size_t z = 0; z < m_weights.m_kernels.size<3>(); ++z)
 									{
-										m_kernels(kernel, x, y, z) += in(baseX + x, baseY + y, baseZ + z) * gradient(baseX + x, baseY + y, baseZ + z) * rate;
+										m_weights.m_kernels(kernel, x, y, z) += in(baseX + x, baseY + y, baseZ + z) * gradient(baseX + x, baseY + y, baseZ + z) * rate;
 									}
 								}
 							}
@@ -386,13 +433,11 @@ namespace neural_network {
 					}
 				}
 
-				m_bias(kernel) += biasGradient(kernel) * rate;
+				m_weights.m_bias(kernel) += biasGradient(kernel) * rate;
 			}
 		}
 
-	private:
-		kernel_weights m_kernels;
-		bias m_bias;
+		_Weights m_weights;
 	};
 
 	template <class _Metrics, class _Core, class _Stride, const size_t _Kernels>
@@ -420,6 +465,7 @@ namespace neural_network {
 	public:
 		typedef typename convolution<_InputMetrics, _Core, _Stride, _Kernels> _Self;
 		typedef typename _convolution_impl<_InputMetrics, _Core, _Stride, _Kernels>::type impl;
+		typedef typename impl::serializer _serializer_impl;
 
 		typedef typename layer_base<_InputMetrics, typename impl::output::metrics> _Base;
 		typedef typename impl::bias _Bias;
@@ -460,6 +506,27 @@ namespace neural_network {
 				m_biasGradient,
 				rate);
 		}
+
+		struct serializer
+		{
+			typedef _Self value;
+
+			enum : size_t { serialized_data_size = _serializer_impl::serialized_data_size };
+
+			static void read(
+				std::istream& in,
+				value& layer)
+			{
+				_serializer_impl::read(in, layer.m_impl.m_weights);
+			}
+
+			static void write(
+				std::ostream& out,
+				const value& layer)
+			{
+				_serializer_impl::write(out, layer.m_impl.m_weights);
+			}
+		};
 
 	private:
 		impl m_impl;

@@ -194,4 +194,6 @@ void test_convolution();
 void test_network();
 void test_ensemble();
 
+void test_serialization();
+
 void run_tests();

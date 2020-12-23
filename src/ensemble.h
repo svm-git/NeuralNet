@@ -25,6 +25,7 @@ SOFTWARE.
 #pragma once
 
 #include "layer.h"
+#include "serialization.h"
 
 namespace neural_network {
 	
@@ -105,10 +106,13 @@ namespace neural_network {
 		typedef typename _Base::common_output common_output;
 		typedef typename _Base::common_output::metrics::template expand<ensemble_size>::type::tensor_type output;
 
+		_network_ensemble_impl()
+			: m_network()
+		{}
+
 		_network_ensemble_impl(const _N& n, const _Args&... args)
 			: _Base(args...), m_network(n)
-		{
-		}
+		{}
 
 		template <class _Output>
 		void process(
@@ -148,6 +152,33 @@ namespace neural_network {
 			_Base::update_weights(rate);
 		}
 
+		struct serializer
+		{
+			typedef _Self value;
+
+			enum : size_t {
+				serialized_data_size =
+					_Base::serializer::serialized_data_size
+					+ _N::serializer::serialized_data_size
+			};
+
+			static void read(
+				std::istream& in,
+				value& network)
+			{
+				_N::serializer::read(in, network.m_network);
+				_Base::serializer::read(in, network);
+			}
+
+			static void write(
+				std::ostream& out,
+				const value& network)
+			{
+				_N::serializer::write(out, network.m_network);
+				_Base::serializer::write(out, network);
+			}
+		};
+
 	private:
 		_N m_network;
 	};
@@ -164,10 +195,13 @@ namespace neural_network {
 		typedef typename _N::output common_output;
 		typedef typename _N::output::metrics::template expand<ensemble_size>::type::tensor_type output;
 
+		_network_ensemble_impl()
+			: m_network()
+		{}
+
 		_network_ensemble_impl(const _N& n)
 			: m_network(n)
-		{
-		}
+		{}
 
 		template <class _Output>
 		void process(
@@ -201,6 +235,27 @@ namespace neural_network {
 			m_network.update_weights(rate);
 		}
 
+		struct serializer
+		{
+			typedef _Self value;
+
+			enum : size_t { serialized_data_size = _N::serializer::serialized_data_size };
+
+			static void read(
+				std::istream& in,
+				value& network)
+			{
+				_N::serializer::read(in, network.m_network);
+			}
+
+			static void write(
+				std::ostream& out,
+				const value& network)
+			{
+				_N::serializer::write(out, network.m_network);
+			}
+		};
+
 	private:
 		_N m_network;
 	};
@@ -211,9 +266,18 @@ namespace neural_network {
 	public:
 		typedef typename network_ensemble<_N1, _N2, _Args...> _Self;
 		typedef typename _network_ensemble_impl<_N1, _N2, _Args...> _Ensemble;
+		typedef typename serialization::chunk_serializer<
+			serialization::chunk_types::ensemble_layer,
+			typename _Ensemble::serializer
+		> _serializer_impl;
 
 		typedef typename _Ensemble::input input;
 		typedef typename _Ensemble::output output;
+
+		network_ensemble()
+			: m_ensemble(), m_output(), m_gradient(), m_local()
+		{
+		}
 
 		network_ensemble(const _N1& n1, const _N2& n2, const _Args&... args)
 			: m_ensemble(n1, n2, args...), m_output(), m_gradient(), m_local()
@@ -238,6 +302,27 @@ namespace neural_network {
 		{
 			m_ensemble.update_weights(rate);
 		}
+
+		struct serializer
+		{
+			typedef _Self value;
+
+			enum : size_t { serialized_data_size = _serializer_impl::serialized_data_size };
+
+			static void read(
+				std::istream& in,
+				value& network)
+			{
+				_serializer_impl::read(in, network.m_ensemble);
+			}
+
+			static void write(
+				std::ostream& out,
+				const value& network)
+			{
+				_serializer_impl::write(out, network.m_ensemble);
+			}
+		};
 
 	private:
 		_Ensemble m_ensemble;

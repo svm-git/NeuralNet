@@ -24,6 +24,8 @@ SOFTWARE.
 
 #pragma once
 
+#include "serialization.h"
+
 namespace neural_network {
 
 	template <class _Net, class _Loss>
@@ -53,6 +55,10 @@ namespace neural_network {
 		typedef typename _Base::output output;
 
 		static_assert(std::is_same<typename _Layer::output, typename _Base::input>::value, "Output of the current layer does not match input of the next layer.");
+
+		network()
+			: _Base(), m_layer()
+		{}
 
 		network(const _Layer& layer, const _Args&... args)
 			: _Base(args...), m_layer(layer)
@@ -88,6 +94,33 @@ namespace neural_network {
 			_train_impl(*this, input, truth, loss, rate);
 		}
 
+		struct serializer
+		{
+			typedef _Self value;
+
+			enum : size_t { 
+				serialized_data_size = 
+					_Base::serializer::serialized_data_size
+					+ _Layer::serializer::serialized_data_size
+			};
+
+			static void read(
+				std::istream& in,
+				value& layer)
+			{
+				_Layer::serializer::read(in, layer.m_layer);
+				_Base::serializer::read(in, layer);
+			}
+
+			static void write(
+				std::ostream& out,
+				const value& layer)
+			{
+				_Layer::serializer::write(out, layer.m_layer);
+				_Base::serializer::write(out, layer);
+			}
+		};
+
 	private:
 		_Layer m_layer;
 	};
@@ -100,6 +133,10 @@ namespace neural_network {
 
 		typedef typename _Layer::input input;
 		typedef typename _Layer::output output;
+
+		network()
+			: m_layer()
+		{}
 
 		network(const _Layer& layer)
 			: m_layer(layer)
@@ -131,6 +168,27 @@ namespace neural_network {
 		{
 			_train_impl(*this, input, truth, loss, rate);
 		}
+
+		struct serializer
+		{
+			typedef _Self value;
+
+			enum : size_t { serialized_data_size = _Layer::serializer::serialized_data_size };
+
+			static void read(
+				std::istream& in,
+				value& layer)
+			{
+				_Layer::serializer::read(in, layer.m_layer);
+			}
+
+			static void write(
+				std::ostream& out,
+				const value& layer)
+			{
+				_Layer::serializer::write(out, layer.m_layer);
+			}
+		};
 
 	private:
 		_Layer m_layer;

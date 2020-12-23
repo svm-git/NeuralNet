@@ -29,6 +29,8 @@ SOFTWARE.
 
 #include "unittest.h"
 #include "training.h"
+#include "serializationtest.h"
+
 #include "..\src\ai.h"
 
 void test_ensemble()
@@ -149,6 +151,8 @@ void test_ensemble()
 	train_test_network(net, input, truth, loss, initialLoss, finalLoss);
 
 	test::assert(finalLoss < initialLoss, "Training did not improve the network.");
+
+	test_layer_serialization("Network Ensemble Serialization Tests", net);
 
 	sc.pass();
 }

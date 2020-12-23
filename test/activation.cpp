@@ -25,6 +25,8 @@ SOFTWARE.
 #include "stdafx.h"
 
 #include "unittest.h"
+#include "serializationtest.h"
+
 #include "..\src\activation.h"
 
 void test_activation()
@@ -45,6 +47,8 @@ void test_activation()
 
 		relu.process(tmp);
 		relu.compute_gradient(tmp);
+
+		test_layer_serialization("1D RELU Activation Layer Serialization Tests", relu);
 	}
 
 	{
@@ -61,6 +65,8 @@ void test_activation()
 
 		relu.process(tmp);
 		relu.compute_gradient(tmp);
+
+		test_layer_serialization("2D RELU Activation Layer Serialization Tests", relu);
 	}
 
 	{
@@ -77,6 +83,8 @@ void test_activation()
 
 		relu.process(tmp);
 		relu.compute_gradient(tmp);
+
+		test_layer_serialization("3D RELU Activation Layer Serialization Tests", relu);
 	}
 
 	{
@@ -93,6 +101,8 @@ void test_activation()
 
 		logistic.process(tmp);
 		logistic.compute_gradient(tmp);
+
+		test_layer_serialization("1D Logistic Activation Layer Serialization Tests", logistic);
 	}
 
 	{
@@ -109,6 +119,8 @@ void test_activation()
 
 		logistic.process(tmp);
 		logistic.compute_gradient(tmp);
+
+		test_layer_serialization("2D Logistic Activation Layer Serialization Tests", logistic);
 	}
 
 	{
@@ -125,6 +137,8 @@ void test_activation()
 
 		logistic.process(tmp);
 		logistic.compute_gradient(tmp);
+
+		test_layer_serialization("3D Logistic Activation Layer Serialization Tests", logistic);
 	}
 
 	sc.pass();

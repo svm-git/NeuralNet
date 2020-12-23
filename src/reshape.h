@@ -25,15 +25,52 @@ SOFTWARE.
 #pragma once
 
 #include "layer.h"
+#include "serialization.h"
 
 namespace neural_network {
 
+	template <typename _Reshape>
+	struct _reshape_serializer_impl
+	{
+		typedef typename _Reshape value;
+
+		typedef typename serialization::metrics_serializer<typename _Reshape::input::metrics> _input_metrics_serializer;
+		typedef typename serialization::metrics_serializer<typename _Reshape::output::metrics> _ouput_metrics_serializer;
+
+		enum : size_t {
+			serialized_data_size =
+				_input_metrics_serializer::serialized_data_size
+				+ _ouput_metrics_serializer::serialized_data_size
+		};
+
+		static void read(
+			std::istream& in,
+			value&)
+		{
+			_input_metrics_serializer::read(in);
+			_ouput_metrics_serializer::read(in);
+		}
+
+		static void write(
+			std::ostream& out,
+			const value&)
+		{
+			_input_metrics_serializer::write(out);
+			_ouput_metrics_serializer::write(out);
+		}
+	};
+
 	template <typename _InputMetrics, typename _OutputMetrics>
-	class reshape : public layer_base < _InputMetrics, _OutputMetrics >
+	class reshape : public layer_base <_InputMetrics, _OutputMetrics>
 	{
 	public:
 		typedef typename reshape<_InputMetrics, _OutputMetrics> _Self;
 		typedef typename layer_base<_InputMetrics, _OutputMetrics> _Base;
+
+		typedef typename serialization::chunk_serializer<
+			serialization::chunk_types::reshape_layer,
+			_reshape_serializer_impl<_Self>
+		> serializer;
 
 		const output& process(const input& input)
 		{

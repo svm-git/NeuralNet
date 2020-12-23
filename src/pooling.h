@@ -26,6 +26,7 @@ SOFTWARE.
 
 #include "layer.h"
 #include "core.h"
+#include "serialization.h"
 
 namespace neural_network {
 	
@@ -171,6 +172,11 @@ namespace neural_network {
 
 		typedef typename layer_base<_InputMetrics, typename impl::output::metrics> _Base;
 
+		typedef typename serialization::chunk_serializer<
+			serialization::chunk_types::max_pooling_layer,
+			serialization::metrics_serializer<_InputMetrics>
+		> _serializer_impl;
+
 		max_pooling()
 			: _Base(), m_impl()
 		{}
@@ -190,6 +196,27 @@ namespace neural_network {
 		void update_weights(
 			const double /*rate*/)
 		{}
+
+		struct serializer
+		{
+			typedef _Self value;
+
+			enum : size_t { serialized_data_size = _serializer_impl::serialized_data_size };
+
+			static void read(
+				std::istream& in,
+				value&)
+			{
+				_serializer_impl::read(in);
+			}
+
+			static void write(
+				std::ostream& out,
+				const value&)
+			{
+				_serializer_impl::write(out);
+			}
+		};
 
 	private:
 		impl m_impl;
@@ -463,6 +490,8 @@ namespace neural_network {
 	{
 		static_assert(1 <= _Metrics::rank == 1 && _Metrics::rank <= 3, "Max pooling with core is supported only for 1D, 2D or 3D tensors.");
 
+		typedef typename _max_pooling_core_impl<_Metrics, _Core, _Stride> _Self;
+
 		typedef typename std::conditional<
 			_Metrics::rank == 1,
 			_1d_max_pooling_impl<_Metrics, _Core, _Stride>,
@@ -472,6 +501,40 @@ namespace neural_network {
 				_3d_max_pooling_impl<_Metrics, _Core, _Stride>
 			>::type
 		>::type type;
+
+		template <typename _Layer>
+		struct serializer
+		{
+			typedef typename _Layer value;
+
+			typedef typename serialization::metrics_serializer<_Metrics> _metrics_serializer;
+			typedef typename serialization::metrics_serializer<_Core> _core_serializer;
+			typedef typename serialization::metrics_serializer<_Stride> _stride_serializer;
+
+			enum : size_t { serialized_data_size = 
+				_metrics_serializer::serialized_data_size 
+					+ _core_serializer::serialized_data_size
+					+ _stride_serializer::serialized_data_size
+			};
+
+			static void read(
+				std::istream& in,
+				value&)
+			{
+				_metrics_serializer::read(in);
+				_core_serializer::read(in);
+				_stride_serializer::read(in);
+			}
+
+			static void write(
+				std::ostream& out,
+				const value&)
+			{
+				_metrics_serializer::write(out);
+				_core_serializer::write(out);
+				_stride_serializer::write(out);
+			}
+		};
 	};
 
 	template <class _InputMetrics, class _Core, class _Stride>
@@ -482,6 +545,11 @@ namespace neural_network {
 		typedef typename _max_pooling_core_impl<_InputMetrics, _Core, _Stride>::type impl;
 
 		typedef typename layer_base<_InputMetrics, typename impl::output::metrics> _Base;
+
+		typedef typename serialization::chunk_serializer<
+			serialization::chunk_types::max_pooling_with_core_layer,
+			typename _max_pooling_core_impl<_InputMetrics, _Core, _Stride>::template serializer<_Self>
+		> serializer;
 
 		max_pooling_with_core()
 			: _Base(), m_impl()

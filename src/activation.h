@@ -25,6 +25,7 @@ SOFTWARE.
 #pragma once
 
 #include "layer.h"
+#include "serialization.h"
 
 namespace neural_network {
 
@@ -52,6 +53,11 @@ namespace neural_network {
 	public:
 		typedef typename relu_activation<_Metrics> _Self;
 		typedef typename activation_base<_Metrics> _Base;
+
+		typedef typename serialization::chunk_serializer<
+			serialization::chunk_types::relu_activation_layer,
+			serialization::metrics_serializer<typename _Metrics>
+		> _serializer_impl;
 
 		relu_activation()
 			: _Base()
@@ -83,6 +89,27 @@ namespace neural_network {
 
 			return m_gradient;
 		}
+
+		struct serializer
+		{
+			typedef _Self value;
+
+			enum : size_t { serialized_data_size = _serializer_impl::serialized_data_size };
+
+			static void read(
+				std::istream& in,
+				value&)
+			{
+				_serializer_impl::read(in);
+			}
+
+			static void write(
+				std::ostream& out,
+				const value&)
+			{
+				_serializer_impl::write(out);
+			}
+		};
 	};
 
 	template <typename _Metrics>
@@ -91,6 +118,11 @@ namespace neural_network {
 	public:
 		typedef typename logistic_activation<_Metrics> _Self;
 		typedef typename activation_base<_Metrics> _Base;
+
+		typedef typename serialization::chunk_serializer<
+			serialization::chunk_types::logistic_activation_layer,
+			serialization::metrics_serializer<typename _Metrics>
+		> _serializer_impl;
 
 		logistic_activation()
 			: _Base()
@@ -123,6 +155,26 @@ namespace neural_network {
 
 			return m_gradient;
 		}
+
+		struct serializer
+		{
+			typedef _Self value;
+			enum : size_t { serialized_data_size = _serializer_impl::serialized_data_size };
+
+			static void read(
+				std::istream& in,
+				value&)
+			{
+				_serializer_impl::read(in);
+			}
+
+			static void write(
+				std::ostream& out,
+				const value&)
+			{
+				_serializer_impl::write(out);
+			}
+		};
 
 	private:
 		static double logistic(const double& x)

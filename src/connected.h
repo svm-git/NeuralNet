@@ -25,6 +25,7 @@ SOFTWARE.
 #pragma once
 
 #include "layer.h"
+#include "serialization.h"
 
 namespace neural_network {
 
@@ -43,6 +44,14 @@ namespace neural_network {
 			algebra::_dimension<_OutputMetrics, 0>::size>::tensor_type _Weights;
 		typedef typename algebra::metrics<algebra::_dimension<_OutputMetrics, 0>::size>::tensor_type _Bias;
 	
+		typedef typename serialization::chunk_serializer<
+			serialization::chunk_types::fully_connected_layer,
+			serialization::composite_serializer<
+				serialization::tensor_serializer<_Weights>,
+				serialization::tensor_serializer<_Bias>,
+				serialization::value_serializer<double>>
+		> _serializer_impl;
+
 		fully_connected(
 			const double regularization = 0.000001)
 			: _Base(), m_input(), m_weights(), m_bias(), m_biasGradient(), m_regularization(regularization)
@@ -113,6 +122,27 @@ namespace neural_network {
 				m_bias(j) += (m_biasGradient(j) + m_regularization * m_bias(j)) * rate;
 			}
 		}
+
+		struct serializer
+		{
+			typedef _Self value;
+
+			enum : size_t { serialized_data_size = _serializer_impl::serialized_data_size };
+
+			static void read(
+				std::istream& in,
+				_Self& layer)
+			{
+				_serializer_impl::read(in, layer.m_weights, layer.m_bias, layer.m_regularization);
+			}
+
+			static void write(
+				std::ostream& out,
+				const _Self& layer)
+			{
+				_serializer_impl::write(out, layer.m_weights, layer.m_bias, layer.m_regularization);
+			}
+		};
 
 	private:
 		input m_input;

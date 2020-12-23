@@ -25,6 +25,8 @@ SOFTWARE.
 #include "stdafx.h"
 
 #include "unittest.h"
+#include "serializationtest.h"
+
 #include "..\src\connected.h"
 
 void test_connected()
@@ -40,6 +42,8 @@ void test_connected()
 	_3::tensor_type ret = layer.process(tmp);
 	layer.compute_gradient(ret);
 	layer.update_weights(0.9);
+
+	test_layer_serialization("Fully Connected Layer Serialization Tests", layer);
 
 	sc.pass();
 }

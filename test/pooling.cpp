@@ -27,6 +27,8 @@ SOFTWARE.
 #include <random>
 
 #include "unittest.h"
+#include "serializationtest.h"
+
 #include "..\src\pooling.h"
 
 void test_pooling()
@@ -57,6 +59,8 @@ void test_pooling()
 
 		layer.compute_gradient(tmp);
 		layer.update_weights(0.1);
+
+		test_layer_serialization("1D Max Pooling Layer Serialization Tests", layer);
 	}
 
 	{
@@ -74,6 +78,8 @@ void test_pooling()
 
 		layer.compute_gradient(tmp);
 		layer.update_weights(0.1);
+
+		test_layer_serialization("2D Max Pooling Layer Serialization Tests", layer);
 	}
 
 	{
@@ -92,6 +98,8 @@ void test_pooling()
 
 		layer.compute_gradient(tmp);
 		layer.update_weights(0.1);
+
+		test_layer_serialization("3D Max Pooling Layer Serialization Tests", layer);
 	}
 
 	{
@@ -111,6 +119,8 @@ void test_pooling()
 
 		layer.compute_gradient(tmp);
 		layer.update_weights(0.1);
+
+		test_layer_serialization("4D Max Pooling Layer Serialization Tests", layer);
 	}
 
 	{
@@ -130,6 +140,8 @@ void test_pooling()
 
 		layer.compute_gradient(tmp);
 		layer.update_weights(0.1);
+
+		test_layer_serialization("1D Max Pooling With Core Layer Serialization Tests", layer);
 	}
 
 	{
@@ -150,6 +162,8 @@ void test_pooling()
 
 		layer.compute_gradient(tmp);
 		layer.update_weights(0.1);
+
+		test_layer_serialization("2D Max Pooling With Core Layer Serialization Tests", layer);
 	}
 
 	{
@@ -171,6 +185,8 @@ void test_pooling()
 
 		layer.compute_gradient(tmp);
 		layer.update_weights(0.1);
+
+		test_layer_serialization("3D Max Pooling With Core Layer Serialization Tests", layer);
 	}
 
 	sc.pass();
