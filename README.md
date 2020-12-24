@@ -206,64 +206,64 @@ The network ensemble is compatible with a layer interface, and can be used as a 
 		
         // Dense layer with ReLU activation
         neural_network::make_network(
-			neural_network::make_reshape_layer<_4x2, _8>(),
-			neural_network::make_fully_connected_layer<_8, _8>(
-				random_values, 0.00005),
-			neural_network::make_relu_activation_layer<_8>(),
-			neural_network::make_reshape_layer<_8, _4x2>()
-		),
+            neural_network::make_reshape_layer<_4x2, _8>(),
+            neural_network::make_fully_connected_layer<_8, _8>(
+                random_values, 0.00005),
+            neural_network::make_relu_activation_layer<_8>(),
+            neural_network::make_reshape_layer<_8, _4x2>()
+        ),
 
-		// Ensemble of 3 networks
-		neural_network::make_ensemble(
+        // Ensemble of 3 networks
+        neural_network::make_ensemble(
 
-			// Network with a single dense layer
-			neural_network::make_network(
-				neural_network::make_reshape_layer<_4x2, _8>(),
-				neural_network::make_fully_connected_layer<_8, _4>(
-					random_values, 0.00003),
-				neural_network::make_relu_activation_layer<_4>(),
-				neural_network::make_reshape_layer<_4, _2x2>()
-			),
+            // Network with a single dense layer
+            neural_network::make_network(
+                neural_network::make_reshape_layer<_4x2, _8>(),
+                neural_network::make_fully_connected_layer<_8, _4>(
+                    random_values, 0.00003),
+                neural_network::make_relu_activation_layer<_4>(),
+                neural_network::make_reshape_layer<_4, _2x2>()
+            ),
 
-			// Network with two dense layers
-			neural_network::make_network(
-				neural_network::make_reshape_layer<_4x2, _8>(),
-				neural_network::make_fully_connected_layer<_8, _5>(
-					random_values, 0.00001),
-				neural_network::make_relu_activation_layer<_5>(),
-				neural_network::make_fully_connected_layer<_5, _4>(
-					random_values, 0.00002),
-				neural_network::make_relu_activation_layer<_4>(),
-				neural_network::make_reshape_layer<_4, _2x2>()
-			),
+            // Network with two dense layers
+            neural_network::make_network(
+                neural_network::make_reshape_layer<_4x2, _8>(),
+                neural_network::make_fully_connected_layer<_8, _5>(
+                    random_values, 0.00001),
+                neural_network::make_relu_activation_layer<_5>(),
+                neural_network::make_fully_connected_layer<_5, _4>(
+                    random_values, 0.00002),
+                neural_network::make_relu_activation_layer<_4>(),
+                neural_network::make_reshape_layer<_4, _2x2>()
+            ),
 
-			// Network with three dense layers
-			neural_network::make_network(
-				neural_network::make_reshape_layer<_4x2, _8>(),
-				neural_network::make_fully_connected_layer<_8, _7>(
-					random_values, 0.00001),
-				neural_network::make_relu_activation_layer<_7>(),
-				neural_network::make_fully_connected_layer<_7, _5>(
-					random_values, 0.00002),
-				neural_network::make_relu_activation_layer<_5>(),
-				neural_network::make_fully_connected_layer<_5, _4>(
-					random_values, 0.00003),
-				neural_network::make_relu_activation_layer<_4>(),
-				neural_network::make_reshape_layer<_4, _2x2>()
-			)
-		),
+            // Network with three dense layers
+            neural_network::make_network(
+                neural_network::make_reshape_layer<_4x2, _8>(),
+                neural_network::make_fully_connected_layer<_8, _7>(
+                    random_values, 0.00001),
+                neural_network::make_relu_activation_layer<_7>(),
+                neural_network::make_fully_connected_layer<_7, _5>(
+                    random_values, 0.00002),
+                neural_network::make_relu_activation_layer<_5>(),
+                neural_network::make_fully_connected_layer<_5, _4>(
+                    random_values, 0.00003),
+                neural_network::make_relu_activation_layer<_4>(),
+                neural_network::make_reshape_layer<_4, _2x2>()
+            )
+        ),
 
-		// Combine the ensemble output
-		neural_network::make_max_pooling_layer<_3x2x2>(),
+        // Combine the ensemble output
+        neural_network::make_max_pooling_layer<_3x2x2>(),
 		
-		// Final dense layer with Logistic activation
-		neural_network::make_network(
-			neural_network::make_reshape_layer<_2x2, _4>(),
-			neural_network::make_fully_connected_layer<_4, _4>(
-				random_values, 0.00003),
-			neural_network::make_logistic_activation_layer<_4>()
-		)
-	);
+        // Final dense layer with Logistic activation
+        neural_network::make_network(
+            neural_network::make_reshape_layer<_2x2, _4>(),
+            neural_network::make_fully_connected_layer<_4, _4>(
+                random_values, 0.00003),
+            neural_network::make_logistic_activation_layer<_4>()
+        )
+    );
 
 ## Model Serialization
 
