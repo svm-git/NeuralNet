@@ -11,7 +11,7 @@ Library of building blocks for configuring, training, applying and persisting de
 
 ## Neural Networks
 
-At a high level, in NeuralNet library a neural network comprises:
+At a high level, in NeuralNet library a neural network comprises of:
 - Interconnected *layers* of neurons.
 - The *architecture*, which defines the logical structure of the network. The topology defines layers with their parameters and describes the connections between those layers.
 - The *model*, which contains information about layer structures and all the data associated with the layers and about weights and biases to be optimized.
