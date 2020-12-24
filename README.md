@@ -35,7 +35,7 @@ The NeuralNet library allows you to define tensors with arbitrary number of rank
 
 When multiple layers are connected to each other using the *neural_network::make_network* function, the output data from a layer is passed as input into the next layer. The type of input tensor of the very first layer defines the type of the input tensor for the entire network, and the type of output tensor of the very last layer defines the network output tensor. The library automatically verifies that output tensor of a hidden layer has the same rank and dimensions as the input tensor of the next layer in the network. If a compatibility problem is detected, it results in a compilation error with the additional information that explains the problem.
 
-For example, a simple network that accepts a rank 1 tensor with 10 elements, consists of two fully connected layers with 5 and 4 neurons and uses logistic activation function between the layers can be defined as following:
+For example, a simple network that accepts a rank-1 tensor with 10 elements, consists of two fully connected layers with 5 and 4 neurons and uses logistic activation function between the layers can be defined as following:
 
     typedef neural_network::algebra::metrics<4> _4;
     typedef neural_network::algebra::metrics<5> _5;
@@ -114,7 +114,7 @@ Logistic activation layer applies logistic function f(x) = 1 / (1 + exp(-x)) to 
 
 The NeuralNet library supports two types of max pooling layers.
 
-A layer that reduces the rank of the input tensor by selecting the largest element within all subtensors of the smaller rank. For example, given a 3 x 10 x 4 input tensor, the layer computes the 10 x 4 output tensor by selecting the largest of the elements with the same indices in the 3 subtensors with 10 x 4 elements. This type of layer is best used together with network ensembles to combine the output of several networks into a single tensor. This layer supports input tensors of all ranks and dimensions.
+A layer that reduces the rank of the input tensor by selecting the largest element within all subtensors of the smaller rank. For example, given a 3 x 10 x 4 input tensor, the layer computes the 10 x 4 output tensor by selecting the largest of the elements with the same indices in the 3 subtensors with 10 x 4 elements. This type of layer is best used together with [network ensembles](#network-ensebles) to combine the output of several networks into a single tensor. This layer supports input tensors of all ranks and dimensions.
 
 To create this layer, use *neural_network::make_max_pooling_layer* helper function without any parameters:
 
