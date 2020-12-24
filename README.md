@@ -48,7 +48,7 @@ where *input* is the input tensor; *truth* is the desired output tensor value fo
 
 The NeuralNet library uses backprogapation method to train the network and adjust weights of the inner layers. Each invocation of the *train* method represents a single application of backpropagation algorithm, where input tensor is processed by the network, a loss function gradient is computed, and layer weights are updated to reduce the loss.
 
-To use the network for prediction you need to use its *process* member function:
+To use the network for prediction you should use its *process* member function:
 
     auto result = network.process(input);
 
@@ -62,9 +62,97 @@ The NeuralNet library supports these layers:
 - Activation layers
   - ReLU activation layer
   - Logistic activation layer
-- Max Pooling layers
+- Max pooling layers
 - Convolution layers
 - Service layers
   - Reshape layer
 - Loss layers
   - Squared error loss layer
+
+### Fully Connected Layer
+
+Fully connected layer computes an inner product of a weighted sum of inputs plus bias for each element of the output tensor. The fully connected layer supports only a rank-1 tensors for input and output, and it is best to use a reshape layer to transform tensors of a higher rank.
+
+To create a new instance of a fully connected layer, use *make_fully_connected_layer* helper function. You can also customize the initial weights and regularization parameter of the layer. This example creates a fully connected layer with 10 input and 5 output neurons and initializes its weights and bias with a uniformly distributed random values in range -0.5..0.5, and configures regularization to 0.00003.
+
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<double> distr(-0.5, 0.5);
+
+    auto random_values = [&distr, &gen]() { return distr(gen); };
+
+    typedef neural_network::algebra::metrics<10> _Input;
+    typedef neural_network::algebra::metrics<5> _Output;
+    
+    auto layer = neural_network::make_fully_connected_layer<_Input, _Output>(
+        random_values, 0.00003);
+
+### ReLU Activation Layer
+
+ReLU activation layer applies Rectifier Linear Unit (ReLU) function to all elements of the input tensor, and produces the output tensor that has the same rank and dimensions. ReLU activation layer supports tensors of any rank and dimensions. This example create a ReLU activation layer for a rank-3 tensor with 15 x 15 x 3 elements.
+
+    typedef neural_network::algebra::metrics<15, 15, 3> _Input;
+    
+    auto layer = neural_network::make_relu_activation_layer<_Input>();
+    
+### Logistic Activation Layer
+
+Logistic activation layer applies logistic function f(x) = 1 / (1 + exp(-x)) to all elements of the input tensor, and produces the output tensor that has the same rank and dimensions. Logistic activation layer supports tensors of any rank and dimensions. This example create a logistic activation layer for a rank-2 tensor with 10 x 7 elements.
+
+    typedef neural_network::algebra::metrics<10, 7> _Input;
+    
+    auto layer = neural_network::make_logistic_activation_layer<_Input>();
+
+### Max Pooling Layers
+
+The NeuralNet library supports two types of max pooling layers.
+
+A layer that reduces the rank of the input tensor by selecting the largest element within all subtensors of the smaller rank. For example, given a 3 x 10 x 4 input tensor, the layer computes the 10 x 4 output tensor by selecting the largest of the elements with the same indices in the 3 subtensors with 10 x 4 elements. This type of layer is best used together with network ensembles to combine the output of several networks into a single tensor. This layer supports input tensors of all ranks and dimensions.
+
+To create this layer, use *make_max_pooling_layer* helper function without any parameters:
+
+    typedef neural_network::algebra::metrics<4, 3, 2> _Input;
+
+    auto layer = neural_network::make_max_pooling_layer<_Input>();
+
+A downsampling layer that selects a maximum element within the given core, and applies the core repeatedly by shifting it by the given stride. For example, given an input tensor of 11 x 11 elements, a core of 3 x 3, and stride of 2 x 2, the layer produces an output tensor with 5 x 5 elements. This layer supports only tensors with ranks 1, 2, and 3, and requires that rank of core and stride parameters is the same as the rank of the input tensor.
+
+The layer also verifies that when a given core and stride parameters are applied, then all elements of the input tensors are used, and there is no padding is needed. In other words, for each corresponding dimension of the input, core, and stride metrics this equation is true: *input_size - core_size = n * stride_size* for some integer value *n* > 0.
+
+To create this layer, use *make_max_pooling_layer* helper function and specify the core and stride as template parameters:
+
+    typedef neural_network::algebra::metrics<7, 8> _Input;
+    typedef neural_network::algebra::metrics<3, 2> _Core;
+    typedef neural_network::algebra::metrics<2, 2> _Stride;
+
+    auto layer = neural_network::make_max_pooling_layer<_Input, _Core, _Stride>();
+
+### Convolution layers
+
+Convolution layer is another type of downsampling layers which applies multiple convolution kernels of a given size with a given stride. The layer supports only tensors with ranks 1, 2, and 3, and requires that rank of core and stride parameters is the same as the rank of the input tensor. The layer produces an output tensor with a rank that is input tensor rank + 1, and has as many dimensions in the first rank as there are kernels. For example, a convolution tensor that is applied to a rank-2 input tensor with 19 x 19 elements, with a 3 x 3 core and 2 x 1 stride and 5 kernels produces an output tensor with 5 x 9 x 17 elements.
+
+The layer also verifies that when a given core and stride parameters are applied, then all elements of the input tensors are used, and there is no padding is needed. In other words, for each corresponding dimension of the input, core, and stride metrics this equation is true: *input_size - core_size = n * stride_size* for some integer value *n* > 0.
+
+To create a convolution layer, use *make_convolution_layer* helper function, and specify core, stride and the number of kernels as template parameters. This example create an convolution layer that can be applied to a rank-3 tensor with 11 x 11 x 3 elements, with a 3 x 3 x 3 core, 2 x 2 x 1 stride, and 7 kernels. The kernel weights are initialized with uniformly distributed random values in the -0.5..0.5 range. The layer produces a rank-4 output tensor with 7 x 5 x 5 x 2 elements.
+
+    typedef neural_network::algebra::metrics<11, 11, 3> _Input;
+    typedef neural_network::algebra::metrics<3, 3, 2> _Core;
+    typedef neural_network::algebra::metrics<2, 2, 1> _Stride;
+    const size_t _Kernels = 7;
+
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<double> distr(-0.5, 0.5);
+
+    auto random_values = [&distr, &gen]() { return distr(gen); };
+    
+    auto layer = neural_network::make_convolution_layer<_Input, _Core, _Stride, _Kernels>(random_values);
+
+### Reshape Layer
+
+Reshape layer is a utility layer that changes the rank and dimensions of an input tensor without loosing the data. To create a reshape layer, use *make_reshape_layer* helper function, and specify the input and output metrics. The layer verifies that the total number of elements in the output tensor is exactly the same as the total number of elements in the input tensor. For example, a rank-3 with 10 x 5 x 3 elements can be reshaped into a rank-2 tensor with 25 x 6 elements, or a rank-1 tensor with 150 elements.
+
+    typedef neural_network::algebra::metrics<3, 2, 1> _Input;
+    typedef neural_network::algebra::metrics<6> _Output;
+
+    auto layer = neural_network::make_reshape_layer<_Input, _Output>();
