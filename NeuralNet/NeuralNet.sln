@@ -5,6 +5,8 @@ VisualStudioVersion = 12.0.31101.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NeuralNet", "NeuralNet.vcxproj", "{69AED594-3C9C-406F-A2EC-A4D397C86CBA}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DigitRecognition", "..\samples\DigitRecognition\DigitRecognition.vcxproj", "{DB0E9F29-82F0-49CA-9D40-546CCFFC3A74}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -21,6 +23,14 @@ Global
 		{69AED594-3C9C-406F-A2EC-A4D397C86CBA}.Release|Win32.Build.0 = Release|Win32
 		{69AED594-3C9C-406F-A2EC-A4D397C86CBA}.Release|x64.ActiveCfg = Release|x64
 		{69AED594-3C9C-406F-A2EC-A4D397C86CBA}.Release|x64.Build.0 = Release|x64
+		{DB0E9F29-82F0-49CA-9D40-546CCFFC3A74}.Debug|Win32.ActiveCfg = Debug|Win32
+		{DB0E9F29-82F0-49CA-9D40-546CCFFC3A74}.Debug|Win32.Build.0 = Debug|Win32
+		{DB0E9F29-82F0-49CA-9D40-546CCFFC3A74}.Debug|x64.ActiveCfg = Debug|x64
+		{DB0E9F29-82F0-49CA-9D40-546CCFFC3A74}.Debug|x64.Build.0 = Debug|x64
+		{DB0E9F29-82F0-49CA-9D40-546CCFFC3A74}.Release|Win32.ActiveCfg = Release|Win32
+		{DB0E9F29-82F0-49CA-9D40-546CCFFC3A74}.Release|Win32.Build.0 = Release|Win32
+		{DB0E9F29-82F0-49CA-9D40-546CCFFC3A74}.Release|x64.ActiveCfg = Release|x64
+		{DB0E9F29-82F0-49CA-9D40-546CCFFC3A74}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

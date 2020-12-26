@@ -125,11 +125,14 @@ namespace neural_network {
 		}
 
 		void compute_gradient(
+			const input& in,
 			const output& grad,
 			input& result,
+			kernel_weights& kernelGradient,
 			bias& biasGradient)
 		{
 			result.fill(0.0);
+			kernelGradient.fill(0.0);
 
 			for (size_t kernel = 0; kernel < grad.size<0>(); ++kernel)
 			{
@@ -145,6 +148,7 @@ namespace neural_network {
 					for (size_t i = 0; i < algebra::_dimension<_Core, 0>::size; ++i)
 					{
 						result(baseX + i) += g * m_weights.m_kernels(kernel, i);
+						kernelGradient(kernel, i) += g * in(baseX + i);
 					}
 				}
 
@@ -153,21 +157,15 @@ namespace neural_network {
 		}
 
 		void update_weights(
-			const input& in,
-			const input& gradient,
+			const kernel_weights& kernelGradient,
 			const bias& biasGradient,
 			const double rate)
 		{
-			for (size_t kernel = 0; kernel < m_weights.m_bias.size<0>(); ++kernel)
+			for (size_t kernel = 0; kernel < m_weights.m_kernels.size<0>(); ++kernel)
 			{
-				for (size_t stride = 0; stride < algebra::_dimension<_convolution, 0>::size; ++stride)
+				for (size_t x = 0; x < m_weights.m_kernels.size<1>(); ++x)
 				{
-					const size_t baseX = stride * algebra::_dimension<_Stride, 0>::size;
-
-					for (size_t x = 0; x < m_weights.m_kernels.size<1>(); ++x)
-					{
-						m_weights.m_kernels(kernel, x) += in(baseX + x) * gradient(baseX + x) * rate;
-					}
+					m_weights.m_kernels(kernel, x) += kernelGradient(kernel, x) * rate;
 				}
 
 				m_weights.m_bias(kernel) += biasGradient(kernel) * rate;
@@ -232,11 +230,14 @@ namespace neural_network {
 		}
 
 		void compute_gradient(
+			const input& in,
 			const output& grad,
 			input& result,
+			kernel_weights& kernelGradient,
 			bias& biasGradient)
 		{
 			result.fill(0.0);
+			kernelGradient.fill(0.0);
 
 			for (size_t kernel = 0; kernel < grad.size<0>(); ++kernel)
 			{
@@ -257,6 +258,7 @@ namespace neural_network {
 							for (size_t j = 0; j < algebra::_dimension<_Core, 1>::size; ++j)
 							{
 								result(baseX + i, baseY + j) += g * m_weights.m_kernels(kernel, i, j);
+								kernelGradient(kernel, i, j) += g * in(baseX + i, baseY + j);
 							}
 						}
 					}
@@ -267,27 +269,17 @@ namespace neural_network {
 		}
 
 		void update_weights(
-			const input& in,
-			const input& gradient,
+			const kernel_weights& kernelGradient,
 			bias& biasGradient,
 			const double rate)
 		{
 			for (size_t kernel = 0; kernel < m_weights.m_bias.size<0>(); ++kernel)
 			{
-				for (size_t strideX = 0; strideX < algebra::_dimension<_convolution, 0>::size; ++strideX)
+				for (size_t x = 0; x < m_weights.m_kernels.size<1>(); ++x)
 				{
-					for (size_t strideY = 0; strideY < algebra::_dimension<_convolution, 1>::size; ++strideY)
+					for (size_t y = 0; y < m_weights.m_kernels.size<2>(); ++y)
 					{
-						const size_t baseX = strideX * algebra::_dimension<_Stride, 0>::size;
-						const size_t baseY = strideY * algebra::_dimension<_Stride, 1>::size;
-
-						for (size_t x = 0; x < m_weights.m_kernels.size<1>(); ++x)
-						{ 
-							for (size_t y = 0; y < m_weights.m_kernels.size<2>(); ++y)
-							{
-								m_weights.m_kernels(kernel, x, y) += in(baseX + x, baseY + y) * gradient(baseX + x, baseY + y) * rate;
-							}
-						}
+						m_weights.m_kernels(kernel, x, y) += kernelGradient(kernel, x, y) * rate;
 					}
 				}
 
@@ -360,11 +352,14 @@ namespace neural_network {
 		}
 
 		void compute_gradient(
+			const input& in,
 			const output& grad,
 			input& result,
+			kernel_weights& kernelGradient,
 			bias& biasGradient)
 		{
 			result.fill(0.0);
+			kernelGradient.fill(0.0);
 
 			for (size_t kernel = 0; kernel < grad.size<0>(); ++kernel)
 			{
@@ -390,6 +385,7 @@ namespace neural_network {
 									for (size_t k = 0; k < algebra::_dimension<_Core, 2>::size; ++k)
 									{
 										result(baseX + i, baseY + j, baseZ + k) += g * m_weights.m_kernels(kernel, i, j, k);
+										kernelGradient(kernel, i, j, k) += g * in(baseX + i, baseY + j, baseZ + k);
 									}
 								}
 							}
@@ -402,33 +398,19 @@ namespace neural_network {
 		}
 
 		void update_weights(
-			const input& in,
-			const input& gradient,
+			const kernel_weights& kernelGradient,
 			const bias& biasGradient,
 			const double rate)
 		{
 			for (size_t kernel = 0; kernel < m_weights.m_bias.size<0>(); ++kernel)
 			{
-				for (size_t strideX = 0; strideX < algebra::_dimension<_convolution, 0>::size; ++strideX)
+				for (size_t x = 0; x < m_weights.m_kernels.size<1>(); ++x)
 				{
-					for (size_t strideY = 0; strideY < algebra::_dimension<_convolution, 1>::size; ++strideY)
+					for (size_t y = 0; y < m_weights.m_kernels.size<2>(); ++y)
 					{
-						for (size_t strideZ = 0; strideZ < algebra::_dimension<_convolution, 2>::size; ++strideZ)
+						for (size_t z = 0; z < m_weights.m_kernels.size<3>(); ++z)
 						{
-							const size_t baseX = strideX * algebra::_dimension<_Stride, 0>::size;
-							const size_t baseY = strideY * algebra::_dimension<_Stride, 1>::size;
-							const size_t baseZ = strideZ * algebra::_dimension<_Stride, 2>::size;
-
-							for (size_t x = 0; x < m_weights.m_kernels.size<1>(); ++x)
-							{
-								for (size_t y = 0; y < m_weights.m_kernels.size<2>(); ++y)
-								{
-									for (size_t z = 0; z < m_weights.m_kernels.size<3>(); ++z)
-									{
-										m_weights.m_kernels(kernel, x, y, z) += in(baseX + x, baseY + y, baseZ + z) * gradient(baseX + x, baseY + y, baseZ + z) * rate;
-									}
-								}
-							}
+							m_weights.m_kernels(kernel, x, y, z) += kernelGradient(kernel, x, y, z) * rate;
 						}
 					}
 				}
@@ -468,7 +450,6 @@ namespace neural_network {
 		typedef typename impl::serializer _serializer_impl;
 
 		typedef typename layer_base<_InputMetrics, typename impl::output::metrics> _Base;
-		typedef typename impl::bias _Bias;
 
 		convolution()
 			: _Base(), m_impl(), m_input(), m_biasGradient()
@@ -490,8 +471,10 @@ namespace neural_network {
 		const input& compute_gradient(const output& grad)
 		{
 			m_impl.compute_gradient(
+				m_input,
 				grad,
 				m_gradient,
+				m_kernleGradient,
 				m_biasGradient);
 
 			return m_gradient;
@@ -501,8 +484,7 @@ namespace neural_network {
 			const double rate)
 		{
 			m_impl.update_weights(
-				m_input,
-				m_gradient,
+				m_kernleGradient,
 				m_biasGradient,
 				rate);
 		}
@@ -532,6 +514,7 @@ namespace neural_network {
 		impl m_impl;
 		input m_input;
 		typename impl::bias m_biasGradient;
+		typename impl::kernel_weights m_kernleGradient;
 	};
 
 	template <class _Input, class _Core, class _Stride, const size_t _Kernels, class... _Args>

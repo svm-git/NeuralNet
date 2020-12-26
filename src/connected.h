@@ -54,14 +54,14 @@ namespace neural_network {
 
 		fully_connected(
 			const double regularization = 0.000001)
-			: _Base(), m_input(), m_weights(), m_bias(), m_biasGradient(), m_regularization(regularization)
+				: _Base(), m_input(), m_weights(), m_weightsGradient(), m_bias(), m_biasGradient(), m_regularization(regularization)
 		{
 		}
 
 		fully_connected(
 			std::function<double()> initializer,
 			const double regularization = 0.000001)
-				: _Base(), m_input(), m_weights(initializer), m_bias(initializer), m_biasGradient(), m_regularization(regularization)
+				: _Base(), m_input(), m_weights(initializer), m_weightsGradient(), m_bias(initializer), m_biasGradient(), m_regularization(regularization)
 		{
 		}
 
@@ -91,6 +91,8 @@ namespace neural_network {
 				for (size_t j = 0; j < grad.size<0>(); ++j)
 				{
 					sum += m_weights(i, j) * grad(j);
+					
+					m_weightsGradient(i, j) = m_input(i) * grad(j);
 				}
 
 				m_gradient(i) = sum;
@@ -109,11 +111,9 @@ namespace neural_network {
 		{
 			for (size_t i = 0; i < m_input.size<0>(); ++i)
 			{
-				const double factor = m_input(i) * rate;
-
 				for (size_t j = 0; j < m_output.size<0>(); ++j)
 				{
-					m_weights(i, j) += (m_gradient(i) + m_regularization * m_weights(i, j)) * factor;
+					m_weights(i, j) += (m_weightsGradient(i, j) + m_regularization * m_weights(i, j)) * rate;
 				}
 			}
 
@@ -147,6 +147,7 @@ namespace neural_network {
 	private:
 		input m_input;
 		_Weights m_weights;
+		_Weights m_weightsGradient;
 		_Bias m_bias;
 		_Bias m_biasGradient;
 		double m_regularization;
