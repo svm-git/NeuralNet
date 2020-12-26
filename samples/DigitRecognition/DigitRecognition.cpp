@@ -208,6 +208,163 @@ void test_success_rate(
 		<< "%\r\n";
 }
 
+template <class Network>
+int train_network(
+	Network& network,
+	arguments& args,
+	mnist_data& full,
+	std::mt19937& gen)
+{
+	std::uniform_real_distribution<double> distr(0, 1);
+
+	mnist_data training;
+	mnist_data test;
+
+	while (full.size() > 0)
+	{
+		int digitId = full.back().first;
+
+		size_t segment = full.size();
+		while (segment > 0 && digitId == full[segment - 1].first)
+		{
+			--segment;
+		}
+
+		while (full.size() > segment)
+		{
+			size_t segmentSize = full.size() - segment;
+			size_t nextIndex = segment + (size_t)(((double)segmentSize) * distr(gen));
+
+			if (segmentSize > 1)
+			{
+				std::swap(full[nextIndex], full[full.size() - 1]);
+			}
+
+			if ((full.size() % 100) < args.training_percent)
+			{
+				training.push_back(full.back());
+			}
+			else
+			{
+				test.push_back(full.back());
+			}
+
+			full.pop_back();
+		}
+	}
+
+	neural_network::squared_error_loss<output_metrics> loss;
+
+	//test_success_rate(network, training, "Untrained");
+	std::cout
+		<< "Training new model on MNIST data set.\r\n"
+		<< "Epochs: " << args.epochs << "; training set: " << training.size() << " images; test set: " << test.size() << " images."
+		<< "\r\n";
+
+	std::vector<double> rates = get_learning_rates(args.start_rate, args.epoch_step, args.epochs);
+
+	std::vector<const mnist_digit*> input;
+
+	// Training
+	for (auto rate : rates)
+	{
+		std::cout << "Epoch: " << (std::find(rates.cbegin(), rates.cend(), rate) - rates.cbegin()) << "; learning rate: " << rate << "\r\n";
+
+		for (int i = 0; i < 1; ++i)
+		{
+			input.resize(training.size());
+			std::transform(
+				training.cbegin(), training.cend(),
+				input.begin(),
+				[](const mnist_digit& digit) { return std::addressof(digit); });
+
+			while (input.size() > 0)
+			{
+				size_t nextIndex = (size_t)(((double)input.size()) * distr(gen));
+				const mnist_digit* digit = input[nextIndex];
+
+				if (input.size() > 1)
+				{
+					std::swap(input[nextIndex], input[input.size() - 1]);
+				}
+				input.pop_back();
+
+				network.train(digit->second, get_target(digit->first), loss, rate);
+			}
+		}
+
+		test_success_rate(network, training, "Training set");
+		test_success_rate(network, test, "Test set");
+	}
+
+	if (args.model_path.size() > 0)
+	{
+		std::wcout 
+			<< L"Saving model to file '" << args.model_path.c_str() << L"' (" 
+			<< neural_network::serialization::model_size(network) << L" bytes)"
+			<<"\r\n";
+
+		try
+		{
+			std::ofstream outfile = std::ofstream(args.model_path, std::ios::out | std::ios::binary | std::ios::ate);
+
+			neural_network::serialization::write(outfile, network);
+			outfile.flush();
+			outfile.close();
+		}
+		catch (const std::exception& ex)
+		{
+			std::wcout << L"Cannot write to file '" << args.model_path.c_str() << "'\r\n";
+			std::cout << "Exception: " << ex.what() << "'\r\n";
+
+			return 3;
+		}
+	}
+
+	return 0;
+}
+
+template <class Network>
+int test_network(
+	Network& network,
+	arguments& args,
+	mnist_data& full)
+{
+	bool modelLoaded = false;
+
+	std::ifstream infile = std::ifstream(args.model_path, std::ios::in | std::ios::binary);
+	if (infile.is_open())
+	{
+		try
+		{
+			infile.seekg(0, std::ios::beg);
+
+			neural_network::serialization::read(infile, network);
+			modelLoaded = true;
+		}
+		catch (const std::exception& ex)
+		{
+			std::wcout << L"Failure to load pretrained model from file '" << args.model_path.c_str() << "'\r\n";
+			std::cout << "Exception: " << ex.what() << "'\r\n";
+		}
+	}
+	else
+	{
+		std::wcout << "The file '" << args.model_path.c_str() << "' couldn't be read";
+	}
+
+	if (false == modelLoaded)
+	{
+		return 2;
+	}
+
+	std::wcout << "Running model '" << args.model_path.c_str() << "' on data set '" << args.mnist_path.c_str() << "'\r\n";
+
+	test_success_rate(network, full, "Model");
+
+	return 0;
+}
+
 int _tmain(int argc, _TCHAR* argv[])
 {
 	arguments args;
@@ -221,11 +378,11 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	std::random_device rd;
 	std::mt19937 gen(rd());
-	std::uniform_real_distribution<double> distr(0, 1);
 	std::uniform_real_distribution<double> weight_distr(-0.5, 0.5);
 
 	auto random_values = [&weight_distr, &gen]() { return weight_distr(gen); };
 
+	
 	typedef neural_network::algebra::metrics<2, 2> _2x2;
 	typedef neural_network::algebra::metrics<3, 10> _3x10;
 	typedef neural_network::algebra::metrics<14, 14> _14x14;
@@ -233,14 +390,22 @@ int _tmain(int argc, _TCHAR* argv[])
 	typedef neural_network::algebra::metrics<196> _196;
 	typedef neural_network::algebra::metrics<784> flat_digit_metrics;
 
-	typedef neural_network::algebra::metrics<1, 1> _1x1;
-	typedef neural_network::algebra::metrics<2, 2> _2x2;
-	typedef neural_network::algebra::metrics<8, 27, 27> _8x27x27;
-	typedef neural_network::algebra::metrics<1, 1, 1> _1x1x1;
+	const size_t nKernels = 48;
+	const size_t nKernels_2 = 24;
+
+	typedef neural_network::algebra::metrics<4, 4> _4x4;
+	typedef neural_network::algebra::metrics<3, 3> _3x3;
+	typedef neural_network::algebra::metrics<nKernels, 3, 3> _Kx3x3;
+	typedef neural_network::algebra::metrics<nKernels, 4, 4> _Kx4x4;
+	typedef neural_network::algebra::metrics<nKernels, 9, 9> _Kx9x9;
+	typedef neural_network::algebra::metrics<1, 3, 3> _1x3x3;
 	typedef neural_network::algebra::metrics<1, 2, 2> _1x2x2;
-	typedef neural_network::algebra::metrics<8, 26, 26> _8x26x26;
-	typedef neural_network::algebra::metrics<5408> _5408;
-	typedef neural_network::algebra::metrics<676> _676;
+	typedef neural_network::algebra::metrics<nKernels, 2, 2> _Kx2x2;
+	typedef neural_network::algebra::metrics<nKernels_2, 1, 2, 2> _K2x1x2x2;
+	typedef neural_network::algebra::metrics<nKernels_2, 2, 2> _K2x2x2;
+	typedef neural_network::algebra::metrics<2, 1, 1> _Pooling;
+	typedef neural_network::algebra::metrics<nKernels_2 / 2, 2, 2> _PoolingOut;
+	typedef neural_network::algebra::metrics<_PoolingOut::data_size> _Flat;
 
 	auto network = neural_network::make_network(
 		neural_network::make_ensemble(
@@ -264,12 +429,20 @@ int _tmain(int argc, _TCHAR* argv[])
 				neural_network::make_logistic_activation_layer<output_metrics>()
 			),
 			neural_network::make_network(
-				neural_network::make_convolution_layer<digit::metrics, _2x2, _1x1, 8>(
+				neural_network::make_convolution_layer<digit::metrics, _4x4, _3x3, nKernels>(
 					random_values),
-				neural_network::make_max_pooling_layer<_8x27x27, _1x2x2, _1x1x1>(),
-				neural_network::make_relu_activation_layer<_8x26x26>(),
-				neural_network::make_reshape_layer<_8x26x26, _5408>(),
-				neural_network::make_fully_connected_layer<_5408, output_metrics>(
+				neural_network::make_relu_activation_layer<_Kx9x9>(),
+				neural_network::make_max_pooling_layer<_Kx9x9, _1x3x3, _1x2x2>(),
+				neural_network::make_convolution_layer<_Kx4x4, _Kx2x2, _Kx2x2, nKernels_2>(
+					random_values),
+				neural_network::make_reshape_layer<_K2x1x2x2, _K2x2x2>(),
+				neural_network::make_relu_activation_layer<_K2x2x2>(),
+				neural_network::make_max_pooling_layer<_K2x2x2, _Pooling, _Pooling>(),
+				neural_network::make_reshape_layer<_PoolingOut, _Flat>(),
+				neural_network::make_fully_connected_layer<_Flat, output_metrics>(
+					random_values, 0.0003),
+				neural_network::make_relu_activation_layer<output_metrics>(),
+				neural_network::make_fully_connected_layer<output_metrics, output_metrics>(
 					random_values, 0.0003),
 				neural_network::make_logistic_activation_layer<output_metrics>()
 			)
@@ -279,137 +452,12 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	if (args.train)
 	{
-		mnist_data training;
-		mnist_data test;
-
-		while (full.size() > 0)
-		{
-			int digitId = full.back().first;
-
-			size_t segment = full.size();
-			while (segment > 0 && digitId == full[segment - 1].first)
-			{
-				--segment;
-			}
-
-			while (full.size() > segment)
-			{
-				size_t segmentSize = full.size() - segment;
-				size_t nextIndex = segment + (size_t)(((double)segmentSize) * distr(gen));
-
-				if (segmentSize > 1)
-				{
-					std::swap(full[nextIndex], full[full.size() - 1]);
-				}
-
-				if ((full.size() % 100) < args.training_percent)
-				{
-					training.push_back(full.back());
-				}
-				else
-				{
-					test.push_back(full.back());
-				}
-
-				full.pop_back();
-			}
-		}
-
-		neural_network::squared_error_loss<output_metrics> loss;
-
-		//test_success_rate(network, training, "Untrained");
-		std::cout
-			<< "Training new model on MNIST data set.\r\n"
-			<< "Epochs: " << args.epochs << "; training set: " << training.size() << " images; test set: " << test.size() << " images."
-			<< "\r\n";
-
-		std::vector<double> rates = get_learning_rates(args.start_rate, args.epoch_step, args.epochs);
-
-		std::vector<const mnist_digit*> input;
-
-		// Training
-		for (auto rate : rates)
-		{
-			std::cout << "Epoch: " << (std::find(rates.cbegin(), rates.cend(), rate) - rates.cbegin()) << "; learning rate: " << rate << "\r\n";
-
-			for (int i = 0; i < 1; ++i)
-			{
-				input.resize(training.size());
-				std::transform(
-					training.cbegin(), training.cend(),
-					input.begin(),
-					[](const mnist_digit& digit) { return std::addressof(digit); });
-
-				while (input.size() > 0)
-				{
-					size_t nextIndex = (size_t)(((double)input.size()) * distr(gen));
-					const mnist_digit* digit = input[nextIndex];
-
-					if (input.size() > 1)
-					{
-						std::swap(input[nextIndex], input[input.size() - 1]);
-					}
-					input.pop_back();
-
-					network.train(digit->second, get_target(digit->first), loss, rate);
-				}
-			}
-
-			test_success_rate(network, training, "Training set");
-			test_success_rate(network, test, "Test set");
-		}
-
-		if (args.model_path.size() > 0)
-		{
-			try
-			{
-				std::ofstream outfile = std::ofstream(args.model_path, std::ios::out | std::ios::binary | std::ios::ate);
-
-				neural_network::serialization::write(outfile, network);
-				outfile.flush();
-				outfile.close();
-			}
-			catch (const std::exception& ex)
-			{
-				std::wcout << L"Cannot write to file '" << args.model_path.c_str() << "'\r\n";
-				std::cout << "Exception: " << ex.what() << "'\r\n";
-			}
-		}
+		return train_network(network, args, full, gen);
 	}
 	else
 	{
-		bool modelLoaded = false;
-
-		std::ifstream infile = std::ifstream(args.model_path, std::ios::in | std::ios::binary);
-		if (infile.is_open())
-		{
-			try
-			{
-				infile.seekg(0, std::ios::beg);
-
-				neural_network::serialization::read(infile, network);
-				modelLoaded = true;
-			}
-			catch (const std::exception& ex)
-			{
-				std::wcout << L"Failure to load pretrained model from file '" << args.model_path.c_str() << "'\r\n";
-				std::cout << "Exception: " << ex.what() << "'\r\n";
-			}
-		}
-		else
-		{
-			std::wcout << "The file '" << args.model_path.c_str() << "' couldn't be read";
-		}
-
-		if (false == modelLoaded)
-		{
-			return 2;
-		}
-
-		std::wcout << "Running model '" << args.model_path.c_str() << "' on data set '" << args.mnist_path.c_str() << "'\r\n";
-		
-		test_success_rate(network, full, "Model");
+		return test_network(network, args, full);
 	}
-
+	
 	return 0;
 }
