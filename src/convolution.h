@@ -474,7 +474,7 @@ namespace neural_network {
 				m_input,
 				grad,
 				m_gradient,
-				m_kernleGradient,
+				m_kernelGradient,
 				m_biasGradient);
 
 			return m_gradient;
@@ -484,7 +484,7 @@ namespace neural_network {
 			const double rate)
 		{
 			m_impl.update_weights(
-				m_kernleGradient,
+				m_kernelGradient,
 				m_biasGradient,
 				rate);
 		}
@@ -514,7 +514,7 @@ namespace neural_network {
 		impl m_impl;
 		input m_input;
 		typename impl::bias m_biasGradient;
-		typename impl::kernel_weights m_kernleGradient;
+		typename impl::kernel_weights m_kernelGradient;
 	};
 
 	template <class _Input, class _Core, class _Stride, const size_t _Kernels, class... _Args>
