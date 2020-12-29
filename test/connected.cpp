@@ -33,13 +33,13 @@ void test_connected()
 {
 	scenario sc("Test for neural_network::fully_connected_layer");
 
-	typedef neural_network::algebra::metrics<3> _3;
-	typedef neural_network::algebra::metrics<5> _5;
+	typedef neural_network::algebra::metrics<3, 2, 1> _3x2x1;
+	typedef neural_network::algebra::metrics<5, 4> _5x4;
 
-	_5::tensor_type tmp;
-	auto layer = neural_network::make_fully_connected_layer<_5, _3>();
+	_5x4::tensor_type tmp;
+	auto layer = neural_network::make_fully_connected_layer<_5x4, _3x2x1>();
 	
-	_3::tensor_type ret = layer.process(tmp);
+	_3x2x1::tensor_type ret = layer.process(tmp);
 	layer.compute_gradient(ret);
 	layer.update_weights(0.9);
 

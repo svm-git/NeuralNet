@@ -47,25 +47,20 @@ void test_network()
 
 	typedef neural_network::algebra::metrics<4> _4;
 	typedef neural_network::algebra::metrics<5> _5;
-	typedef neural_network::algebra::metrics<10> _10;
 	typedef neural_network::algebra::metrics<5, 2> _5x2;
 	typedef neural_network::algebra::metrics<2, 2> _2x2;
 
 	auto net = neural_network::make_network(
 
-		neural_network::make_reshape_layer<_5x2, _10>(),
-
-		neural_network::make_fully_connected_layer<_10, _5>(
+		neural_network::make_fully_connected_layer<_5x2, _5>(
 			random_values, 0.00003),
 
 		neural_network::make_relu_activation_layer<_5>(),
 
-		neural_network::make_fully_connected_layer<_5, _4>(
+		neural_network::make_fully_connected_layer<_5, _2x2>(
 			random_values, 0.00005),
 
-		neural_network::make_logistic_activation_layer<_4>(),
-
-		neural_network::make_reshape_layer<_4, _2x2>()
+		neural_network::make_logistic_activation_layer<_2x2>()
 	);
 
 	_5x2::tensor_type input(random_values);

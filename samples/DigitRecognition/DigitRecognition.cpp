@@ -382,20 +382,16 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	auto random_values = [&weight_distr, &gen]() { return weight_distr(gen); };
 
-	
 	typedef neural_network::algebra::metrics<2, 2> _2x2;
 	typedef neural_network::algebra::metrics<3, 10> _3x10;
 	typedef neural_network::algebra::metrics<14, 14> _14x14;
 	typedef neural_network::algebra::metrics<49> _49;
-	typedef neural_network::algebra::metrics<196> _196;
-	typedef neural_network::algebra::metrics<784> flat_digit_metrics;
 
 	const size_t nKernels = 48;
 	const size_t nKernels_2 = 24;
 
 	typedef neural_network::algebra::metrics<4, 4> _4x4;
 	typedef neural_network::algebra::metrics<3, 3> _3x3;
-	typedef neural_network::algebra::metrics<nKernels, 3, 3> _Kx3x3;
 	typedef neural_network::algebra::metrics<nKernels, 4, 4> _Kx4x4;
 	typedef neural_network::algebra::metrics<nKernels, 9, 9> _Kx9x9;
 	typedef neural_network::algebra::metrics<1, 3, 3> _1x3x3;
@@ -405,13 +401,11 @@ int _tmain(int argc, _TCHAR* argv[])
 	typedef neural_network::algebra::metrics<nKernels_2, 2, 2> _K2x2x2;
 	typedef neural_network::algebra::metrics<2, 1, 1> _Pooling;
 	typedef neural_network::algebra::metrics<nKernels_2 / 2, 2, 2> _PoolingOut;
-	typedef neural_network::algebra::metrics<_PoolingOut::data_size> _Flat;
 
 	auto network = neural_network::make_network(
 		neural_network::make_ensemble(
 			neural_network::make_network(
-				neural_network::make_reshape_layer<digit::metrics, flat_digit_metrics>(),
-				neural_network::make_fully_connected_layer<flat_digit_metrics, _49>(
+				neural_network::make_fully_connected_layer<digit::metrics, _49>(
 					random_values, 0.0003),
 				neural_network::make_relu_activation_layer<_49>(),
 				neural_network::make_fully_connected_layer<_49, output_metrics>(
@@ -420,8 +414,7 @@ int _tmain(int argc, _TCHAR* argv[])
 			),
 			neural_network::make_network(
 				neural_network::make_max_pooling_layer<digit::metrics, _2x2, _2x2>(),
-				neural_network::make_reshape_layer<_14x14, _196>(),
-				neural_network::make_fully_connected_layer<_196, _49>(
+				neural_network::make_fully_connected_layer<_14x14, _49>(
 					random_values, 0.0003),
 				neural_network::make_relu_activation_layer<_49>(),
 				neural_network::make_fully_connected_layer<_49, output_metrics>(
@@ -438,8 +431,7 @@ int _tmain(int argc, _TCHAR* argv[])
 				neural_network::make_reshape_layer<_K2x1x2x2, _K2x2x2>(),
 				neural_network::make_relu_activation_layer<_K2x2x2>(),
 				neural_network::make_max_pooling_layer<_K2x2x2, _Pooling, _Pooling>(),
-				neural_network::make_reshape_layer<_PoolingOut, _Flat>(),
-				neural_network::make_fully_connected_layer<_Flat, output_metrics>(
+				neural_network::make_fully_connected_layer<_PoolingOut, output_metrics>(
 					random_values, 0.0003),
 				neural_network::make_relu_activation_layer<output_metrics>(),
 				neural_network::make_fully_connected_layer<output_metrics, output_metrics>(

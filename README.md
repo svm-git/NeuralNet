@@ -78,7 +78,7 @@ The NeuralNet library supports these layers:
 
 ### Fully Connected Layer
 
-Fully connected layer computes an inner product of a weighted sum of inputs plus bias for each element of the output tensor. The fully connected layer supports only a rank-1 tensors for input and output, and it is best to use a [reshape layer](#reshape-layer) to transform tensors of a higher rank into a rank-1 tensor.
+Fully connected layer computes an inner product of a weighted sum of inputs plus bias for each element of the output tensor.
 
 To create a new instance of a fully connected layer, use *neural_network::make_fully_connected_layer* helper function. You can also customize the initial weights and regularization parameter of the layer. This example creates a fully connected layer with 10 input and 5 output neurons and initializes its weights and bias with a uniformly distributed random values in range -0.5..0.5, and configures regularization to 0.00003.
 
@@ -164,7 +164,7 @@ Reshape layer is a utility layer that changes the rank and dimensions of an inpu
 
     auto layer = neural_network::make_reshape_layer<_Input, _Output>();
 
-Reshape layer can be used as an adapter layer between a [fully connected layer](#fully-connected-layer) and other types of layers.
+Reshape layer can be used as an adapter layer between different layers.
 
 ### Squared Error Loss
 

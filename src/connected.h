@@ -36,13 +36,13 @@ namespace neural_network {
 		typedef typename fully_connected<_InputMetrics, _OutputMetrics> _Self;
 		typedef typename layer_base<_InputMetrics, _OutputMetrics> _Base;
 
-		static_assert(input::rank == 1, "Multi-dimensional input is not supported in a fully connected layer.");
-		static_assert(output::rank == 1, "Multi-dimensional output is not supported in a fully connected layer.");
+		typedef typename algebra::metrics<input::data_size> reshaped_input;
+		typedef typename algebra::metrics<output::data_size> reshaped_output;
 
 		typedef typename algebra::metrics<
-			algebra::_dimension<_InputMetrics, 0>::size,
-			algebra::_dimension<_OutputMetrics, 0>::size>::tensor_type _Weights;
-		typedef typename algebra::metrics<algebra::_dimension<_OutputMetrics, 0>::size>::tensor_type _Bias;
+			reshaped_input::data_size,
+			reshaped_output::data_size>::tensor_type _Weights;
+		typedef typename reshaped_output::tensor_type _Bias;
 	
 		typedef typename serialization::chunk_serializer<
 			serialization::chunk_types::fully_connected_layer,
@@ -69,15 +69,18 @@ namespace neural_network {
 		{
 			m_input = input;
 
-			for (size_t j = 0; j < m_output.size<0>(); ++j)
+			reshaped_input::tensor_type rin = input.reshape<reshaped_input>();
+			reshaped_output::tensor_type rout = m_output.reshape<reshaped_output>();
+
+			for (size_t j = 0; j < rout.size<0>(); ++j)
 			{
 				double sum = 0.0;
-				for (size_t i = 0; i < input.size<0>(); ++i)
+				for (size_t i = 0; i < rin.size<0>(); ++i)
 				{
-					sum += m_weights(i, j) * input(i);
+					sum += m_weights(i, j) * rin(i);
 				}
 
-				m_output(j) = sum + m_bias(j);
+				rout(j) = sum + m_bias(j);
 			}
 
 			return m_output;
@@ -85,22 +88,26 @@ namespace neural_network {
 
 		const input& compute_gradient(const output& grad)
 		{
-			for (size_t i = 0; i < m_gradient.size<0>(); ++i)
+			reshaped_input::tensor_type rin = m_input.reshape<reshaped_input>();
+			reshaped_input::tensor_type rgradResult = m_gradient.reshape<reshaped_input>();
+			reshaped_output::tensor_type rgrad = grad.reshape<reshaped_output>();
+
+			for (size_t i = 0; i < rgradResult.size<0>(); ++i)
 			{
 				double sum = 0.0;
-				for (size_t j = 0; j < grad.size<0>(); ++j)
+				for (size_t j = 0; j < rgrad.size<0>(); ++j)
 				{
-					sum += m_weights(i, j) * grad(j);
+					sum += m_weights(i, j) * rgrad(j);
 					
-					m_weightsGradient(i, j) = m_input(i) * grad(j);
+					m_weightsGradient(i, j) = rin(i) * rgrad(j);
 				}
 
-				m_gradient(i) = sum;
+				rgradResult(i) = sum;
 			}
 
-			for (size_t j = 0; j < grad.size<0>(); ++j)
+			for (size_t j = 0; j < rgrad.size<0>(); ++j)
 			{
-				m_biasGradient(j) = grad(j);
+				m_biasGradient(j) = rgrad(j);
 			}
 
 			return m_gradient;
@@ -109,9 +116,9 @@ namespace neural_network {
 		void update_weights(
 			const double rate)
 		{
-			for (size_t i = 0; i < m_input.size<0>(); ++i)
+			for (size_t i = 0; i < m_weights.size<0>(); ++i)
 			{
-				for (size_t j = 0; j < m_output.size<0>(); ++j)
+				for (size_t j = 0; j < m_weights.size<1>(); ++j)
 				{
 					m_weights(i, j) += (m_weightsGradient(i, j) + m_regularization * m_weights(i, j)) * rate;
 				}
