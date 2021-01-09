@@ -25,11 +25,11 @@ The *make_network* function takes a variable number of layers as parameters, and
 
 A *tensor* is a multidimensional array of numbers, which is defined by its *metrics*. To define tensor, start with defining the rank and the number of dimensions for each rank:
 
-    typedef neural_network::algebra::metrics<4> _4;         // rank-1 tensor (or vector) with 4 elements
-    typedef neural_network::algebra::metrics<10, 5> _10x5;  // rank-2 tensor (or matrix) with 10 x 5 elements
+    typedef neural_network::algebra::metrics<4> m4;         // rank-1 tensor (or vector) with 4 elements
+    typedef neural_network::algebra::metrics<10, 5> m10x5;  // rank-2 tensor (or matrix) with 10 x 5 elements
     
-    _4::tensor_type inputVector;
-    _10x5::tensor_type inputMatrix;
+    m4::tensor_type inputVector;
+    m10x5::tensor_type inputMatrix;
 
 The NeuralNet library allows you to define tensors with arbitrary number of ranks and dimensions within each rank, and many layers support tensors of arbitrary ranks. However, some of the layers have restrictions on the ranks of input and output tensors that are allowed.
 
@@ -37,15 +37,15 @@ When multiple layers are connected to each other using the *neural_network::make
 
 For example, a simple network that accepts a rank-1 tensor with 10 elements, consists of two fully connected layers with 5 and 4 neurons and uses logistic activation function between the layers can be defined as following:
 
-    typedef neural_network::algebra::metrics<4> _4;
-    typedef neural_network::algebra::metrics<5> _5;
-    typedef neural_network::algebra::metrics<10> _10;
+    typedef neural_network::algebra::metrics<4> m4;
+    typedef neural_network::algebra::metrics<5> m5;
+    typedef neural_network::algebra::metrics<10> m10;
 
     auto network = neural_network::make_network(
-        neural_network::make_fully_connected_layer<_10, _5>(),
-        neural_network::make_logistic_activation_layer<_5>(),
-        neural_network::make_fully_connected_layer<_5, _4>(),
-        neural_network::make_logistic_activation_layer<_4>());
+        neural_network::make_fully_connected_layer<m10, m5>(),
+        neural_network::make_logistic_activation_layer<m5>(),
+        neural_network::make_fully_connected_layer<m5, m4>(),
+        neural_network::make_logistic_activation_layer<m4>());
 
 To train the network you need to use its *train* member function repeatedly using the training data set.  
 
@@ -88,27 +88,27 @@ To create a new instance of a fully connected layer, use *neural_network::make_f
 
     auto random_values = [&distr, &gen]() { return distr(gen); };
 
-    typedef neural_network::algebra::metrics<10> _Input;
-    typedef neural_network::algebra::metrics<5> _Output;
+    typedef neural_network::algebra::metrics<10> Input;
+    typedef neural_network::algebra::metrics<5> Output;
     
-    auto layer = neural_network::make_fully_connected_layer<_Input, _Output>(
+    auto layer = neural_network::make_fully_connected_layer<Input, Output>(
         random_values, 0.00003);
 
 ### ReLU Activation Layer
 
 ReLU activation layer applies Rectifier Linear Unit (ReLU) function to all elements of the input tensor, and produces the output tensor that has the same rank and dimensions. ReLU activation layer supports tensors of any rank and dimensions. This example creates a ReLU activation layer for a rank-3 tensor with 15 x 15 x 3 elements using *neural_network::make_relu_activation_layer* helper function.
 
-    typedef neural_network::algebra::metrics<15, 15, 3> _Input;
+    typedef neural_network::algebra::metrics<15, 15, 3> Input;
     
-    auto layer = neural_network::make_relu_activation_layer<_Input>();
+    auto layer = neural_network::make_relu_activation_layer<Input>();
     
 ### Logistic Activation Layer
 
 Logistic activation layer applies logistic function f(x) = 1 / (1 + exp(-x)) to all elements of the input tensor, and produces the output tensor that has the same rank and dimensions. Logistic activation layer supports tensors of any rank and dimensions. This example creates a logistic activation layer for a rank-2 tensor with 10 x 7 elements using *neural_network::make_logistic_activation_layer* helper function.
 
-    typedef neural_network::algebra::metrics<10, 7> _Input;
+    typedef neural_network::algebra::metrics<10, 7> Input;
     
-    auto layer = neural_network::make_logistic_activation_layer<_Input>();
+    auto layer = neural_network::make_logistic_activation_layer<Input>();
 
 ### Max Pooling Layers
 
@@ -118,9 +118,9 @@ A layer that reduces the rank of the input tensor by selecting the largest eleme
 
 To create this layer, use *neural_network::make_max_pooling_layer* helper function without any parameters:
 
-    typedef neural_network::algebra::metrics<4, 3, 2> _Input;
+    typedef neural_network::algebra::metrics<4, 3, 2> Input;
 
-    auto layer = neural_network::make_max_pooling_layer<_Input>();
+    auto layer = neural_network::make_max_pooling_layer<Input>();
 
 A downsampling layer that selects a maximum element within the given core, and applies the core repeatedly by shifting it by the given stride. For example, given an input tensor of 11 x 11 elements, a core of 3 x 3, and stride of 2 x 2, the layer produces an output tensor with 5 x 5 elements. This layer supports only tensors with ranks 1, 2, and 3, and requires that rank of core and stride parameters is the same as the rank of the input tensor.
 
@@ -128,11 +128,11 @@ The layer also verifies that when a given core and stride parameters are applied
 
 To create this layer, use *neural_network::make_max_pooling_layer* helper function and specify the core and stride as template parameters:
 
-    typedef neural_network::algebra::metrics<7, 8> _Input;
-    typedef neural_network::algebra::metrics<3, 2> _Core;
-    typedef neural_network::algebra::metrics<2, 2> _Stride;
+    typedef neural_network::algebra::metrics<7, 8> Input;
+    typedef neural_network::algebra::metrics<3, 2> Core;
+    typedef neural_network::algebra::metrics<2, 2> Stride;
 
-    auto layer = neural_network::make_max_pooling_layer<_Input, _Core, _Stride>();
+    auto layer = neural_network::make_max_pooling_layer<Input, Core, Stride>();
 
 ### Convolution layers
 
@@ -142,10 +142,10 @@ The layer also verifies that when a given core and stride parameters are applied
 
 To create a convolution layer, use *neural_network::make_convolution_layer* helper function, and specify core, stride and the number of kernels as template parameters. This example create an convolution layer that can be applied to a rank-3 tensor with 11 x 11 x 3 elements, with a 3 x 3 x 3 core, 2 x 2 x 1 stride, and 7 kernels. The kernel weights are initialized with uniformly distributed random values in the -0.5..0.5 range. The layer produces a rank-4 output tensor with 7 x 5 x 5 x 2 elements.
 
-    typedef neural_network::algebra::metrics<11, 11, 3> _Input;
-    typedef neural_network::algebra::metrics<3, 3, 2> _Core;
-    typedef neural_network::algebra::metrics<2, 2, 1> _Stride;
-    const size_t _Kernels = 7;
+    typedef neural_network::algebra::metrics<11, 11, 3> Input;
+    typedef neural_network::algebra::metrics<3, 3, 2> Core;
+    typedef neural_network::algebra::metrics<2, 2, 1> Stride;
+    const size_t Kernels = 7;
 
     std::random_device rd;
     std::mt19937 gen(rd());
@@ -153,16 +153,16 @@ To create a convolution layer, use *neural_network::make_convolution_layer* help
 
     auto random_values = [&distr, &gen]() { return distr(gen); };
     
-    auto layer = neural_network::make_convolution_layer<_Input, _Core, _Stride, _Kernels>(random_values);
+    auto layer = neural_network::make_convolution_layer<Input, Core, Stride, Kernels>(random_values);
 
 ### Reshape Layer
 
 Reshape layer is a utility layer that changes the rank and dimensions of an input tensor without loosing the data. To create a reshape layer, use *neural_network::make_reshape_layer* helper function, and specify the input and output metrics. The layer verifies that the total number of elements in the output tensor is exactly the same as the total number of elements in the input tensor. For example, a rank-3 with 10 x 5 x 3 elements can be reshaped into a rank-2 tensor with 25 x 6 elements, or a rank-1 tensor with 150 elements.
 
-    typedef neural_network::algebra::metrics<3, 2, 1> _Input;
-    typedef neural_network::algebra::metrics<6> _Output;
+    typedef neural_network::algebra::metrics<3, 2, 1> Input;
+    typedef neural_network::algebra::metrics<6> Output;
 
-    auto layer = neural_network::make_reshape_layer<_Input, _Output>();
+    auto layer = neural_network::make_reshape_layer<Input, Output>();
 
 Reshape layer can be used as an adapter layer between different layers.
 
@@ -170,9 +170,9 @@ Reshape layer can be used as an adapter layer between different layers.
 
 Squared error loss function is used during the training stage and it is not used in prediction stage. The squared error loss function can be applied to a pair of tensors that represent network output value and the expected, or ground truth, value and computes the loss value l(x, g) = sum((x - g) ^ 2).
 
-    typedef neural_network::algebra::metrics<2, 2> _Output;
+    typedef neural_network::algebra::metrics<2, 2> Output;
 	
-    neural_network::squared_error_loss<_Output> loss;
+    neural_network::squared_error_loss<Output> loss;
 
     network.train(input, truth, loss, rate);
 
@@ -194,23 +194,23 @@ The network ensemble is compatible with a layer interface, and can be used as a 
 
     auto random_values = [&distr, &gen]() { return distr(gen); };
 
-    typedef neural_network::algebra::metrics<4> _4;
-    typedef neural_network::algebra::metrics<5> _5;
-    typedef neural_network::algebra::metrics<7> _7;
-    typedef neural_network::algebra::metrics<8> _8;
-    typedef neural_network::algebra::metrics<2, 2> _2x2;
-    typedef neural_network::algebra::metrics<4, 2> _4x2;
-    typedef neural_network::algebra::metrics<3, 2, 2> _3x2x2;
+    typedef neural_network::algebra::metrics<4> m4;
+    typedef neural_network::algebra::metrics<5> m5;
+    typedef neural_network::algebra::metrics<7> m7;
+    typedef neural_network::algebra::metrics<8> m8;
+    typedef neural_network::algebra::metrics<2, 2> m2x2;
+    typedef neural_network::algebra::metrics<4, 2> m4x2;
+    typedef neural_network::algebra::metrics<3, 2, 2> m3x2x2;
 	
     auto net = neural_network::make_network(
 		
         // Dense layer with ReLU activation
         neural_network::make_network(
-            neural_network::make_reshape_layer<_4x2, _8>(),
-            neural_network::make_fully_connected_layer<_8, _8>(
+            neural_network::make_reshape_layer<m4x2, m8>(),
+            neural_network::make_fully_connected_layer<m8, m8>(
                 random_values, 0.00005),
-            neural_network::make_relu_activation_layer<_8>(),
-            neural_network::make_reshape_layer<_8, _4x2>()
+            neural_network::make_relu_activation_layer<m8>(),
+            neural_network::make_reshape_layer<m8, m4x2>()
         ),
 
         // Ensemble of 3 networks
@@ -218,50 +218,50 @@ The network ensemble is compatible with a layer interface, and can be used as a 
 
             // Network with a single dense layer
             neural_network::make_network(
-                neural_network::make_reshape_layer<_4x2, _8>(),
-                neural_network::make_fully_connected_layer<_8, _4>(
+                neural_network::make_reshape_layer<m4x2, m8>(),
+                neural_network::make_fully_connected_layer<m8, m4>(
                     random_values, 0.00003),
-                neural_network::make_relu_activation_layer<_4>(),
-                neural_network::make_reshape_layer<_4, _2x2>()
+                neural_network::make_relu_activation_layer<m4>(),
+                neural_network::make_reshape_layer<m4, m2x2>()
             ),
 
             // Network with two dense layers
             neural_network::make_network(
-                neural_network::make_reshape_layer<_4x2, _8>(),
-                neural_network::make_fully_connected_layer<_8, _5>(
+                neural_network::make_reshape_layer<m4x2, m8>(),
+                neural_network::make_fully_connected_layer<m8, m5>(
                     random_values, 0.00001),
-                neural_network::make_relu_activation_layer<_5>(),
-                neural_network::make_fully_connected_layer<_5, _4>(
+                neural_network::make_relu_activation_layer<m5>(),
+                neural_network::make_fully_connected_layer<m5, m4>(
                     random_values, 0.00002),
-                neural_network::make_relu_activation_layer<_4>(),
-                neural_network::make_reshape_layer<_4, _2x2>()
+                neural_network::make_relu_activation_layer<m4>(),
+                neural_network::make_reshape_layer<m4, m2x2>()
             ),
 
             // Network with three dense layers
             neural_network::make_network(
-                neural_network::make_reshape_layer<_4x2, _8>(),
-                neural_network::make_fully_connected_layer<_8, _7>(
+                neural_network::make_reshape_layer<m4x2, m8>(),
+                neural_network::make_fully_connected_layer<m8, m7>(
                     random_values, 0.00001),
-                neural_network::make_relu_activation_layer<_7>(),
-                neural_network::make_fully_connected_layer<_7, _5>(
+                neural_network::make_relu_activation_layer<m7>(),
+                neural_network::make_fully_connected_layer<m7, m5>(
                     random_values, 0.00002),
-                neural_network::make_relu_activation_layer<_5>(),
-                neural_network::make_fully_connected_layer<_5, _4>(
+                neural_network::make_relu_activation_layer<m5>(),
+                neural_network::make_fully_connected_layer<m5, m4>(
                     random_values, 0.00003),
-                neural_network::make_relu_activation_layer<_4>(),
-                neural_network::make_reshape_layer<_4, _2x2>()
+                neural_network::make_relu_activation_layer<m4>(),
+                neural_network::make_reshape_layer<m4, m2x2>()
             )
         ),
 
         // Combine the ensemble output
-        neural_network::make_max_pooling_layer<_3x2x2>(),
+        neural_network::make_max_pooling_layer<m3x2x2>(),
 		
         // Final dense layer with Logistic activation
         neural_network::make_network(
-            neural_network::make_reshape_layer<_2x2, _4>(),
-            neural_network::make_fully_connected_layer<_4, _4>(
+            neural_network::make_reshape_layer<m2x2, m4>(),
+            neural_network::make_fully_connected_layer<m4, m4>(
                 random_values, 0.00003),
-            neural_network::make_logistic_activation_layer<_4>()
+            neural_network::make_logistic_activation_layer<m4>()
         )
     );
 
