@@ -29,39 +29,39 @@ SOFTWARE.
 
 namespace neural_network {
 
-	template <typename _InputMetrics, typename _OutputMetrics>
-	class fully_connected : public layer_base<_InputMetrics, _OutputMetrics>
+	template <typename InputMetrics, typename OutputMetrics>
+	class fully_connected : public layer_base<InputMetrics, OutputMetrics>
 	{
 	public:
-		typedef typename fully_connected<_InputMetrics, _OutputMetrics> _Self;
-		typedef typename layer_base<_InputMetrics, _OutputMetrics> _Base;
+		typedef typename fully_connected<InputMetrics, OutputMetrics> this_type;
+		typedef typename layer_base<InputMetrics, OutputMetrics> base_type;
 
 		typedef typename algebra::metrics<input::data_size> reshaped_input;
 		typedef typename algebra::metrics<output::data_size> reshaped_output;
 
 		typedef typename algebra::metrics<
 			reshaped_input::data_size,
-			reshaped_output::data_size>::tensor_type _Weights;
-		typedef typename reshaped_output::tensor_type _Bias;
+			reshaped_output::data_size>::tensor_type weights_type;
+		typedef typename reshaped_output::tensor_type bias_type;
 	
 		typedef typename serialization::chunk_serializer<
 			serialization::chunk_types::fully_connected_layer,
 			serialization::composite_serializer<
-				serialization::tensor_serializer<_Weights>,
-				serialization::tensor_serializer<_Bias>,
+				serialization::tensor_serializer<weights_type>,
+				serialization::tensor_serializer<bias_type>,
 				serialization::value_serializer<double>>
-		> _serializer_impl;
+		> serializer_impl_type;
 
 		fully_connected(
 			const double regularization = 0.000001)
-				: _Base(), m_input(), m_weights(), m_weightsGradient(), m_bias(), m_biasGradient(), m_regularization(regularization)
+				: base_type(), m_input(), m_weights(), m_weightsGradient(), m_bias(), m_biasGradient(), m_regularization(regularization)
 		{
 		}
 
 		fully_connected(
 			std::function<double()> initializer,
 			const double regularization = 0.000001)
-				: _Base(), m_input(), m_weights(initializer), m_weightsGradient(), m_bias(initializer), m_biasGradient(), m_regularization(regularization)
+				: base_type(), m_input(), m_weights(initializer), m_weightsGradient(), m_bias(initializer), m_biasGradient(), m_regularization(regularization)
 		{
 		}
 
@@ -132,39 +132,39 @@ namespace neural_network {
 
 		struct serializer
 		{
-			typedef _Self value_type;
+			typedef this_type value_type;
 
-			enum : size_t { serialized_data_size = _serializer_impl::serialized_data_size };
+			enum : size_t { serialized_data_size = serializer_impl_type::serialized_data_size };
 
 			static void read(
 				std::istream& in,
 				value_type& layer)
 			{
-				_serializer_impl::read(in, layer.m_weights, layer.m_bias, layer.m_regularization);
+				serializer_impl_type::read(in, layer.m_weights, layer.m_bias, layer.m_regularization);
 			}
 
 			static void write(
 				std::ostream& out,
 				const value_type& layer)
 			{
-				_serializer_impl::write(out, layer.m_weights, layer.m_bias, layer.m_regularization);
+				serializer_impl_type::write(out, layer.m_weights, layer.m_bias, layer.m_regularization);
 			}
 		};
 
 	private:
 		input m_input;
-		_Weights m_weights;
-		_Weights m_weightsGradient;
-		_Bias m_bias;
-		_Bias m_biasGradient;
+		weights_type m_weights;
+		weights_type m_weightsGradient;
+		bias_type m_bias;
+		bias_type m_biasGradient;
 		double m_regularization;
 	};
 
-	template <class _Input, class _Output, class... _Args>
-	fully_connected<_Input, _Output> make_fully_connected_layer(
-		_Args&&... args)
+	template <class Input, class Output, class... Args>
+	fully_connected<Input, Output> make_fully_connected_layer(
+		Args&&... args)
 	{
-		typedef fully_connected<_Input, _Output> _Ltype;
-		return (_Ltype(std::forward<_Args>(args)...));
+		typedef fully_connected<Input, Output> _Ltype;
+		return (_Ltype(std::forward<Args>(args)...));
 	}
 }

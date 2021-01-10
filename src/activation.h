@@ -29,38 +29,38 @@ SOFTWARE.
 
 namespace neural_network {
 
-	template <typename _Metrics>
-	class activation_base : public layer_base<_Metrics, _Metrics>
+	template <typename Metrics>
+	class activation_base : public layer_base<Metrics, Metrics>
 	{
 	public:
-		typedef typename layer_base<_Metrics, _Metrics> _Base;
+		typedef typename layer_base<Metrics, Metrics> base_type;
 
 		activation_base() 
-			: m_input(), _Base()
+			: m_input(), base_type()
 		{}
 
 		void update_weights(
-			const double /*rate*/)
+			const double)
 		{}
 
 	protected:
 		input m_input;
 	};
 
-	template <typename _Metrics>
-	class relu_activation : public activation_base<_Metrics>
+	template <typename Metrics>
+	class relu_activation : public activation_base<Metrics>
 	{
 	public:
-		typedef typename relu_activation<_Metrics> _Self;
-		typedef typename activation_base<_Metrics> _Base;
+		typedef typename relu_activation<Metrics> this_type;
+		typedef typename activation_base<Metrics> base_type;
 
 		typedef typename serialization::chunk_serializer<
 			serialization::chunk_types::relu_activation_layer,
-			serialization::metrics_serializer<typename _Metrics>
-		> _serializer_impl;
+			serialization::metrics_serializer<typename Metrics>
+		> serializer_impl_type;
 
 		relu_activation()
-			: _Base()
+			: base_type()
 		{}
 
 		const output& process(const input& input)
@@ -92,40 +92,40 @@ namespace neural_network {
 
 		struct serializer
 		{
-			typedef _Self value;
+			typedef this_type value_type;
 
-			enum : size_t { serialized_data_size = _serializer_impl::serialized_data_size };
+			enum : size_t { serialized_data_size = serializer_impl_type::serialized_data_size };
 
 			static void read(
 				std::istream& in,
-				value&)
+				value_type&)
 			{
-				_serializer_impl::read(in);
+				serializer_impl_type::read(in);
 			}
 
 			static void write(
 				std::ostream& out,
-				const value&)
+				const value_type&)
 			{
-				_serializer_impl::write(out);
+				serializer_impl_type::write(out);
 			}
 		};
 	};
 
-	template <typename _Metrics>
-	class logistic_activation : public activation_base<_Metrics>
+	template <typename Metrics>
+	class logistic_activation : public activation_base<Metrics>
 	{
 	public:
-		typedef typename logistic_activation<_Metrics> _Self;
-		typedef typename activation_base<_Metrics> _Base;
+		typedef typename logistic_activation<Metrics> this_type;
+		typedef typename activation_base<Metrics> base_type;
 
 		typedef typename serialization::chunk_serializer<
 			serialization::chunk_types::logistic_activation_layer,
-			serialization::metrics_serializer<typename _Metrics>
-		> _serializer_impl;
+			serialization::metrics_serializer<typename Metrics>
+		> serializer_impl_type;
 
 		logistic_activation()
-			: _Base()
+			: base_type()
 		{}
 
 		const output& process(const input& input)
@@ -136,7 +136,7 @@ namespace neural_network {
 				m_output,
 				[](const double& i)
 			{
-				return _Self::logistic(i);
+				return this_type::logistic(i);
 			});
 
 			return m_output;
@@ -149,8 +149,8 @@ namespace neural_network {
 				m_gradient,
 				[](const double& g, const double& i)
 			{
-				auto _f = _Self::logistic(i);
-				return g * _f * (1.0 - _f);
+				auto f = this_type::logistic(i);
+				return g * f * (1.0 - f);
 			});
 
 			return m_gradient;
@@ -158,21 +158,21 @@ namespace neural_network {
 
 		struct serializer
 		{
-			typedef _Self value;
-			enum : size_t { serialized_data_size = _serializer_impl::serialized_data_size };
+			typedef this_type value;
+			enum : size_t { serialized_data_size = serializer_impl_type::serialized_data_size };
 
 			static void read(
 				std::istream& in,
 				value&)
 			{
-				_serializer_impl::read(in);
+				serializer_impl_type::read(in);
 			}
 
 			static void write(
 				std::ostream& out,
 				const value&)
 			{
-				_serializer_impl::write(out);
+				serializer_impl_type::write(out);
 			}
 		};
 
@@ -183,19 +183,19 @@ namespace neural_network {
 		}
 	};
 
-	template <class _Input, class... _Args>
-	logistic_activation<_Input> make_logistic_activation_layer(
-		_Args&&... args)
+	template <class Input, class... Args>
+	logistic_activation<Input> make_logistic_activation_layer(
+		Args&&... args)
 	{
-		typedef logistic_activation<_Input> _Ltype;
-		return (_Ltype(std::forward<_Args>(args)...));
+		typedef logistic_activation<Input> layer_type;
+		return (layer_type(std::forward<Args>(args)...));
 	}
 
-	template <class _Input, class... _Args>
-	relu_activation<_Input> make_relu_activation_layer(
-		_Args&&... args)
+	template <class Input, class... Args>
+	relu_activation<Input> make_relu_activation_layer(
+		Args&&... args)
 	{
-		typedef relu_activation<_Input> _Ltype;
-		return (_Ltype(std::forward<_Args>(args)...));
+		typedef relu_activation<Input> layer_type;
+		return (layer_type(std::forward<Args>(args)...));
 	}
 }

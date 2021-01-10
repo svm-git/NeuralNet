@@ -26,12 +26,12 @@ SOFTWARE.
 
 #include <sstream>
 
-template <class _Net, class _Input, class _Truth, class _Loss>
+template <class Network, class Input, class Truth, class Loss>
 void train_test_network(
-	_Net& net,
-	const _Input& input,
-	const _Truth& truth,
-	_Loss& loss,
+	Network& net,
+	const Input& input,
+	const Truth& truth,
+	Loss& loss,
 	double& initialLoss,
 	double& finalLoss)
 {

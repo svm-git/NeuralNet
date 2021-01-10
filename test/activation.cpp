@@ -36,14 +36,14 @@ void test_activation()
 	{
 		test::verbose("1D RELU Activation Tests");
 
-		typedef neural_network::algebra::metrics<3> _3;
-		typedef neural_network::relu_activation<_3> _1d_relu;
+		typedef neural_network::algebra::metrics<3> m3;
+		typedef neural_network::relu_activation<m3> relu_1d;
 
-		static_assert(std::is_same<_1d_relu::input, neural_network::algebra::tensor<3>>::value, "Invalid 1D-RELU input type.");
-		static_assert(std::is_same<_1d_relu::output, neural_network::algebra::tensor<3>>::value, "Invalid 1D-RELU output type.");
+		static_assert(std::is_same<relu_1d::input, neural_network::algebra::tensor<3>>::value, "Invalid 1D-RELU input type.");
+		static_assert(std::is_same<relu_1d::output, neural_network::algebra::tensor<3>>::value, "Invalid 1D-RELU output type.");
 
-		_3::tensor_type tmp;
-		_1d_relu relu = neural_network::make_relu_activation_layer<_3>();
+		m3::tensor_type tmp;
+		relu_1d relu = neural_network::make_relu_activation_layer<m3>();
 
 		relu.process(tmp);
 		relu.compute_gradient(tmp);
@@ -54,14 +54,14 @@ void test_activation()
 	{
 		test::verbose("2D RELU Activation Tests");
 
-		typedef neural_network::algebra::metrics<3, 2> _3_x_2;
-		typedef neural_network::relu_activation<_3_x_2> _2d_relu;
+		typedef neural_network::algebra::metrics<3, 2> m3x2;
+		typedef neural_network::relu_activation<m3x2> relu_2d;
 
-		static_assert(std::is_same<_2d_relu::input, neural_network::algebra::tensor<3, 2>>::value, "Invalid 2D-RELU input type.");
-		static_assert(std::is_same<_2d_relu::output, neural_network::algebra::tensor<3, 2>>::value, "Invalid 2D-RELU output type.");
+		static_assert(std::is_same<relu_2d::input, neural_network::algebra::tensor<3, 2>>::value, "Invalid 2D-RELU input type.");
+		static_assert(std::is_same<relu_2d::output, neural_network::algebra::tensor<3, 2>>::value, "Invalid 2D-RELU output type.");
 
-		_3_x_2::tensor_type tmp;
-		_2d_relu relu = neural_network::make_relu_activation_layer<_3_x_2>();
+		m3x2::tensor_type tmp;
+		relu_2d relu = neural_network::make_relu_activation_layer<m3x2>();
 
 		relu.process(tmp);
 		relu.compute_gradient(tmp);
@@ -72,14 +72,14 @@ void test_activation()
 	{
 		test::verbose("3D RELU Activation Tests");
 
-		typedef neural_network::algebra::metrics<3, 2, 1> _3_x_2_x_1;
-		typedef neural_network::relu_activation<_3_x_2_x_1> _3d_relu;
+		typedef neural_network::algebra::metrics<3, 2, 1> m3x2x1;
+		typedef neural_network::relu_activation<m3x2x1> relu_3d;
 
-		static_assert(std::is_same<_3d_relu::input, neural_network::algebra::tensor<3, 2, 1>>::value, "Invalid 3D-RELU input type.");
-		static_assert(std::is_same<_3d_relu::output, neural_network::algebra::tensor<3, 2, 1>>::value, "Invalid 3D-RELU output type.");
+		static_assert(std::is_same<relu_3d::input, neural_network::algebra::tensor<3, 2, 1>>::value, "Invalid 3D-RELU input type.");
+		static_assert(std::is_same<relu_3d::output, neural_network::algebra::tensor<3, 2, 1>>::value, "Invalid 3D-RELU output type.");
 
-		_3_x_2_x_1::tensor_type tmp;
-		_3d_relu relu = neural_network::make_relu_activation_layer<_3_x_2_x_1>();
+		m3x2x1::tensor_type tmp;
+		relu_3d relu = neural_network::make_relu_activation_layer<m3x2x1>();
 
 		relu.process(tmp);
 		relu.compute_gradient(tmp);
@@ -90,14 +90,14 @@ void test_activation()
 	{
 		test::verbose("1D Logistic Activation Tests");
 
-		typedef neural_network::algebra::metrics<3> _3;
-		typedef neural_network::logistic_activation<_3> _1d_logistic;
+		typedef neural_network::algebra::metrics<3> m3;
+		typedef neural_network::logistic_activation<m3> logistic_1d;
 
-		static_assert(std::is_same<_1d_logistic::input, neural_network::algebra::tensor<3>>::value, "Invalid 1D-Logistic input type.");
-		static_assert(std::is_same<_1d_logistic::output, neural_network::algebra::tensor<3>>::value, "Invalid 1D-Logistic output type.");
+		static_assert(std::is_same<logistic_1d::input, neural_network::algebra::tensor<3>>::value, "Invalid 1D-Logistic input type.");
+		static_assert(std::is_same<logistic_1d::output, neural_network::algebra::tensor<3>>::value, "Invalid 1D-Logistic output type.");
 
-		_3::tensor_type tmp;
-		_1d_logistic logistic = neural_network::make_logistic_activation_layer<_3>();
+		m3::tensor_type tmp;
+		logistic_1d logistic = neural_network::make_logistic_activation_layer<m3>();
 
 		logistic.process(tmp);
 		logistic.compute_gradient(tmp);
@@ -108,14 +108,14 @@ void test_activation()
 	{
 		test::verbose("2D Logistic Activation Tests");
 
-		typedef neural_network::algebra::metrics<3, 2> _3_x_2;
-		typedef neural_network::logistic_activation<_3_x_2> _2d_logistic;
+		typedef neural_network::algebra::metrics<3, 2> m3x2;
+		typedef neural_network::logistic_activation<m3x2> logistic_2d;
 
-		static_assert(std::is_same<_2d_logistic::input, neural_network::algebra::tensor<3, 2>>::value, "Invalid 2D-Logistic input type.");
-		static_assert(std::is_same<_2d_logistic::output, neural_network::algebra::tensor<3, 2>>::value, "Invalid 2D-Logistic output type.");
+		static_assert(std::is_same<logistic_2d::input, neural_network::algebra::tensor<3, 2>>::value, "Invalid 2D-Logistic input type.");
+		static_assert(std::is_same<logistic_2d::output, neural_network::algebra::tensor<3, 2>>::value, "Invalid 2D-Logistic output type.");
 
-		_3_x_2::tensor_type tmp;
-		_2d_logistic logistic = neural_network::make_logistic_activation_layer<_3_x_2>();
+		m3x2::tensor_type tmp;
+		logistic_2d logistic = neural_network::make_logistic_activation_layer<m3x2>();
 
 		logistic.process(tmp);
 		logistic.compute_gradient(tmp);
@@ -126,14 +126,14 @@ void test_activation()
 	{
 		test::verbose("3D Logistic Activation Tests");
 
-		typedef neural_network::algebra::metrics<3, 2, 1> _3_x_2_x_1;
-		typedef neural_network::logistic_activation<_3_x_2_x_1> _3d_logistic;
+		typedef neural_network::algebra::metrics<3, 2, 1> m3x2x1;
+		typedef neural_network::logistic_activation<m3x2x1> logistic_3d;
 
-		static_assert(std::is_same<_3d_logistic::input, neural_network::algebra::tensor<3, 2, 1>>::value, "Invalid 3D-Logistic input type.");
-		static_assert(std::is_same<_3d_logistic::output, neural_network::algebra::tensor<3, 2, 1>>::value, "Invalid 3D-Logistic output type.");
+		static_assert(std::is_same<logistic_3d::input, neural_network::algebra::tensor<3, 2, 1>>::value, "Invalid 3D-Logistic input type.");
+		static_assert(std::is_same<logistic_3d::output, neural_network::algebra::tensor<3, 2, 1>>::value, "Invalid 3D-Logistic output type.");
 
-		_3_x_2_x_1::tensor_type tmp;
-		_3d_logistic logistic = neural_network::make_logistic_activation_layer<_3_x_2_x_1>();
+		m3x2x1::tensor_type tmp;
+		logistic_3d logistic = neural_network::make_logistic_activation_layer<m3x2x1>();
 
 		logistic.process(tmp);
 		logistic.compute_gradient(tmp);

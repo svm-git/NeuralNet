@@ -33,14 +33,12 @@ void test_reshape()
 {
 	scenario sc("Test for neural_network::reshape layer");
 
-	typedef neural_network::algebra::metrics<3, 2, 1> _3_x_2_x_1;
-	typedef neural_network::algebra::metrics<6> _6;
+	typedef neural_network::algebra::metrics<3, 2, 1> m3x2x1;
+	typedef neural_network::algebra::metrics<6> m6;
 	
-	typedef neural_network::reshape<_3_x_2_x_1, _6> reshape;
+	m3x2x1::tensor_type i;
 
-	_3_x_2_x_1::tensor_type i;
-
-	reshape layer = neural_network::make_reshape_layer<_3_x_2_x_1, _6>();
+	auto layer = neural_network::make_reshape_layer<m3x2x1, m6>();
 
 	auto r = layer.process(i);
 

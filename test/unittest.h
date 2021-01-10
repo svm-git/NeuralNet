@@ -35,10 +35,10 @@ public:
 };
 
 template <const bool Verbose = false>
-class _Test
+class unit_test
 {
 private:
-	typedef _Test<Verbose> _Self;
+	typedef unit_test<Verbose> this_type;
 
 public:
 	static bool is_verbose()
@@ -114,7 +114,7 @@ public:
 	template <class _Ex, class _Func>
 	static bool check_exception(_Func func, const char* message)
 	{
-		return _Self::check([&func]()
+		return this_type::check([&func]()
 			{
 				bool pass = false;
 				try
@@ -135,7 +135,7 @@ public:
 };
 
 // Default to no verbose logging. Change that to true for debugging.
-typedef _Test<true> test;
+typedef unit_test<true> test;
 
 // Utility struct to automatically check for a test scenario success.
 //

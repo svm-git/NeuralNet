@@ -29,47 +29,50 @@ SOFTWARE.
 
 namespace neural_network {
 
-	template <typename _Reshape>
-	struct _reshape_serializer_impl
-	{
-		typedef typename _Reshape value_type;
+namespace detail {
 
-		typedef typename serialization::metrics_serializer<typename _Reshape::input::metrics> _input_metrics_serializer;
-		typedef typename serialization::metrics_serializer<typename _Reshape::output::metrics> _ouput_metrics_serializer;
+	template <typename Reshape>
+	struct reshape_serializer_impl
+	{
+		typedef typename Reshape value_type;
+
+		typedef typename serialization::metrics_serializer<typename Reshape::input::metrics> input_metrics_serializer_type;
+		typedef typename serialization::metrics_serializer<typename Reshape::output::metrics> ouput_metrics_serializer_type;
 
 		enum : size_t {
 			serialized_data_size =
-				_input_metrics_serializer::serialized_data_size
-				+ _ouput_metrics_serializer::serialized_data_size
+				input_metrics_serializer_type::serialized_data_size
+				+ ouput_metrics_serializer_type::serialized_data_size
 		};
 
 		static void read(
 			std::istream& in,
 			value_type&)
 		{
-			_input_metrics_serializer::read(in);
-			_ouput_metrics_serializer::read(in);
+			input_metrics_serializer_type::read(in);
+			ouput_metrics_serializer_type::read(in);
 		}
 
 		static void write(
 			std::ostream& out,
 			const value_type&)
 		{
-			_input_metrics_serializer::write(out);
-			_ouput_metrics_serializer::write(out);
+			input_metrics_serializer_type::write(out);
+			ouput_metrics_serializer_type::write(out);
 		}
 	};
+}
 
-	template <typename _InputMetrics, typename _OutputMetrics>
-	class reshape : public layer_base <_InputMetrics, _OutputMetrics>
+	template <typename InputMetrics, typename OutputMetrics>
+	class reshape : public layer_base <InputMetrics, OutputMetrics>
 	{
 	public:
-		typedef typename reshape<_InputMetrics, _OutputMetrics> _Self;
-		typedef typename layer_base<_InputMetrics, _OutputMetrics> _Base;
+		typedef typename reshape<InputMetrics, OutputMetrics> this_type;
+		typedef typename layer_base<InputMetrics, OutputMetrics> base_type;
 
 		typedef typename serialization::chunk_serializer<
 			serialization::chunk_types::reshape_layer,
-			_reshape_serializer_impl<_Self>
+			detail::reshape_serializer_impl<this_type>
 		> serializer;
 
 		const output& process(const input& input)
@@ -85,15 +88,15 @@ namespace neural_network {
 		}
 
 		void update_weights(
-			const double /*rate*/)
+			const double)
 		{}
 	};
 
-	template <class _Input, class _Output, class... _Args>
-	reshape<_Input, _Output> make_reshape_layer(
-		_Args&&... args)
+	template <class Input, class Output, class... Args>
+	reshape<Input, Output> make_reshape_layer(
+		Args&&... args)
 	{
-		typedef reshape<_Input, _Output> _Ltype;
-		return (_Ltype(std::forward<_Args>(args)...));
+		typedef reshape<Input, Output> layer_type;
+		return (layer_type(std::forward<Args>(args)...));
 	}
 }
