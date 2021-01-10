@@ -199,20 +199,20 @@ namespace neural_network {
 
 		struct serializer
 		{
-			typedef _Self value;
+			typedef _Self value_type;
 
 			enum : size_t { serialized_data_size = _serializer_impl::serialized_data_size };
 
 			static void read(
 				std::istream& in,
-				value&)
+				value_type&)
 			{
 				_serializer_impl::read(in);
 			}
 
 			static void write(
 				std::ostream& out,
-				const value&)
+				const value_type&)
 			{
 				_serializer_impl::write(out);
 			}
@@ -505,7 +505,7 @@ namespace neural_network {
 		template <typename _Layer>
 		struct serializer
 		{
-			typedef typename _Layer value;
+			typedef typename _Layer value_type;
 
 			typedef typename serialization::metrics_serializer<_Metrics> _metrics_serializer;
 			typedef typename serialization::metrics_serializer<_Core> _core_serializer;
@@ -519,7 +519,7 @@ namespace neural_network {
 
 			static void read(
 				std::istream& in,
-				value&)
+				value_type&)
 			{
 				_metrics_serializer::read(in);
 				_core_serializer::read(in);
@@ -528,7 +528,7 @@ namespace neural_network {
 
 			static void write(
 				std::ostream& out,
-				const value&)
+				const value_type&)
 			{
 				_metrics_serializer::write(out);
 				_core_serializer::write(out);

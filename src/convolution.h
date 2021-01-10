@@ -54,20 +54,20 @@ namespace neural_network {
 
 		struct serializer
 		{
-			typedef _Self value;
+			typedef _Self value_type;
 
 			enum : size_t { serialized_data_size = _serializer_impl::serialized_data_size };
 
 			static void read(
 				std::istream& in,
-				value& layer)
+				value_type& layer)
 			{
 				_serializer_impl::read(in, layer.m_kernels, layer.m_bias);
 			}
 
 			static void write(
 				std::ostream& out,
-				const value& layer)
+				const value_type& layer)
 			{
 				_serializer_impl::write(out, layer.m_kernels, layer.m_bias);
 			}

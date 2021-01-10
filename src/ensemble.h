@@ -154,7 +154,7 @@ namespace neural_network {
 
 		struct serializer
 		{
-			typedef _Self value;
+			typedef _Self value_type;
 
 			enum : size_t {
 				serialized_data_size =
@@ -164,7 +164,7 @@ namespace neural_network {
 
 			static void read(
 				std::istream& in,
-				value& network)
+				value_type& network)
 			{
 				_N::serializer::read(in, network.m_network);
 				_Base::serializer::read(in, network);
@@ -172,7 +172,7 @@ namespace neural_network {
 
 			static void write(
 				std::ostream& out,
-				const value& network)
+				const value_type& network)
 			{
 				_N::serializer::write(out, network.m_network);
 				_Base::serializer::write(out, network);
@@ -237,20 +237,20 @@ namespace neural_network {
 
 		struct serializer
 		{
-			typedef _Self value;
+			typedef _Self value_type;
 
 			enum : size_t { serialized_data_size = _N::serializer::serialized_data_size };
 
 			static void read(
 				std::istream& in,
-				value& network)
+				value_type& network)
 			{
 				_N::serializer::read(in, network.m_network);
 			}
 
 			static void write(
 				std::ostream& out,
-				const value& network)
+				const value_type& network)
 			{
 				_N::serializer::write(out, network.m_network);
 			}
@@ -305,20 +305,20 @@ namespace neural_network {
 
 		struct serializer
 		{
-			typedef _Self value;
+			typedef _Self value_type;
 
 			enum : size_t { serialized_data_size = _serializer_impl::serialized_data_size };
 
 			static void read(
 				std::istream& in,
-				value& network)
+				value_type& network)
 			{
 				_serializer_impl::read(in, network.m_ensemble);
 			}
 
 			static void write(
 				std::ostream& out,
-				const value& network)
+				const value_type& network)
 			{
 				_serializer_impl::write(out, network.m_ensemble);
 			}

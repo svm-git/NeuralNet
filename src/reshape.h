@@ -32,7 +32,7 @@ namespace neural_network {
 	template <typename _Reshape>
 	struct _reshape_serializer_impl
 	{
-		typedef typename _Reshape value;
+		typedef typename _Reshape value_type;
 
 		typedef typename serialization::metrics_serializer<typename _Reshape::input::metrics> _input_metrics_serializer;
 		typedef typename serialization::metrics_serializer<typename _Reshape::output::metrics> _ouput_metrics_serializer;
@@ -45,7 +45,7 @@ namespace neural_network {
 
 		static void read(
 			std::istream& in,
-			value&)
+			value_type&)
 		{
 			_input_metrics_serializer::read(in);
 			_ouput_metrics_serializer::read(in);
@@ -53,7 +53,7 @@ namespace neural_network {
 
 		static void write(
 			std::ostream& out,
-			const value&)
+			const value_type&)
 		{
 			_input_metrics_serializer::write(out);
 			_ouput_metrics_serializer::write(out);
