@@ -183,9 +183,9 @@ std::vector<double> get_learning_rates(
 	return result;
 }
 
-template <class _Network>
+template <class Network>
 void test_success_rate(
-	_Network& network,
+	Network& network,
 	const mnist_data& training,
 	std::string prefix)
 {
@@ -255,7 +255,6 @@ int train_network(
 
 	neural_network::squared_error_loss<output_metrics> loss;
 
-	//test_success_rate(network, training, "Untrained");
 	std::cout
 		<< "Training new model on MNIST data set.\r\n"
 		<< "Epochs: " << args.epochs << "; training set: " << training.size() << " images; test set: " << test.size() << " images."
@@ -382,56 +381,56 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	auto random_values = [&weight_distr, &gen]() { return weight_distr(gen); };
 
-	typedef neural_network::algebra::metrics<2, 2> _2x2;
-	typedef neural_network::algebra::metrics<3, 10> _3x10;
-	typedef neural_network::algebra::metrics<14, 14> _14x14;
-	typedef neural_network::algebra::metrics<49> _49;
+	typedef neural_network::algebra::metrics<2, 2> m2x2;
+	typedef neural_network::algebra::metrics<3, 10> m3x10;
+	typedef neural_network::algebra::metrics<14, 14> m14x14;
+	typedef neural_network::algebra::metrics<49> m49;
 
 	const size_t nKernels = 48;
 	const size_t nKernels_2 = 24;
 
-	typedef neural_network::algebra::metrics<4, 4> _4x4;
-	typedef neural_network::algebra::metrics<3, 3> _3x3;
-	typedef neural_network::algebra::metrics<nKernels, 4, 4> _Kx4x4;
-	typedef neural_network::algebra::metrics<nKernels, 9, 9> _Kx9x9;
-	typedef neural_network::algebra::metrics<1, 3, 3> _1x3x3;
-	typedef neural_network::algebra::metrics<1, 2, 2> _1x2x2;
-	typedef neural_network::algebra::metrics<nKernels, 2, 2> _Kx2x2;
-	typedef neural_network::algebra::metrics<nKernels_2, 1, 2, 2> _K2x1x2x2;
-	typedef neural_network::algebra::metrics<nKernels_2, 2, 2> _K2x2x2;
-	typedef neural_network::algebra::metrics<2, 1, 1> _Pooling;
-	typedef neural_network::algebra::metrics<nKernels_2 / 2, 2, 2> _PoolingOut;
+	typedef neural_network::algebra::metrics<4, 4> m4x4;
+	typedef neural_network::algebra::metrics<3, 3> m3x3;
+	typedef neural_network::algebra::metrics<nKernels, 4, 4> mKx4x4;
+	typedef neural_network::algebra::metrics<nKernels, 9, 9> mKx9x9;
+	typedef neural_network::algebra::metrics<1, 3, 3> m1x3x3;
+	typedef neural_network::algebra::metrics<1, 2, 2> m1x2x2;
+	typedef neural_network::algebra::metrics<nKernels, 2, 2> mKx2x2;
+	typedef neural_network::algebra::metrics<nKernels_2, 1, 2, 2> mK2x1x2x2;
+	typedef neural_network::algebra::metrics<nKernels_2, 2, 2> mK2x2x2;
+	typedef neural_network::algebra::metrics<2, 1, 1> mPooling;
+	typedef neural_network::algebra::metrics<nKernels_2 / 2, 2, 2> mPoolingOut;
 
 	auto network = neural_network::make_network(
 		neural_network::make_ensemble(
 			neural_network::make_network(
-				neural_network::make_fully_connected_layer<digit::metrics, _49>(
+				neural_network::make_fully_connected_layer<digit::metrics, m49>(
 					random_values, 0.0003),
-				neural_network::make_relu_activation_layer<_49>(),
-				neural_network::make_fully_connected_layer<_49, output_metrics>(
-					random_values, 0.0003),
-				neural_network::make_logistic_activation_layer<output_metrics>()
-			),
-			neural_network::make_network(
-				neural_network::make_max_pooling_layer<digit::metrics, _2x2, _2x2>(),
-				neural_network::make_fully_connected_layer<_14x14, _49>(
-					random_values, 0.0003),
-				neural_network::make_relu_activation_layer<_49>(),
-				neural_network::make_fully_connected_layer<_49, output_metrics>(
+				neural_network::make_relu_activation_layer<m49>(),
+				neural_network::make_fully_connected_layer<m49, output_metrics>(
 					random_values, 0.0003),
 				neural_network::make_logistic_activation_layer<output_metrics>()
 			),
 			neural_network::make_network(
-				neural_network::make_convolution_layer<digit::metrics, _4x4, _3x3, nKernels>(
+				neural_network::make_max_pooling_layer<digit::metrics, m2x2, m2x2>(),
+				neural_network::make_fully_connected_layer<m14x14, m49>(
+					random_values, 0.0003),
+				neural_network::make_relu_activation_layer<m49>(),
+				neural_network::make_fully_connected_layer<m49, output_metrics>(
+					random_values, 0.0003),
+				neural_network::make_logistic_activation_layer<output_metrics>()
+			),
+			neural_network::make_network(
+				neural_network::make_convolution_layer<digit::metrics, m4x4, m3x3, nKernels>(
 					random_values),
-				neural_network::make_relu_activation_layer<_Kx9x9>(),
-				neural_network::make_max_pooling_layer<_Kx9x9, _1x3x3, _1x2x2>(),
-				neural_network::make_convolution_layer<_Kx4x4, _Kx2x2, _Kx2x2, nKernels_2>(
+				neural_network::make_relu_activation_layer<mKx9x9>(),
+				neural_network::make_max_pooling_layer<mKx9x9, m1x3x3, m1x2x2>(),
+				neural_network::make_convolution_layer<mKx4x4, mKx2x2, mKx2x2, nKernels_2>(
 					random_values),
-				neural_network::make_reshape_layer<_K2x1x2x2, _K2x2x2>(),
-				neural_network::make_relu_activation_layer<_K2x2x2>(),
-				neural_network::make_max_pooling_layer<_K2x2x2, _Pooling, _Pooling>(),
-				neural_network::make_fully_connected_layer<_PoolingOut, output_metrics>(
+				neural_network::make_reshape_layer<mK2x1x2x2, mK2x2x2>(),
+				neural_network::make_relu_activation_layer<mK2x2x2>(),
+				neural_network::make_max_pooling_layer<mK2x2x2, mPooling, mPooling>(),
+				neural_network::make_fully_connected_layer<mPoolingOut, output_metrics>(
 					random_values, 0.0003),
 				neural_network::make_relu_activation_layer<output_metrics>(),
 				neural_network::make_fully_connected_layer<output_metrics, output_metrics>(
@@ -439,7 +438,7 @@ int _tmain(int argc, _TCHAR* argv[])
 				neural_network::make_logistic_activation_layer<output_metrics>()
 			)
 		),
-		neural_network::make_max_pooling_layer<_3x10>()
+		neural_network::make_max_pooling_layer<m3x10>()
 	);
 
 	if (args.train)
