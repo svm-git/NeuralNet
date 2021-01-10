@@ -85,7 +85,7 @@ namespace neural_network {
 		typedef typename _1d_convolution_impl<_Metrics, _Core, _Stride, _Kernels> _Self;
 
 		typedef typename _Metrics::tensor_type input;
-		typedef typename algebra::_apply_core_with_stride<_Metrics, _Core, _Stride, _Metrics::rank>::metrics _convolution;
+		typedef typename algebra::detail::apply_core_with_stride<_Metrics, _Core, _Stride, _Metrics::rank>::metrics _convolution;
 		typedef typename _convolution::template expand<_Kernels>::type::tensor_type output;
 		typedef typename _Core::template expand<_Kernels>::type::tensor_type kernel_weights;
 		typedef typename algebra::metrics<_Kernels>::tensor_type bias;
@@ -112,7 +112,7 @@ namespace neural_network {
 				{
 					double sum = 0.0;
 
-					const size_t baseX = stride * algebra::_dimension<_Stride, 0>::size;
+					const size_t baseX = stride * algebra::detail::dimension<_Stride, 0>::size;
 
 					for (size_t x = 0; x < m_weights.m_kernels.size<1>(); ++x)
 					{
@@ -143,9 +143,9 @@ namespace neural_network {
 					double g = grad(kernel, x);
 					sum += g;
 
-					const size_t baseX = x * algebra::_dimension<_Stride, 0>::size;
+					const size_t baseX = x * algebra::detail::dimension<_Stride, 0>::size;
 
-					for (size_t i = 0; i < algebra::_dimension<_Core, 0>::size; ++i)
+					for (size_t i = 0; i < algebra::detail::dimension<_Core, 0>::size; ++i)
 					{
 						result(baseX + i) += g * m_weights.m_kernels(kernel, i);
 						kernelGradient(kernel, i) += g * in(baseX + i);
@@ -183,7 +183,7 @@ namespace neural_network {
 		typedef typename _2d_convolution_impl<_Metrics, _Core, _Stride, _Kernels> _Self;
 
 		typedef typename _Metrics::tensor_type input;
-		typedef typename algebra::_apply_core_with_stride<_Metrics, _Core, _Stride, _Metrics::rank>::metrics _convolution;
+		typedef typename algebra::detail::apply_core_with_stride<_Metrics, _Core, _Stride, _Metrics::rank>::metrics _convolution;
 		typedef typename _convolution::template expand<_Kernels>::type::tensor_type output;
 		typedef typename _Core::template expand<_Kernels>::type::tensor_type kernel_weights;
 		typedef typename algebra::metrics<_Kernels>::tensor_type bias;
@@ -212,8 +212,8 @@ namespace neural_network {
 					{
 						double sum = 0.0;
 
-						const size_t baseX = strideX * algebra::_dimension<_Stride, 0>::size;
-						const size_t baseY = strideY * algebra::_dimension<_Stride, 1>::size;
+						const size_t baseX = strideX * algebra::detail::dimension<_Stride, 0>::size;
+						const size_t baseY = strideY * algebra::detail::dimension<_Stride, 1>::size;
 
 						for (size_t x = 0; x < m_weights.m_kernels.size<1>(); ++x)
 						{
@@ -250,12 +250,12 @@ namespace neural_network {
 						double g = grad(kernel, x, y);
 						sum += g;
 
-						const size_t baseX = x * algebra::_dimension<_Stride, 0>::size;
-						const size_t baseY = y * algebra::_dimension<_Stride, 1>::size;
+						const size_t baseX = x * algebra::detail::dimension<_Stride, 0>::size;
+						const size_t baseY = y * algebra::detail::dimension<_Stride, 1>::size;
 
-						for (size_t i = 0; i < algebra::_dimension<_Core, 0>::size; ++i)
+						for (size_t i = 0; i < algebra::detail::dimension<_Core, 0>::size; ++i)
 						{
-							for (size_t j = 0; j < algebra::_dimension<_Core, 1>::size; ++j)
+							for (size_t j = 0; j < algebra::detail::dimension<_Core, 1>::size; ++j)
 							{
 								result(baseX + i, baseY + j) += g * m_weights.m_kernels(kernel, i, j);
 								kernelGradient(kernel, i, j) += g * in(baseX + i, baseY + j);
@@ -298,7 +298,7 @@ namespace neural_network {
 		typedef typename _3d_convolution_impl<_Metrics, _Core, _Stride, _Kernels> _Self;
 
 		typedef typename _Metrics::tensor_type input;
-		typedef typename algebra::_apply_core_with_stride<_Metrics, _Core, _Stride, _Metrics::rank>::metrics _convolution;
+		typedef typename algebra::detail::apply_core_with_stride<_Metrics, _Core, _Stride, _Metrics::rank>::metrics _convolution;
 		typedef typename _convolution::template expand<_Kernels>::type::tensor_type output;
 		typedef typename _Core::template expand<_Kernels>::type::tensor_type kernel_weights;
 		typedef typename algebra::metrics<_Kernels>::tensor_type bias;
@@ -329,9 +329,9 @@ namespace neural_network {
 						{
 							double sum = 0.0;
 
-							const size_t baseX = strideX * algebra::_dimension<_Stride, 0>::size;
-							const size_t baseY = strideY * algebra::_dimension<_Stride, 1>::size;
-							const size_t baseZ = strideZ * algebra::_dimension<_Stride, 2>::size;
+							const size_t baseX = strideX * algebra::detail::dimension<_Stride, 0>::size;
+							const size_t baseY = strideY * algebra::detail::dimension<_Stride, 1>::size;
+							const size_t baseZ = strideZ * algebra::detail::dimension<_Stride, 2>::size;
 
 							for (size_t x = 0; x < m_weights.m_kernels.size<1>(); ++x)
 							{
@@ -374,15 +374,15 @@ namespace neural_network {
 							double g = grad(kernel, x, y, z);
 							sum += g;
 
-							const size_t baseX = x * algebra::_dimension<_Stride, 0>::size;
-							const size_t baseY = y * algebra::_dimension<_Stride, 1>::size;
-							const size_t baseZ = z * algebra::_dimension<_Stride, 2>::size;
+							const size_t baseX = x * algebra::detail::dimension<_Stride, 0>::size;
+							const size_t baseY = y * algebra::detail::dimension<_Stride, 1>::size;
+							const size_t baseZ = z * algebra::detail::dimension<_Stride, 2>::size;
 
-							for (size_t i = 0; i < algebra::_dimension<_Core, 0>::size; ++i)
+							for (size_t i = 0; i < algebra::detail::dimension<_Core, 0>::size; ++i)
 							{
-								for (size_t j = 0; j < algebra::_dimension<_Core, 1>::size; ++j)
+								for (size_t j = 0; j < algebra::detail::dimension<_Core, 1>::size; ++j)
 								{
-									for (size_t k = 0; k < algebra::_dimension<_Core, 2>::size; ++k)
+									for (size_t k = 0; k < algebra::detail::dimension<_Core, 2>::size; ++k)
 									{
 										result(baseX + i, baseY + j, baseZ + k) += g * m_weights.m_kernels(kernel, i, j, k);
 										kernelGradient(kernel, i, j, k) += g * in(baseX + i, baseY + j, baseZ + k);

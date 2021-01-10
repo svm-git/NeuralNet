@@ -28,94 +28,99 @@ SOFTWARE.
 #include <array>
 #include <functional>
 
-namespace neural_network { namespace algebra {
+namespace neural_network {
+namespace algebra {
 
-	template <class _Metrics, const size_t _Dim>
-	struct _dimension
+namespace detail {
+
+	template <class Metrics, const size_t Dimension>
+	struct dimension
 	{
 		typedef typename std::conditional <
-			_Dim == 0,
-			typename _Metrics,
-			typename _dimension<typename _Metrics::_Base, (_Dim - 1)>::metrics >::type metrics;
+			Dimension == 0,
+			typename Metrics,
+			typename dimension<typename Metrics::base_type, (Dimension - 1)>::metrics >::type metrics;
 
 		enum { size = metrics::dimension_size };
 	};
 
-	template <class _Metrics>
-	struct _dimension<_Metrics, 0>
+	template <class Metrics>
+	struct dimension<Metrics, 0>
 	{
-		typedef typename _Metrics metrics;
+		typedef typename Metrics metrics;
 		enum { size = metrics::dimension_size };
 	};
 
-	template <const size_t... _Metrics>
+}
+
+	template <const size_t... Metrics>
 	class tensor;
 
-	template <const size_t _Size, const size_t... _Args>
-	struct metrics : public metrics<_Args...>
+	template <const size_t Size, const size_t... Args>
+	struct metrics : public metrics<Args...>
 	{
 	public:
-		static_assert(0 < _Size, "0-size metrics are not supported.");
+		static_assert(0 < Size, "0-size metrics are not supported.");
 
-		typedef typename metrics<_Size, _Args...> _Self;
-		typedef typename metrics<_Args...> _Base;
+		typedef typename metrics<Size, Args...> this_type;
+		typedef typename metrics<Args...> base_type;
 
-		typedef typename tensor< _Size, _Args...> tensor_type;
+		typedef typename tensor< Size, Args...> tensor_type;
 
 		enum { 
-			rank = _Base::rank + 1,
-			dimension_size = _Size,
-			data_size = _Size * _Base::data_size };
+			rank = base_type::rank + 1,
+			dimension_size = Size,
+			data_size = Size * base_type::data_size };
 
-		template <const size_t _Dim>
+		template <const size_t Dimension>
 		struct expand
 		{
-			typedef typename metrics<_Dim, _Size, _Args...> type;
+			typedef typename metrics<Dimension, Size, Args...> type;
 		};
 
 		struct shrink
 		{
-			typedef typename _Base type;
+			typedef typename base_type type;
 		};
 
-		template <typename ..._Other>
-		static bool is_valid_index(const size_t index, _Other... args)
+		template <typename ...IndexArgs>
+		static bool is_valid_index(const size_t index, IndexArgs... args)
 		{
-			return (index < _Size) && _Base::is_valid_index(args...);
+			return (index < Size) && base_type::is_valid_index(args...);
 		}
 
-		template <typename ..._Other>
-		static size_t offset(const size_t index, _Other... args)
+		template <typename ...IndexArgs>
+		static size_t offset(const size_t index, IndexArgs... args)
 		{
-			return index * _Base::data_size + _Base::offset(args...);
+			return index * base_type::data_size + base_type::offset(args...);
 		}
 	};
 
-	template <const size_t _Size>
-	class metrics<_Size>
+	template <const size_t Size>
+	class metrics<Size>
 	{
 	public:
-		static_assert(0 < _Size, "0-size metrics are not supported.");
+		static_assert(0 < Size, "0-size metrics are not supported.");
 
-		typedef typename metrics<_Size> _Self;
-		typedef typename metrics<_Size> _Base;
+		typedef typename metrics<Size> this_type;
+		typedef typename metrics<Size> base_type;
 
-		typedef typename tensor< _Size> tensor_type;
+		typedef typename tensor< Size> tensor_type;
 
 		enum { 
 			rank = 1,
-			dimension_size = _Size,
-			data_size = _Size };
+			dimension_size = Size,
+			data_size = Size };
 
-		template <const size_t _Dim>
+		template <const size_t Dimension>
 		struct expand
 		{
-			typedef typename metrics<_Dim, _Size> type;
+			typedef typename metrics<Dimension, Size> type;
 		};
 
 		static bool is_valid_index(const size_t index)
 		{
-			return (index < _Size);
+			return (index < Size);
 		}
 
 		static size_t offset(const size_t index)
@@ -124,51 +129,51 @@ namespace neural_network { namespace algebra {
 		}
 	};
 
-	template <const size_t... _Metrics>
+	template <const size_t... Metrics>
 	class tensor
 	{
 	public:
-		typedef typename tensor<_Metrics...> _Self;
-		typedef typename metrics<_Metrics...> metrics;
+		typedef typename tensor<Metrics...> this_type;
+		typedef typename metrics<Metrics...> metrics;
 
 		enum { 
 			rank = metrics::rank,
 			dimension_size = metrics::dimension_size,
 			data_size = metrics::data_size };
 
-		typedef typename std::array<double, data_size> _Data;
-		typedef typename std::shared_ptr<_Data> _DataPtr;
+		typedef typename std::array<double, data_size> buffer_type;
+		typedef typename std::shared_ptr<buffer_type> buffer_ptr;
 
 		tensor()
-			: m_pData(std::make_shared<_Data>())
+			: m_pData(std::make_shared<buffer_type>())
 		{
 			m_pData->fill(0.0);
 		}
 
 		tensor(std::function<double()> initializer)
-			: m_pData(std::make_shared<_Data>())
+			: m_pData(std::make_shared<buffer_type>())
 		{
 			std::generate(
 				m_pData->begin(), m_pData->end(),
 				initializer);
 		}
 
-		tensor(const _Self& other)
+		tensor(const this_type& other)
 			: m_pData(other.m_pData)
 		{}
 
-		tensor(const _DataPtr& ptr)
+		tensor(const buffer_ptr& ptr)
 			: m_pData(ptr)
 		{}
 
-		_Self& operator=(const _Self& other)
+		this_type& operator=(const this_type& other)
 		{
 			m_pData = other.m_pData;
 			return (*this);
 		}
 
-		template <typename ..._Idx>
-		const double& operator()(_Idx... idx) const
+		template <typename ...IndexArgs>
+		const double& operator()(IndexArgs... idx) const
 		{
 			if (false == metrics::is_valid_index(idx...))
 				throw std::invalid_argument("Index out of range.");
@@ -176,8 +181,8 @@ namespace neural_network { namespace algebra {
 			return *(m_pData->cbegin() + metrics::offset(idx...));
 		}
 
-		template <typename ..._Idx>
-		double& operator()(_Idx... idx)
+		template <typename ...IndexArgs>
+		double& operator()(IndexArgs... idx)
 		{
 			if (false == metrics::is_valid_index(idx...))
 				throw std::invalid_argument("Index out of range.");
@@ -185,16 +190,16 @@ namespace neural_network { namespace algebra {
 			return *(m_pData->begin() + metrics::offset(idx...));
 		}
 
-		template <const size_t _Dim>
+		template <const size_t Dimension>
 		const size_t size() const
 		{
-			static_assert(_Dim < _Self::rank, "Requested dimension is larger than tensor rank.");
+			static_assert(Dimension < this_type::rank, "Requested dimension is larger than tensor rank.");
 
-			return _dimension<metrics, _Dim>::size;
+			return detail::dimension<metrics, Dimension>::size;
 		}
 
 		template <class Operator>
-		void transform(_Self& dst, Operator op) const
+		void transform(this_type& dst, Operator op) const
 		{
 			std::transform(
 				m_pData->cbegin(), m_pData->cend(),
@@ -203,7 +208,7 @@ namespace neural_network { namespace algebra {
 		}
 
 		template <class Operator>
-		void transform(const _Self& other, _Self& dst, Operator op) const
+		void transform(const this_type& other, this_type& dst, Operator op) const
 		{
 			std::transform(
 				m_pData->cbegin(), m_pData->cend(),
@@ -212,12 +217,12 @@ namespace neural_network { namespace algebra {
 				op);
 		}
 
-		template <class _Other>
-		typename _Other::tensor_type reshape() const
+		template <class Other>
+		typename Other::tensor_type reshape() const
 		{
-			static_assert(metrics::data_size == _Other::data_size, "Reshape data size must match this data size.");
+			static_assert(metrics::data_size == Other::data_size, "Reshape data size must match this data size.");
 
-			return _Other::tensor_type(m_pData);
+			return Other::tensor_type(m_pData);
 		}
 
 		void fill(const double val)
@@ -226,7 +231,8 @@ namespace neural_network { namespace algebra {
 		}
 
 	private:
-		std::shared_ptr<_Data> m_pData;
+		std::shared_ptr<buffer_type> m_pData;
 	};
+
 }
 }

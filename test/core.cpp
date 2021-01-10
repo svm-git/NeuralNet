@@ -35,27 +35,27 @@ void test_core()
 	scenario sc("Test for convolution/pooling core utility classes");
 
 	{
-		typedef neural_network::algebra::metrics<2> _2;
-		typedef neural_network::algebra::metrics<3> _3;
-		typedef neural_network::algebra::metrics<7> _7;
+		typedef neural_network::algebra::metrics<2> m2;
+		typedef neural_network::algebra::metrics<3> m3;
+		typedef neural_network::algebra::metrics<7> m7;
 
-		static_assert(std::is_same<neural_network::algebra::_apply_core_with_stride<_7, _3, _2, 1>::metrics, neural_network::algebra::metrics<3>>::value, "Invalid metrics after applying rank 1 core and stride.");
+		static_assert(std::is_same<neural_network::algebra::detail::apply_core_with_stride<m7, m3, m2, 1>::metrics, neural_network::algebra::metrics<3>>::value, "Invalid metrics after applying rank 1 core and stride.");
 	}
 
 	{
-		typedef neural_network::algebra::metrics<3, 3> _3x3;
-		typedef neural_network::algebra::metrics<4, 4> _4x4;
-		typedef neural_network::algebra::metrics<19, 19> _19x19;
+		typedef neural_network::algebra::metrics<3, 3> m3x3;
+		typedef neural_network::algebra::metrics<4, 4> m4x4;
+		typedef neural_network::algebra::metrics<19, 19> m19x19;
 
-		static_assert(std::is_same<neural_network::algebra::_apply_core_with_stride<_19x19, _4x4, _3x3, 2>::metrics, neural_network::algebra::metrics<6, 6>>::value, "Invalid metrics after applying rank 2 core and stride.");
+		static_assert(std::is_same<neural_network::algebra::detail::apply_core_with_stride<m19x19, m4x4, m3x3, 2>::metrics, neural_network::algebra::metrics<6, 6>>::value, "Invalid metrics after applying rank 2 core and stride.");
 	}
 
 	{
-		typedef neural_network::algebra::metrics<1, 1, 1> _1x1x1;
-		typedef neural_network::algebra::metrics<2, 2, 2> _2x2x2;
-		typedef neural_network::algebra::metrics<17, 17, 3> _17x17x3;
+		typedef neural_network::algebra::metrics<1, 1, 1> m1x1x1;
+		typedef neural_network::algebra::metrics<2, 2, 2> m2x2x2;
+		typedef neural_network::algebra::metrics<17, 17, 3> m17x17x3;
 
-		static_assert(std::is_same<neural_network::algebra::_apply_core_with_stride<_17x17x3, _2x2x2, _1x1x1, 3>::metrics, neural_network::algebra::metrics<16, 16, 2>>::value, "Invalid metrics after applying rank 3 core and stride.");
+		static_assert(std::is_same<neural_network::algebra::detail::apply_core_with_stride<m17x17x3, m2x2x2, m1x1x1, 3>::metrics, neural_network::algebra::metrics<16, 16, 2>>::value, "Invalid metrics after applying rank 3 core and stride.");
 	}
 
 	sc.pass();

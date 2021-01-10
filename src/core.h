@@ -26,42 +26,45 @@ SOFTWARE.
 
 #include "tensor.h"
 
-namespace neural_network { namespace algebra {
+namespace neural_network {
+namespace algebra {
+namespace detail {
 
-	template <typename _Metrics, typename _Core, typename _Stride, const size_t _Rank>
-	struct _apply_core_with_stride
+	template <typename Metrics, typename Core, typename Stride, const size_t Rank>
+	struct apply_core_with_stride
 	{
-		static_assert(_Rank == _Metrics::rank, "Rank mismatch.");
-		static_assert(_Core::rank == _Metrics::rank, "Core rank must be the same as the input tensor rank.");
-		static_assert(_Core::rank == _Stride::rank, "Stride rank must be the same as the core rank.");
+		static_assert(Rank == Metrics::rank, "Rank mismatch.");
+		static_assert(Core::rank == Metrics::rank, "Core rank must be the same as the input tensor rank.");
+		static_assert(Core::rank == Stride::rank, "Stride rank must be the same as the core rank.");
 
-		static_assert(_Core::dimension_size <= _Metrics::dimension_size, "Core dimension must be the same or smaller then the input tensor dimension.");
-		static_assert(_Stride::dimension_size <= _Core::dimension_size, "Stride dimension must be the same or smaller then the core dimension.");
+		static_assert(Core::dimension_size <= Metrics::dimension_size, "Core dimension must be the same or smaller then the input tensor dimension.");
+		static_assert(Stride::dimension_size <= Core::dimension_size, "Stride dimension must be the same or smaller then the core dimension.");
 
-		static_assert(0 == (_Metrics::dimension_size - _Core::dimension_size) % _Stride::dimension_size, "Current core and stride size cause some data in the input tensor to be ignored.");
+		static_assert(0 == (Metrics::dimension_size - Core::dimension_size) % Stride::dimension_size, "Current core and stride size cause some data in the input tensor to be ignored.");
 
-		typedef typename _apply_core_with_stride<
-			typename _Metrics::_Base, typename _Core::_Base, typename _Stride::_Base, (_Rank - 1)>
-				::metrics _inner;
+		typedef typename apply_core_with_stride<
+			typename Metrics::base_type, typename Core::base_type, typename Stride::base_type, (Rank - 1)>
+				::metrics inner_metrics;
 
-		typedef typename _inner::
-			template expand<(_Metrics::dimension_size - _Core::dimension_size + _Stride::dimension_size) / _Stride::dimension_size>
+		typedef typename inner_metrics::
+			template expand<(Metrics::dimension_size - Core::dimension_size + Stride::dimension_size) / Stride::dimension_size>
 				::type metrics;
 	};
 
-	template <typename _Metrics, typename _Core, typename _Stride>
-	struct _apply_core_with_stride<_Metrics, _Core, _Stride, 1>
+	template <typename Metrics, typename Core, typename Stride>
+	struct apply_core_with_stride<Metrics, Core, Stride, 1>
 	{
-		static_assert(1 == _Metrics::rank, "Rank mismatch.");
-		static_assert(_Core::rank == _Metrics::rank, "Core rank must be the same as the input tensor rank.");
-		static_assert(_Core::rank == _Stride::rank, "Stride rank must be the same as the core rank.");
+		static_assert(1 == Metrics::rank, "Rank mismatch.");
+		static_assert(Core::rank == Metrics::rank, "Core rank must be the same as the input tensor rank.");
+		static_assert(Core::rank == Stride::rank, "Stride rank must be the same as the core rank.");
 
-		static_assert(_Core::dimension_size <= _Metrics::dimension_size, "Core dimension must be the same or smaller then the input tensor dimension.");
-		static_assert(_Stride::dimension_size <= _Core::dimension_size, "Stride dimension must be the same or smaller then the core dimension.");
+		static_assert(Core::dimension_size <= Metrics::dimension_size, "Core dimension must be the same or smaller then the input tensor dimension.");
+		static_assert(Stride::dimension_size <= Core::dimension_size, "Stride dimension must be the same or smaller then the core dimension.");
 
-		static_assert(0 == (_Metrics::dimension_size - _Core::dimension_size) % _Stride::dimension_size, "Current core and stride size cause some data in the input tensor to be ignored.");
+		static_assert(0 == (Metrics::dimension_size - Core::dimension_size) % Stride::dimension_size, "Current core and stride size cause some data in the input tensor to be ignored.");
 
-		typedef typename metrics<(_Metrics::dimension_size - _Core::dimension_size + _Stride::dimension_size) / _Stride::dimension_size> metrics;
+		typedef typename metrics<(Metrics::dimension_size - Core::dimension_size + Stride::dimension_size) / Stride::dimension_size> metrics;
 	};
+}
 }
 }

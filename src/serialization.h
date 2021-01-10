@@ -135,10 +135,10 @@ namespace neural_network { namespace serialization {
 	template <typename _Metrics, const size_t _Rank>
 	struct _metrics_serializer_impl : public _serializer_base
 	{
-		typedef typename _metrics_serializer_impl<typename _Metrics::_Base, (_Rank - 1)> _Base;
-		typedef typename _Base::value value;
+		typedef typename _metrics_serializer_impl<typename _Metrics::base_type, (_Rank - 1)> base_type;
+		typedef typename base_type::value value;
 
-		enum : size_t { serialized_data_size = _Base::serialized_data_size + sizeof(value) };
+		enum : size_t { serialized_data_size = base_type::serialized_data_size + sizeof(value) };
 
 		static void read(
 			std::istream& in)
@@ -147,7 +147,7 @@ namespace neural_network { namespace serialization {
 			if (!in.read(reinterpret_cast<char*>(std::addressof(dim)), sizeof(value)))
 				_throw_io_error("Failed to read metrics dimension value.");
 
-			_Base::read(in);
+			base_type::read(in);
 		}
 
 		static void write(
@@ -157,7 +157,7 @@ namespace neural_network { namespace serialization {
 			if (!out.write(reinterpret_cast<char*>(std::addressof(dim)), sizeof(value)))
 				_throw_io_error("Failed to write metrics dimension value.");
 
-			_Base::write(out);
+			base_type::write(out);
 		}
 	};
 
@@ -264,12 +264,12 @@ namespace neural_network { namespace serialization {
 	struct composite_serializer : public composite_serializer<_Args...>
 	{
 		typedef typename composite_serializer<_S, _Args...> _Self;
-		typedef typename composite_serializer<_Args...> _Base;
+		typedef typename composite_serializer<_Args...> base_type;
 
 		typedef typename _S::value value;
 		typedef typename _S serializer;
 
-		enum : size_t { serialized_data_size = _S::serialized_data_size + _Base::serialized_data_size };
+		enum : size_t { serialized_data_size = _S::serialized_data_size + base_type::serialized_data_size };
 
 		template <class... _Values>
 		static void read(
@@ -279,7 +279,7 @@ namespace neural_network { namespace serialization {
 		{
 			serializer::read(in, val);
 
-			_Base::read(in, args...);
+			base_type::read(in, args...);
 		}
 
 		template <class... _Values>
@@ -290,7 +290,7 @@ namespace neural_network { namespace serialization {
 		{
 			serializer::write(out, val);
 
-			_Base::write(out, args...);
+			base_type::write(out, args...);
 		}
 	};
 

@@ -239,7 +239,7 @@ namespace neural_network {
 		typedef typename _1d_max_pooling_impl<_Metrics, _Core, _Stride> _Self;
 
 		typedef typename _Metrics::tensor_type input;
-		typedef typename algebra::_apply_core_with_stride<_Metrics, _Core, _Stride, _Metrics::rank>::metrics::tensor_type output;
+		typedef typename algebra::detail::apply_core_with_stride<_Metrics, _Core, _Stride, _Metrics::rank>::metrics::tensor_type output;
 
 		_1d_max_pooling_impl()
 			: m_mask()
@@ -253,12 +253,12 @@ namespace neural_network {
 
 			for (size_t stride = 0; stride < result.size<0>(); ++stride)
 			{
-				const size_t baseX = stride * algebra::_dimension<_Stride, 0>::size;
+				const size_t baseX = stride * algebra::detail::dimension<_Stride, 0>::size;
 
 				double max = input(baseX);
 				size_t maxX = baseX;
 
-				for (size_t x = 1; x < algebra::_dimension<_Core, 0>::size; ++x)
+				for (size_t x = 1; x < algebra::detail::dimension<_Core, 0>::size; ++x)
 				{
 					auto e = input(baseX + x);
 					if (max < e)
@@ -283,9 +283,9 @@ namespace neural_network {
 			{
 				double g = grad(stride);
 
-				const size_t baseX = stride * algebra::_dimension<_Stride, 0>::size;
+				const size_t baseX = stride * algebra::detail::dimension<_Stride, 0>::size;
 
-				for (size_t x = 0; x < algebra::_dimension<_Core, 0>::size; ++x)
+				for (size_t x = 0; x < algebra::detail::dimension<_Core, 0>::size; ++x)
 				{
 					if (0.0 < m_mask(baseX + x))
 					{
@@ -308,7 +308,7 @@ namespace neural_network {
 		typedef typename _2d_max_pooling_impl<_Metrics, _Core, _Stride> _Self;
 
 		typedef typename _Metrics::tensor_type input;
-		typedef typename algebra::_apply_core_with_stride<_Metrics, _Core, _Stride, _Metrics::rank>::metrics::tensor_type output;
+		typedef typename algebra::detail::apply_core_with_stride<_Metrics, _Core, _Stride, _Metrics::rank>::metrics::tensor_type output;
 
 		_2d_max_pooling_impl()
 			: m_mask()
@@ -324,16 +324,16 @@ namespace neural_network {
 			{
 				for (size_t strideY = 0; strideY < result.size<1>(); ++strideY)
 				{
-					const size_t baseX = strideX * algebra::_dimension<_Stride, 0>::size;
-					const size_t baseY = strideY * algebra::_dimension<_Stride, 1>::size;
+					const size_t baseX = strideX * algebra::detail::dimension<_Stride, 0>::size;
+					const size_t baseY = strideY * algebra::detail::dimension<_Stride, 1>::size;
 
 					double max = input(baseX, baseY);
 					size_t maxX = baseX;
 					size_t maxY = baseY;
 
-					for (size_t x = 0; x < algebra::_dimension<_Core, 0>::size; ++x)
+					for (size_t x = 0; x < algebra::detail::dimension<_Core, 0>::size; ++x)
 					{
-						for (size_t y = 0; y < algebra::_dimension<_Core, 1>::size; ++y)
+						for (size_t y = 0; y < algebra::detail::dimension<_Core, 1>::size; ++y)
 						{
 							auto e = input(baseX + x, baseY + y);
 							if (max < e)
@@ -363,12 +363,12 @@ namespace neural_network {
 				{
 					double g = grad(strideX, strideY);
 
-					const size_t baseX = strideX * algebra::_dimension<_Stride, 0>::size;
-					const size_t baseY = strideY * algebra::_dimension<_Stride, 1>::size;
+					const size_t baseX = strideX * algebra::detail::dimension<_Stride, 0>::size;
+					const size_t baseY = strideY * algebra::detail::dimension<_Stride, 1>::size;
 
-					for (size_t x = 0; x < algebra::_dimension<_Core, 0>::size; ++x)
+					for (size_t x = 0; x < algebra::detail::dimension<_Core, 0>::size; ++x)
 					{
-						for (size_t y = 0; y < algebra::_dimension<_Core, 1>::size; ++y)
+						for (size_t y = 0; y < algebra::detail::dimension<_Core, 1>::size; ++y)
 						{
 							if (0.0 < m_mask(baseX + x, baseY + y))
 							{
@@ -393,7 +393,7 @@ namespace neural_network {
 		typedef typename _3d_max_pooling_impl<_Metrics, _Core, _Stride> _Self;
 
 		typedef typename _Metrics::tensor_type input;
-		typedef typename algebra::_apply_core_with_stride<_Metrics, _Core, _Stride, _Metrics::rank>::metrics::tensor_type output;
+		typedef typename algebra::detail::apply_core_with_stride<_Metrics, _Core, _Stride, _Metrics::rank>::metrics::tensor_type output;
 
 		_3d_max_pooling_impl()
 			: m_mask()
@@ -411,20 +411,20 @@ namespace neural_network {
 				{
 					for (size_t strideZ = 0; strideZ < result.size<2>(); ++strideZ)
 					{
-						const size_t baseX = strideX * algebra::_dimension<_Stride, 0>::size;
-						const size_t baseY = strideY * algebra::_dimension<_Stride, 1>::size;
-						const size_t baseZ = strideZ * algebra::_dimension<_Stride, 2>::size;
+						const size_t baseX = strideX * algebra::detail::dimension<_Stride, 0>::size;
+						const size_t baseY = strideY * algebra::detail::dimension<_Stride, 1>::size;
+						const size_t baseZ = strideZ * algebra::detail::dimension<_Stride, 2>::size;
 
 						double max = input(baseX, baseY, baseZ);
 						size_t maxX = baseX;
 						size_t maxY = baseY;
 						size_t maxZ = baseZ;
 
-						for (size_t x = 0; x < algebra::_dimension<_Core, 0>::size; ++x)
+						for (size_t x = 0; x < algebra::detail::dimension<_Core, 0>::size; ++x)
 						{
-							for (size_t y = 0; y < algebra::_dimension<_Core, 1>::size; ++y)
+							for (size_t y = 0; y < algebra::detail::dimension<_Core, 1>::size; ++y)
 							{
-								for (size_t z = 0; z < algebra::_dimension<_Core, 2>::size; ++z)
+								for (size_t z = 0; z < algebra::detail::dimension<_Core, 2>::size; ++z)
 								{
 									auto e = input(baseX + x, baseY + y, baseZ + z);
 									if (max < e)
@@ -459,15 +459,15 @@ namespace neural_network {
 					{
 						double g = grad(strideX, strideY, strideZ);
 
-						const size_t baseX = strideX * algebra::_dimension<_Stride, 0>::size;
-						const size_t baseY = strideY * algebra::_dimension<_Stride, 1>::size;
-						const size_t baseZ = strideZ * algebra::_dimension<_Stride, 2>::size;
+						const size_t baseX = strideX * algebra::detail::dimension<_Stride, 0>::size;
+						const size_t baseY = strideY * algebra::detail::dimension<_Stride, 1>::size;
+						const size_t baseZ = strideZ * algebra::detail::dimension<_Stride, 2>::size;
 
-						for (size_t x = 0; x < algebra::_dimension<_Core, 0>::size; ++x)
+						for (size_t x = 0; x < algebra::detail::dimension<_Core, 0>::size; ++x)
 						{
-							for (size_t y = 0; y < algebra::_dimension<_Core, 1>::size; ++y)
+							for (size_t y = 0; y < algebra::detail::dimension<_Core, 1>::size; ++y)
 							{
-								for (size_t z = 0; z < algebra::_dimension<_Core, 2>::size; ++z)
+								for (size_t z = 0; z < algebra::detail::dimension<_Core, 2>::size; ++z)
 								{
 									if (0.0 < m_mask(baseX + x, baseY + y, baseZ + z))
 									{
