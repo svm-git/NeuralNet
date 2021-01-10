@@ -199,10 +199,10 @@ namespace detail {
 	};
 
 	template <class... Layers>
-	network<typename std::_Unrefwrap<Layers>::type...> make_network(
+	network<Layers...> make_network(
 		Layers&&... args)
 	{
-		typedef network<typename std::_Unrefwrap<Layers>::type...> network_type;
+		typedef network<Layers...> network_type;
 		return (network_type(std::forward<Layers>(args)...));
 	}
 }

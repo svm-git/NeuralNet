@@ -334,10 +334,10 @@ namespace detail {
 	};
 
 	template <class... Networks>
-	network_ensemble<typename std::_Unrefwrap<Networks>::type...> make_ensemble(
+	network_ensemble<Networks...> make_ensemble(
 		Networks&&... args)
 	{
-		typedef network_ensemble<typename std::_Unrefwrap<Networks>::type...> network_type;
+		typedef network_ensemble<Networks...> network_type;
 		return (network_type(std::forward<Networks>(args)...));
 	}
 }
