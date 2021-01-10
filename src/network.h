@@ -28,12 +28,14 @@ SOFTWARE.
 
 namespace neural_network {
 
-	template <class _Net, class _Loss>
-	void _train_impl(
-		_Net& net,
-		const typename _Net::input& input,
-		const typename _Net::output& truth,
-		_Loss& loss,
+namespace detail {
+
+	template <class Network, class Loss>
+	void train_network(
+		Network& net,
+		const typename Network::input& input,
+		const typename Network::output& truth,
+		Loss& loss,
 		const double rate)
 	{
 		net.compute_gradient(
@@ -44,101 +46,103 @@ namespace neural_network {
 		net.update_weights(-std::abs(rate));
 	}
 
-	template <class _Layer, class... _Args>
-	class network : protected network <_Args...>
+}
+
+	template <class Layer, class... Args>
+	class network : protected network <Args...>
 	{
 	public:
-		typedef typename network<_Layer, _Args...> _Self;
-		typedef typename network<_Args...> _Base;
+		typedef typename network<Layer, Args...> this_type;
+		typedef typename network<Args...> base_type;
 
-		typedef typename _Layer::input input;
-		typedef typename _Base::output output;
+		typedef typename Layer::input input;
+		typedef typename base_type::output output;
 
-		static_assert(std::is_same<typename _Layer::output, typename _Base::input>::value, "Output of the current layer does not match input of the next layer.");
+		static_assert(std::is_same<typename Layer::output, typename base_type::input>::value, "Output of the current layer does not match input of the next layer.");
 
 		network()
-			: _Base(), m_layer()
+			: base_type(), m_layer()
 		{}
 
-		network(const _Layer& layer, const _Args&... args)
-			: _Base(args...), m_layer(layer)
+		network(const Layer& layer, const Args&... args)
+			: base_type(args...), m_layer(layer)
 		{
 		}
 
 		const output& process(const input& input)
 		{
-			return _Base::process(
+			return base_type::process(
 				m_layer.process(input));
 		}
 
 		const input& compute_gradient(const output& grad)
 		{
 			return m_layer.compute_gradient(
-				_Base::compute_gradient(grad));
+				base_type::compute_gradient(grad));
 		}
 
 		void update_weights(
 			const double rate)
 		{
-			_Base::update_weights(rate);
+			base_type::update_weights(rate);
 			m_layer.update_weights(rate);
 		}
 
-		template <class _Loss>
+		template <class Loss>
 		void train(
 			const typename input& input,
 			const typename output& truth,
-			_Loss& loss,
+			Loss& loss,
 			const double rate)
 		{
-			_train_impl(*this, input, truth, loss, rate);
+			detail::train_network(*this, input, truth, loss, rate);
 		}
 
 		struct serializer
 		{
-			typedef _Self value;
+			typedef this_type value;
 
 			enum : size_t { 
 				serialized_data_size = 
-					_Base::serializer::serialized_data_size
-					+ _Layer::serializer::serialized_data_size
+					base_type::serializer::serialized_data_size
+					+ Layer::serializer::serialized_data_size
 			};
 
 			static void read(
 				std::istream& in,
 				value& layer)
 			{
-				_Layer::serializer::read(in, layer.m_layer);
-				_Base::serializer::read(in, layer);
+				Layer::serializer::read(in, layer.m_layer);
+				base_type::serializer::read(in, layer);
 			}
 
 			static void write(
 				std::ostream& out,
 				const value& layer)
 			{
-				_Layer::serializer::write(out, layer.m_layer);
-				_Base::serializer::write(out, layer);
+				Layer::serializer::write(out, layer.m_layer);
+				base_type::serializer::write(out, layer);
 			}
 		};
 
 	private:
-		_Layer m_layer;
+		Layer m_layer;
 	};
 
-	template <class _Layer>
-	class network<_Layer>
+	template <class Layer>
+	class network<Layer>
 	{
 	public:
-		typedef typename network<_Layer> _Self;
+		typedef typename network<Layer> this_type;
 
-		typedef typename _Layer::input input;
-		typedef typename _Layer::output output;
+		typedef typename Layer::input input;
+		typedef typename Layer::output output;
 
 		network()
 			: m_layer()
 		{}
 
-		network(const _Layer& layer)
+		network(const Layer& layer)
 			: m_layer(layer)
 		{
 		}
@@ -159,46 +163,46 @@ namespace neural_network {
 			m_layer.update_weights(rate);
 		}
 
-		template <class _Loss>
+		template <class Loss>
 		void train(
 			const typename input& input,
 			const typename output& truth,
-			_Loss& loss,
+			Loss& loss,
 			const double rate)
 		{
-			_train_impl(*this, input, truth, loss, rate);
+			train_network(*this, input, truth, loss, rate);
 		}
 
 		struct serializer
 		{
-			typedef _Self value;
+			typedef this_type value;
 
-			enum : size_t { serialized_data_size = _Layer::serializer::serialized_data_size };
+			enum : size_t { serialized_data_size = Layer::serializer::serialized_data_size };
 
 			static void read(
 				std::istream& in,
 				value& layer)
 			{
-				_Layer::serializer::read(in, layer.m_layer);
+				Layer::serializer::read(in, layer.m_layer);
 			}
 
 			static void write(
 				std::ostream& out,
 				const value& layer)
 			{
-				_Layer::serializer::write(out, layer.m_layer);
+				Layer::serializer::write(out, layer.m_layer);
 			}
 		};
 
 	private:
-		_Layer m_layer;
+		Layer m_layer;
 	};
 
-	template <class... _Layers>
-	network<typename std::_Unrefwrap<_Layers>::type...> make_network(
-		_Layers&&... args)
+	template <class... Layers>
+	network<typename std::_Unrefwrap<Layers>::type...> make_network(
+		Layers&&... args)
 	{
-		typedef network<typename std::_Unrefwrap<_Layers>::type...> _Ntype;
-		return (_Ntype(std::forward<_Layers>(args)...));
+		typedef network<typename std::_Unrefwrap<Layers>::type...> network_type;
+		return (network_type(std::forward<Layers>(args)...));
 	}
 }

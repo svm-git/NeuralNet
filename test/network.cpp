@@ -45,30 +45,30 @@ void test_network()
 
 	auto random_values = [&distr, &gen]() { return distr(gen); };
 
-	typedef neural_network::algebra::metrics<4> _4;
-	typedef neural_network::algebra::metrics<5> _5;
-	typedef neural_network::algebra::metrics<5, 2> _5x2;
-	typedef neural_network::algebra::metrics<2, 2> _2x2;
+	typedef neural_network::algebra::metrics<4> m4;
+	typedef neural_network::algebra::metrics<5> m5;
+	typedef neural_network::algebra::metrics<5, 2> m5x2;
+	typedef neural_network::algebra::metrics<2, 2> m2x2;
 
 	auto net = neural_network::make_network(
 
-		neural_network::make_fully_connected_layer<_5x2, _5>(
+		neural_network::make_fully_connected_layer<m5x2, m5>(
 			random_values, 0.00003),
 
-		neural_network::make_relu_activation_layer<_5>(),
+		neural_network::make_relu_activation_layer<m5>(),
 
-		neural_network::make_fully_connected_layer<_5, _2x2>(
+		neural_network::make_fully_connected_layer<m5, m2x2>(
 			random_values, 0.00005),
 
-		neural_network::make_logistic_activation_layer<_2x2>()
+		neural_network::make_logistic_activation_layer<m2x2>()
 	);
 
-	_5x2::tensor_type input(random_values);
-	_2x2::tensor_type truth;
+	m5x2::tensor_type input(random_values);
+	m2x2::tensor_type truth;
 
 	truth(0, 0) = 1.0;
 
-	neural_network::squared_error_loss<_2x2> loss;
+	neural_network::squared_error_loss<m2x2> loss;
 
 	double initialLoss = 0.0, finalLoss = 0.0;
 

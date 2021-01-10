@@ -84,22 +84,22 @@ void test_serialization()
 
 		char buffer[0x100] = { 0x0 };
 
-		typedef neural_network::algebra::tensor<4, 3, 2> _4x3x2;
-		typedef neural_network::serialization::tensor_serializer<_4x3x2> serializer;
+		typedef neural_network::algebra::tensor<4, 3, 2> m4x3x2;
+		typedef neural_network::serialization::tensor_serializer<m4x3x2> serializer;
 
 		static_assert(serializer::serialized_data_size <= sizeof(buffer), "Stack buffer is not large enough.");
 
 		membuf outbuf(buffer, sizeof(buffer));
 		std::ostream out(&outbuf);
 
-		_4x3x2 expected(random_values);
+		m4x3x2 expected(random_values);
 		serializer::write(out, expected);
 		test::assert(serializer::serialized_data_size == out.tellp(), "Invalid stream position after writing tensor.");
 
 		membuf inbuf(buffer, sizeof(buffer));
 		std::istream in(&inbuf);
 
-		_4x3x2 actual;
+		m4x3x2 actual;
 		serializer::read(in, actual);
 		test::assert(serializer::serialized_data_size == in.tellg(), "Invalid stream position after reading tensor.");
 
@@ -120,22 +120,22 @@ void test_serialization()
 
 		char buffer[0x1000] = { 0x0 };
 
-		typedef neural_network::algebra::tensor<4, 3, 2> _4x3x2;
-		typedef neural_network::algebra::tensor<4, 3> _4x3;
+		typedef neural_network::algebra::tensor<4, 3, 2> m4x3x2;
+		typedef neural_network::algebra::tensor<4, 3> m4x3;
 
 		typedef neural_network::serialization::chunk_serializer<
 			neural_network::serialization::chunk_types::fully_connected_layer,
 			neural_network::serialization::composite_serializer<
 				neural_network::serialization::value_serializer<double>,
-				neural_network::serialization::tensor_serializer<_4x3x2>,
-				neural_network::serialization::tensor_serializer<_4x3>>
+				neural_network::serialization::tensor_serializer<m4x3x2>,
+				neural_network::serialization::tensor_serializer<m4x3>>
 		> serializer;
 
 		static_assert(serializer::serialized_data_size <= sizeof(buffer), "Stack buffer is not large enough.");
 
 		double expectedDouble = 654.321;
-		_4x3x2 expectedT1(random_values);
-		_4x3 expectedT2(random_values);
+		m4x3x2 expectedT1(random_values);
+		m4x3 expectedT2(random_values);
 
 		membuf outbuf(buffer, sizeof(buffer));
 		std::ostream out(&outbuf);
@@ -147,8 +147,8 @@ void test_serialization()
 		std::istream in(&inbuf);
 
 		double actualDouble = 0.0;
-		_4x3x2 actualT1;
-		_4x3 actualT2;
+		m4x3x2 actualT1;
+		m4x3 actualT2;
 
 		serializer::read(in, actualDouble, actualT1, actualT2);
 		test::assert(serializer::serialized_data_size == in.tellg(), "Invalid stream position after reading composite chunk value.");

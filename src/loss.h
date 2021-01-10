@@ -28,24 +28,24 @@ SOFTWARE.
 
 namespace neural_network {
 
-	template <typename _ValueMetrics>
+	template <typename ValueMetrics>
 	class squared_error_loss
 	{
 	public:
-		typedef typename squared_error_loss<_ValueMetrics> _Self;
-		typedef typename _ValueMetrics::tensor_type value;
+		typedef typename squared_error_loss<ValueMetrics> this_type;
+		typedef typename ValueMetrics::tensor_type value_type;
 
 		squared_error_loss()
 			: m_gradient()
 		{}
 
 		const double compute(
-			const value& result,
-			const value& truth)
+			const value_type& result,
+			const value_type& truth)
 		{
 			double loss = 0.0;
 
-			value tmp;
+			value_type tmp;
 			result.transform(
 				truth,
 				tmp,
@@ -59,9 +59,9 @@ namespace neural_network {
 			return loss;
 		}
 
-		const value& compute_gradient(
-			const value& result,
-			const value& truth)
+		const value_type& compute_gradient(
+			const value_type& result,
+			const value_type& truth)
 		{
 			result.transform(
 				truth,
@@ -75,6 +75,6 @@ namespace neural_network {
 		}
 	
 	private:
-		value m_gradient;
+		value_type m_gradient;
 	};
 }

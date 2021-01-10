@@ -47,11 +47,11 @@ void test_pooling()
 	{
 		test::verbose("1D Max Pooling Tests");
 
-		typedef neural_network::algebra::metrics<4> _4;
+		typedef neural_network::algebra::metrics<4> m4;
 
-		auto layer = neural_network::make_max_pooling_layer<_4>();
+		auto layer = neural_network::make_max_pooling_layer<m4>();
 
-		_4::tensor_type input(random_values);
+		m4::tensor_type input(random_values);
 
 		auto tmp = layer.process(input);
 
@@ -66,11 +66,11 @@ void test_pooling()
 	{
 		test::verbose("2D Max Pooling Tests");
 
-		typedef neural_network::algebra::metrics<4, 3> _4x3;
+		typedef neural_network::algebra::metrics<4, 3> m4x3;
 
-		auto layer = neural_network::make_max_pooling_layer<_4x3>();
+		auto layer = neural_network::make_max_pooling_layer<m4x3>();
 
-		_4x3::tensor_type input(random_values);
+		m4x3::tensor_type input(random_values);
 
 		auto tmp = layer.process(input);
 
@@ -85,11 +85,11 @@ void test_pooling()
 	{
 		test::verbose("3D Max Pooling Tests");
 
-		typedef neural_network::algebra::metrics<4, 3, 2> _4x3x2;
+		typedef neural_network::algebra::metrics<4, 3, 2> m4x3x2;
 
-		auto layer = neural_network::make_max_pooling_layer<_4x3x2>();
+		auto layer = neural_network::make_max_pooling_layer<m4x3x2>();
 
-		_4x3x2::tensor_type input(random_values);
+		m4x3x2::tensor_type input(random_values);
 
 		auto tmp = layer.process(input);
 
@@ -105,11 +105,11 @@ void test_pooling()
 	{
 		test::verbose("4D Max Pooling Tests");
 
-		typedef neural_network::algebra::metrics<5, 4, 3, 2> _5x4x3x2;
+		typedef neural_network::algebra::metrics<5, 4, 3, 2> m5x4x3x2;
 
-		auto layer = neural_network::make_max_pooling_layer<_5x4x3x2>();
+		auto layer = neural_network::make_max_pooling_layer<m5x4x3x2>();
 
-		_5x4x3x2::tensor_type input(random_values);
+		m5x4x3x2::tensor_type input(random_values);
 
 		auto tmp = layer.process(input);
 
@@ -126,13 +126,13 @@ void test_pooling()
 	{
 		test::verbose("1D Max Pooling With Core Tests");
 
-		typedef neural_network::algebra::metrics<1> _1;
-		typedef neural_network::algebra::metrics<3> _3;
-		typedef neural_network::algebra::metrics<4> _4;
+		typedef neural_network::algebra::metrics<1> m1;
+		typedef neural_network::algebra::metrics<3> m3;
+		typedef neural_network::algebra::metrics<4> m4;
 
-		auto layer = neural_network::make_max_pooling_layer<_4, _3, _1>();
+		auto layer = neural_network::make_max_pooling_layer<m4, m3, m1>();
 
-		_4::tensor_type input(random_values);
+		m4::tensor_type input(random_values);
 
 		auto tmp = layer.process(input);
 
@@ -147,13 +147,13 @@ void test_pooling()
 	{
 		test::verbose("2D Max Pooling With Core Tests");
 
-		typedef neural_network::algebra::metrics<2, 2> _2x2;
-		typedef neural_network::algebra::metrics<3, 2> _3x2;
-		typedef neural_network::algebra::metrics<7, 8> _7x8;
+		typedef neural_network::algebra::metrics<2, 2> m2x2;
+		typedef neural_network::algebra::metrics<3, 2> m3x2;
+		typedef neural_network::algebra::metrics<7, 8> m7x8;
 
-		auto layer = neural_network::make_max_pooling_layer<_7x8, _3x2, _2x2>();
+		auto layer = neural_network::make_max_pooling_layer<m7x8, m3x2, m2x2>();
 
-		_7x8::tensor_type input(random_values);
+		m7x8::tensor_type input(random_values);
 
 		auto tmp = layer.process(input);
 
@@ -169,13 +169,13 @@ void test_pooling()
 	{
 		test::verbose("3D Max Pooling With Core Tests");
 
-		typedef neural_network::algebra::metrics<2, 2, 1> _2x2x1;
-		typedef neural_network::algebra::metrics<3, 3, 3> _3x3x3;
-		typedef neural_network::algebra::metrics<19, 19, 3> _19x19x3;
+		typedef neural_network::algebra::metrics<2, 2, 1> m2x2x1;
+		typedef neural_network::algebra::metrics<3, 3, 3> m3x3x3;
+		typedef neural_network::algebra::metrics<19, 19, 3> m19x19x3;
 
-		auto layer = neural_network::make_max_pooling_layer<_19x19x3, _3x3x3, _2x2x1>();
+		auto layer = neural_network::make_max_pooling_layer<m19x19x3, m3x3x3, m2x2x1>();
 
-		_19x19x3::tensor_type input(random_values);
+		m19x19x3::tensor_type input(random_values);
 
 		auto tmp = layer.process(input);
 

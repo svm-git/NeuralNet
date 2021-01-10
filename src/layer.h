@@ -28,12 +28,12 @@ SOFTWARE.
 
 namespace neural_network {
 
-	template <typename _InputMetrics, typename _OutputMetrics>
+	template <typename InputMetrics, typename OutputMetrics>
 	class layer_base
 	{
 	public:
-		typedef typename _InputMetrics::tensor_type input;
-		typedef typename _OutputMetrics::tensor_type output;
+		typedef typename InputMetrics::tensor_type input;
+		typedef typename OutputMetrics::tensor_type output;
 
 		layer_base()
 			: m_output(), m_gradient()

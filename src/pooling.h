@@ -30,18 +30,20 @@ SOFTWARE.
 
 namespace neural_network {
 	
-	template <class _Metrics>
-	class _scalar_max_pooling_impl
+namespace detail {
+
+	template <class Metrics>
+	class scalar_max_pooling
 	{
 	public:
-		typedef typename _scalar_max_pooling_impl<_Metrics> _Self;
+		typedef typename scalar_max_pooling<Metrics> this_type;
 
-		typedef typename _Metrics::tensor_type input;
+		typedef typename Metrics::tensor_type input;
 		typedef algebra::metrics<1>::tensor_type output;
 
-		static_assert(_Metrics::rank == 1, "Invalid metric rank for scalar max pooling.");
+		static_assert(Metrics::rank == 1, "Invalid metric rank for scalar max pooling.");
 
-		_scalar_max_pooling_impl()
+		scalar_max_pooling()
 			: m_mask()
 		{}
 	
@@ -84,21 +86,21 @@ namespace neural_network {
 		input m_mask;
 	};
 
-	template <class _Metrics>
-	class _generic_max_pooling_impl
+	template <class Metrics>
+	class generic_max_pooling
 	{
 	public:
-		typedef typename _generic_max_pooling_impl<_Metrics> _Self;
+		typedef typename generic_max_pooling<Metrics> this_type;
 
-		typedef typename _Metrics::tensor_type input;
-		typedef typename _Metrics::shrink::type::tensor_type output;
+		typedef typename Metrics::tensor_type input;
+		typedef typename Metrics::shrink::type::tensor_type output;
 
-		typedef typename algebra::metrics<_Metrics::dimension_size, output::data_size>::tensor_type reshaped_input;
+		typedef typename algebra::metrics<Metrics::dimension_size, output::data_size>::tensor_type reshaped_input;
 		typedef typename algebra::metrics<output::data_size>::tensor_type reshaped_output;
 
-		static_assert(2 <= _Metrics::rank, "Metric rank is too small for generic max pooling.");
+		static_assert(2 <= Metrics::rank, "Metric rank is too small for generic max pooling.");
 
-		_generic_max_pooling_impl()
+		generic_max_pooling()
 			: m_mask()
 		{}
 
@@ -153,95 +155,28 @@ namespace neural_network {
 		reshaped_input m_mask;
 	};
 
-	template <class _Metrics>
-	struct _max_pooling_impl
+	template <class Metrics>
+	struct max_pooling_impl
 	{
 		typedef typename std::conditional<
-			_Metrics::rank == 1, 
-			_scalar_max_pooling_impl<_Metrics>,
-			_generic_max_pooling_impl<_Metrics>
+			Metrics::rank == 1, 
+			scalar_max_pooling<Metrics>,
+			generic_max_pooling<Metrics>
 		>::type type;
 	};
 
-	template <class _InputMetrics>
-	class max_pooling : public layer_base<_InputMetrics, typename _max_pooling_impl<_InputMetrics>::type::output::metrics>
+	template <class Metrics, class Core, class Stride>
+	class max_pooling_1d
 	{
 	public:
-		typedef typename max_pooling<_InputMetrics> _Self;
-		typedef typename _max_pooling_impl<_InputMetrics>::type impl;
+		static_assert(Metrics::rank == 1, "Invalid metric rank for 1D max pooling.");
 
-		typedef typename layer_base<_InputMetrics, typename impl::output::metrics> _Base;
+		typedef typename max_pooling_1d<Metrics, Core, Stride> this_type;
 
-		typedef typename serialization::chunk_serializer<
-			serialization::chunk_types::max_pooling_layer,
-			serialization::metrics_serializer<_InputMetrics>
-		> _serializer_impl;
+		typedef typename Metrics::tensor_type input;
+		typedef typename algebra::detail::apply_core_with_stride<Metrics, Core, Stride, Metrics::rank>::metrics::tensor_type output;
 
-		max_pooling()
-			: _Base(), m_impl()
-		{}
-
-		const output& process(const input& input)
-		{
-			m_impl.process(input, m_output);
-			return m_output;
-		}
-
-		const input& compute_gradient(const output& grad)
-		{
-			m_impl.compute_gradient(grad, m_gradient);
-			return m_gradient;
-		}
-
-		void update_weights(
-			const double /*rate*/)
-		{}
-
-		struct serializer
-		{
-			typedef _Self value_type;
-
-			enum : size_t { serialized_data_size = _serializer_impl::serialized_data_size };
-
-			static void read(
-				std::istream& in,
-				value_type&)
-			{
-				_serializer_impl::read(in);
-			}
-
-			static void write(
-				std::ostream& out,
-				const value_type&)
-			{
-				_serializer_impl::write(out);
-			}
-		};
-
-	private:
-		impl m_impl;
-	};
-	
-	template <class _Input, class... _Args>
-	max_pooling<_Input> make_max_pooling_layer(
-		_Args&&... args)
-	{
-		typedef max_pooling<_Input> _Ltype;
-		return (_Ltype(std::forward<_Args>(args)...));
-	}
-
-	template <class _Metrics, class _Core, class _Stride>
-	class _1d_max_pooling_impl
-	{
-	public:
-		static_assert(_Metrics::rank == 1, "Invalid metric rank for 1D max pooling.");
-
-		typedef typename _1d_max_pooling_impl<_Metrics, _Core, _Stride> _Self;
-
-		typedef typename _Metrics::tensor_type input;
-		typedef typename algebra::detail::apply_core_with_stride<_Metrics, _Core, _Stride, _Metrics::rank>::metrics::tensor_type output;
-
-		_1d_max_pooling_impl()
+		max_pooling_1d()
 			: m_mask()
 		{}
 
@@ -253,12 +188,12 @@ namespace neural_network {
 
 			for (size_t stride = 0; stride < result.size<0>(); ++stride)
 			{
-				const size_t baseX = stride * algebra::detail::dimension<_Stride, 0>::size;
+				const size_t baseX = stride * algebra::detail::dimension<Stride, 0>::size;
 
 				double max = input(baseX);
 				size_t maxX = baseX;
 
-				for (size_t x = 1; x < algebra::detail::dimension<_Core, 0>::size; ++x)
+				for (size_t x = 1; x < algebra::detail::dimension<Core, 0>::size; ++x)
 				{
 					auto e = input(baseX + x);
 					if (max < e)
@@ -283,9 +218,9 @@ namespace neural_network {
 			{
 				double g = grad(stride);
 
-				const size_t baseX = stride * algebra::detail::dimension<_Stride, 0>::size;
+				const size_t baseX = stride * algebra::detail::dimension<Stride, 0>::size;
 
-				for (size_t x = 0; x < algebra::detail::dimension<_Core, 0>::size; ++x)
+				for (size_t x = 0; x < algebra::detail::dimension<Core, 0>::size; ++x)
 				{
 					if (0.0 < m_mask(baseX + x))
 					{
@@ -299,18 +234,18 @@ namespace neural_network {
 		input m_mask;
 	};
 
-	template <class _Metrics, class _Core, class _Stride>
-	class _2d_max_pooling_impl
+	template <class Metrics, class Core, class Stride>
+	class max_pooling_2d
 	{
 	public:
-		static_assert(_Metrics::rank == 2, "Invalid metric rank for 2D max pooling.");
+		static_assert(Metrics::rank == 2, "Invalid metric rank for 2D max pooling.");
 
-		typedef typename _2d_max_pooling_impl<_Metrics, _Core, _Stride> _Self;
+		typedef typename max_pooling_2d<Metrics, Core, Stride> this_type;
 
-		typedef typename _Metrics::tensor_type input;
-		typedef typename algebra::detail::apply_core_with_stride<_Metrics, _Core, _Stride, _Metrics::rank>::metrics::tensor_type output;
+		typedef typename Metrics::tensor_type input;
+		typedef typename algebra::detail::apply_core_with_stride<Metrics, Core, Stride, Metrics::rank>::metrics::tensor_type output;
 
-		_2d_max_pooling_impl()
+		max_pooling_2d()
 			: m_mask()
 		{}
 
@@ -324,16 +259,16 @@ namespace neural_network {
 			{
 				for (size_t strideY = 0; strideY < result.size<1>(); ++strideY)
 				{
-					const size_t baseX = strideX * algebra::detail::dimension<_Stride, 0>::size;
-					const size_t baseY = strideY * algebra::detail::dimension<_Stride, 1>::size;
+					const size_t baseX = strideX * algebra::detail::dimension<Stride, 0>::size;
+					const size_t baseY = strideY * algebra::detail::dimension<Stride, 1>::size;
 
 					double max = input(baseX, baseY);
 					size_t maxX = baseX;
 					size_t maxY = baseY;
 
-					for (size_t x = 0; x < algebra::detail::dimension<_Core, 0>::size; ++x)
+					for (size_t x = 0; x < algebra::detail::dimension<Core, 0>::size; ++x)
 					{
-						for (size_t y = 0; y < algebra::detail::dimension<_Core, 1>::size; ++y)
+						for (size_t y = 0; y < algebra::detail::dimension<Core, 1>::size; ++y)
 						{
 							auto e = input(baseX + x, baseY + y);
 							if (max < e)
@@ -363,12 +298,12 @@ namespace neural_network {
 				{
 					double g = grad(strideX, strideY);
 
-					const size_t baseX = strideX * algebra::detail::dimension<_Stride, 0>::size;
-					const size_t baseY = strideY * algebra::detail::dimension<_Stride, 1>::size;
+					const size_t baseX = strideX * algebra::detail::dimension<Stride, 0>::size;
+					const size_t baseY = strideY * algebra::detail::dimension<Stride, 1>::size;
 
-					for (size_t x = 0; x < algebra::detail::dimension<_Core, 0>::size; ++x)
+					for (size_t x = 0; x < algebra::detail::dimension<Core, 0>::size; ++x)
 					{
-						for (size_t y = 0; y < algebra::detail::dimension<_Core, 1>::size; ++y)
+						for (size_t y = 0; y < algebra::detail::dimension<Core, 1>::size; ++y)
 						{
 							if (0.0 < m_mask(baseX + x, baseY + y))
 							{
@@ -384,18 +319,18 @@ namespace neural_network {
 		input m_mask;
 	};
 
-	template <class _Metrics, class _Core, class _Stride>
-	class _3d_max_pooling_impl
+	template <class Metrics, class Core, class Stride>
+	class max_pooling_3d
 	{
 	public:
-		static_assert(_Metrics::rank == 3, "Invalid metric rank for 3D max pooling.");
+		static_assert(Metrics::rank == 3, "Invalid metric rank for 3D max pooling.");
 
-		typedef typename _3d_max_pooling_impl<_Metrics, _Core, _Stride> _Self;
+		typedef typename max_pooling_3d<Metrics, Core, Stride> this_type;
 
-		typedef typename _Metrics::tensor_type input;
-		typedef typename algebra::detail::apply_core_with_stride<_Metrics, _Core, _Stride, _Metrics::rank>::metrics::tensor_type output;
+		typedef typename Metrics::tensor_type input;
+		typedef typename algebra::detail::apply_core_with_stride<Metrics, Core, Stride, Metrics::rank>::metrics::tensor_type output;
 
-		_3d_max_pooling_impl()
+		max_pooling_3d()
 			: m_mask()
 		{}
 
@@ -411,20 +346,20 @@ namespace neural_network {
 				{
 					for (size_t strideZ = 0; strideZ < result.size<2>(); ++strideZ)
 					{
-						const size_t baseX = strideX * algebra::detail::dimension<_Stride, 0>::size;
-						const size_t baseY = strideY * algebra::detail::dimension<_Stride, 1>::size;
-						const size_t baseZ = strideZ * algebra::detail::dimension<_Stride, 2>::size;
+						const size_t baseX = strideX * algebra::detail::dimension<Stride, 0>::size;
+						const size_t baseY = strideY * algebra::detail::dimension<Stride, 1>::size;
+						const size_t baseZ = strideZ * algebra::detail::dimension<Stride, 2>::size;
 
 						double max = input(baseX, baseY, baseZ);
 						size_t maxX = baseX;
 						size_t maxY = baseY;
 						size_t maxZ = baseZ;
 
-						for (size_t x = 0; x < algebra::detail::dimension<_Core, 0>::size; ++x)
+						for (size_t x = 0; x < algebra::detail::dimension<Core, 0>::size; ++x)
 						{
-							for (size_t y = 0; y < algebra::detail::dimension<_Core, 1>::size; ++y)
+							for (size_t y = 0; y < algebra::detail::dimension<Core, 1>::size; ++y)
 							{
-								for (size_t z = 0; z < algebra::detail::dimension<_Core, 2>::size; ++z)
+								for (size_t z = 0; z < algebra::detail::dimension<Core, 2>::size; ++z)
 								{
 									auto e = input(baseX + x, baseY + y, baseZ + z);
 									if (max < e)
@@ -459,15 +394,15 @@ namespace neural_network {
 					{
 						double g = grad(strideX, strideY, strideZ);
 
-						const size_t baseX = strideX * algebra::detail::dimension<_Stride, 0>::size;
-						const size_t baseY = strideY * algebra::detail::dimension<_Stride, 1>::size;
-						const size_t baseZ = strideZ * algebra::detail::dimension<_Stride, 2>::size;
+						const size_t baseX = strideX * algebra::detail::dimension<Stride, 0>::size;
+						const size_t baseY = strideY * algebra::detail::dimension<Stride, 1>::size;
+						const size_t baseZ = strideZ * algebra::detail::dimension<Stride, 2>::size;
 
-						for (size_t x = 0; x < algebra::detail::dimension<_Core, 0>::size; ++x)
+						for (size_t x = 0; x < algebra::detail::dimension<Core, 0>::size; ++x)
 						{
-							for (size_t y = 0; y < algebra::detail::dimension<_Core, 1>::size; ++y)
+							for (size_t y = 0; y < algebra::detail::dimension<Core, 1>::size; ++y)
 							{
-								for (size_t z = 0; z < algebra::detail::dimension<_Core, 2>::size; ++z)
+								for (size_t z = 0; z < algebra::detail::dimension<Core, 2>::size; ++z)
 								{
 									if (0.0 < m_mask(baseX + x, baseY + y, baseZ + z))
 									{
@@ -485,20 +420,20 @@ namespace neural_network {
 		input m_mask;
 	};
 
-	template <class _Metrics, class _Core, class _Stride>
-	struct _max_pooling_core_impl
+	template <class Metrics, class Core, class Stride>
+	struct max_pooling_core_impl
 	{
-		static_assert(1 <= _Metrics::rank == 1 && _Metrics::rank <= 3, "Max pooling with core is supported only for 1D, 2D or 3D tensors.");
+		static_assert(1 <= Metrics::rank == 1 && Metrics::rank <= 3, "Max pooling with core is supported only for 1D, 2D or 3D tensors.");
 
-		typedef typename _max_pooling_core_impl<_Metrics, _Core, _Stride> _Self;
+		typedef typename max_pooling_core_impl<Metrics, Core, Stride> this_type;
 
 		typedef typename std::conditional<
-			_Metrics::rank == 1,
-			_1d_max_pooling_impl<_Metrics, _Core, _Stride>,
+			Metrics::rank == 1,
+			max_pooling_1d<Metrics, Core, Stride>,
 			typename std::conditional<
-				_Metrics::rank == 2,
-				_2d_max_pooling_impl<_Metrics, _Core, _Stride>,
-				_3d_max_pooling_impl<_Metrics, _Core, _Stride>
+				Metrics::rank == 2,
+				max_pooling_2d<Metrics, Core, Stride>,
+				max_pooling_3d<Metrics, Core, Stride>
 			>::type
 		>::type type;
 
@@ -507,14 +442,15 @@ namespace neural_network {
 		{
 			typedef typename _Layer value_type;
 
-			typedef typename serialization::metrics_serializer<_Metrics> _metrics_serializer;
-			typedef typename serialization::metrics_serializer<_Core> _core_serializer;
-			typedef typename serialization::metrics_serializer<_Stride> _stride_serializer;
+			typedef typename serialization::metrics_serializer<Metrics> _metrics_serializer;
+			typedef typename serialization::metrics_serializer<Core> _core_serializer;
+			typedef typename serialization::metrics_serializer<Stride> _stride_serializer;
 
-			enum : size_t { serialized_data_size = 
-				_metrics_serializer::serialized_data_size 
-					+ _core_serializer::serialized_data_size
-					+ _stride_serializer::serialized_data_size
+			enum : size_t {
+				serialized_data_size =
+				_metrics_serializer::serialized_data_size
+				+ _core_serializer::serialized_data_size
+				+ _stride_serializer::serialized_data_size
 			};
 
 			static void read(
@@ -537,22 +473,24 @@ namespace neural_network {
 		};
 	};
 
-	template <class _InputMetrics, class _Core, class _Stride>
-	class max_pooling_with_core : public layer_base<_InputMetrics, typename _max_pooling_core_impl<_InputMetrics, _Core, _Stride>::type::output::metrics>
+}
+
+	template <class InputMetrics>
+	class max_pooling : public layer_base<InputMetrics, typename detail::max_pooling_impl<InputMetrics>::type::output::metrics>
 	{
 	public:
-		typedef typename max_pooling_with_core<_InputMetrics, _Core, _Stride> _Self;
-		typedef typename _max_pooling_core_impl<_InputMetrics, _Core, _Stride>::type impl;
+		typedef typename max_pooling<InputMetrics> this_type;
+		typedef typename detail::max_pooling_impl<InputMetrics>::type impl;
 
-		typedef typename layer_base<_InputMetrics, typename impl::output::metrics> _Base;
+		typedef typename layer_base<InputMetrics, typename impl::output::metrics> base_type;
 
 		typedef typename serialization::chunk_serializer<
-			serialization::chunk_types::max_pooling_with_core_layer,
-			typename _max_pooling_core_impl<_InputMetrics, _Core, _Stride>::template serializer<_Self>
-		> serializer;
+			serialization::chunk_types::max_pooling_layer,
+			serialization::metrics_serializer<InputMetrics>
+		> serializer_impl_type;
 
-		max_pooling_with_core()
-			: _Base(), m_impl()
+		max_pooling()
+			: base_type(), m_impl()
 		{}
 
 		const output& process(const input& input)
@@ -568,18 +506,85 @@ namespace neural_network {
 		}
 
 		void update_weights(
-			const double /*rate*/)
+			const double)
+		{}
+
+		struct serializer
+		{
+			typedef this_type value_type;
+
+			enum : size_t { serialized_data_size = serializer_impl_type::serialized_data_size };
+
+			static void read(
+				std::istream& in,
+				value_type&)
+			{
+				serializer_impl_type::read(in);
+			}
+
+			static void write(
+				std::ostream& out,
+				const value_type&)
+			{
+				serializer_impl_type::write(out);
+			}
+		};
+
+	private:
+		impl m_impl;
+	};
+	
+	template <class InputMetrics, class Core, class Stride>
+	class max_pooling_with_core : public layer_base<InputMetrics, typename detail::max_pooling_core_impl<InputMetrics, Core, Stride>::type::output::metrics>
+	{
+	public:
+		typedef typename max_pooling_with_core<InputMetrics, Core, Stride> this_type;
+		typedef typename detail::max_pooling_core_impl<InputMetrics, Core, Stride>::type impl;
+
+		typedef typename layer_base<InputMetrics, typename impl::output::metrics> base_type;
+
+		typedef typename serialization::chunk_serializer<
+			serialization::chunk_types::max_pooling_with_core_layer,
+			typename detail::max_pooling_core_impl<InputMetrics, Core, Stride>::template serializer<this_type>
+		> serializer;
+
+		max_pooling_with_core()
+			: base_type(), m_impl()
+		{}
+
+		const output& process(const input& input)
+		{
+			m_impl.process(input, m_output);
+			return m_output;
+		}
+
+		const input& compute_gradient(const output& grad)
+		{
+			m_impl.compute_gradient(grad, m_gradient);
+			return m_gradient;
+		}
+
+		void update_weights(
+			const double)
 		{}
 
 	private:
 		impl m_impl;
 	};
 
-	template <class _Input, class _Core, class _Stride, class... _Args>
-	max_pooling_with_core<_Input, _Core, _Stride> make_max_pooling_layer(
-		_Args&&... args)
+	template <class Input, class... Args>
+	max_pooling<Input> make_max_pooling_layer(
+		Args&&... args)
 	{
-		typedef max_pooling_with_core<_Input, _Core, _Stride> _Ltype;
-		return (_Ltype(std::forward<_Args>(args)...));
+		typedef max_pooling<Input> layer_type;
+		return (layer_type(std::forward<Args>(args)...));
+	}
+
+	template <class Input, class Core, class Stride, class... Args>
+	max_pooling_with_core<Input, Core, Stride> make_max_pooling_layer(
+		Args&&... args)
+	{
+		typedef max_pooling_with_core<Input, Core, Stride> layer_type;
+		return (layer_type(std::forward<Args>(args)...));
 	}
 }
