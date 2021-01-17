@@ -225,8 +225,9 @@ namespace detail {
 	struct tensor_serializer : public detail::serializer_base
 	{
 		typedef typename metrics_serializer<typename Tensor::metrics> MetricsSerializer;
+		typedef typename Tensor::number_type number_type;
 
-		enum : size_t { serialized_data_size = MetricsSerializer::serialized_data_size + sizeof(double) * Tensor::data_size };
+		enum : size_t { serialized_data_size = MetricsSerializer::serialized_data_size + sizeof(number_type) * Tensor::data_size };
 
 		typedef typename Tensor value_type;
 
@@ -241,7 +242,7 @@ namespace detail {
 
 			for (size_t i = 0; i < flatValue.size<0>(); ++i)
 			{
-				if (!in.read(reinterpret_cast<char*>(std::addressof(flatValue(i))), sizeof(double)))
+				if (!in.read(reinterpret_cast<char*>(std::addressof(flatValue(i))), sizeof(number_type)))
 					throw_io_error("Failed to read tensor element value.");
 			}
 
@@ -259,7 +260,7 @@ namespace detail {
 
 			for (size_t i = 0; i < flatValue.size<0>(); ++i)
 			{
-				if (!out.write(reinterpret_cast<char*>(std::addressof(flatValue(i))), sizeof(double)))
+				if (!out.write(reinterpret_cast<char*>(std::addressof(flatValue(i))), sizeof(number_type)))
 					throw_io_error("Failed to write tensor element value.");
 			}
 		}

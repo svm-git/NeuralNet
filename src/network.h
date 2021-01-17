@@ -36,7 +36,7 @@ namespace detail {
 		const typename Network::input& input,
 		const typename Network::output& truth,
 		Loss& loss,
-		const double rate)
+		const typename Network::number_type rate)
 	{
 		net.compute_gradient(
 			loss.compute_gradient(
@@ -60,6 +60,8 @@ namespace detail {
 
 		static_assert(std::is_same<typename Layer::output, typename base_type::input>::value, "Output of the current layer does not match input of the next layer.");
 
+		typedef typename Layer::number_type number_type;
+
 		network()
 			: base_type(), m_layer()
 		{}
@@ -82,7 +84,7 @@ namespace detail {
 		}
 
 		void update_weights(
-			const double rate)
+			const number_type rate)
 		{
 			base_type::update_weights(rate);
 			m_layer.update_weights(rate);
@@ -93,7 +95,7 @@ namespace detail {
 			const typename input& input,
 			const typename output& truth,
 			Loss& loss,
-			const double rate)
+			const number_type rate)
 		{
 			detail::train_network(*this, input, truth, loss, rate);
 		}
@@ -138,6 +140,8 @@ namespace detail {
 		typedef typename Layer::input input;
 		typedef typename Layer::output output;
 
+		typedef typename Layer::number_type number_type;
+
 		network()
 			: m_layer()
 		{}
@@ -158,7 +162,7 @@ namespace detail {
 		}
 
 		void update_weights(
-			const double rate)
+			const number_type rate)
 		{
 			m_layer.update_weights(rate);
 		}
@@ -168,7 +172,7 @@ namespace detail {
 			const typename input& input,
 			const typename output& truth,
 			Loss& loss,
-			const double rate)
+			const number_type rate)
 		{
 			train_network(*this, input, truth, loss, rate);
 		}

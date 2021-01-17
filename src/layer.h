@@ -35,6 +35,12 @@ namespace neural_network {
 		typedef typename InputMetrics::tensor_type input;
 		typedef typename OutputMetrics::tensor_type output;
 
+		static_assert(
+			std::is_same<typename input::number_type, typename output::number_type>::value,
+			"Input and output tensor value types do not match.");
+
+		typedef typename input::number_type number_type;
+
 		layer_base()
 			: m_output(), m_gradient()
 		{}

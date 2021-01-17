@@ -44,12 +44,18 @@ namespace detail {
 			>
 		> serializer_impl_type;
 
+		static_assert(
+			std::is_same<typename Kernels::number_type, typename Bias::number_type>::value,
+			"Kernel and bias tensor value types do not match.");
+
+		typedef typename Kernels::number_type number_type;
+
 		convolution_kernels()
 			: m_kernels(), m_bias()
 		{}
 
 		convolution_kernels(
-			std::function<double()> initializer)
+			std::function<number_type()> initializer)
 			: m_kernels(initializer), m_bias(initializer)
 		{
 		}
@@ -93,13 +99,14 @@ namespace detail {
 		typedef typename algebra::metrics<Kernels>::tensor_type bias;
 		typedef typename convolution_kernels<kernel_weights, bias> weights_type;
 		typedef typename weights_type::serializer serializer;
+		typedef typename weights_type::number_type number_type;
 
 		convolution_1d()
 			: m_weights()
 		{}
 
 		convolution_1d(
-			std::function<double()> initializer)
+			std::function<number_type()> initializer)
 			: m_weights(initializer)
 		{
 		}
@@ -112,7 +119,7 @@ namespace detail {
 			{
 				for (size_t stride = 0; stride < result.size<1>(); ++stride)
 				{
-					double sum = 0.0;
+					number_type sum = 0.0f;
 
 					const size_t baseX = stride * algebra::detail::dimension<Stride, 0>::size;
 
@@ -133,16 +140,16 @@ namespace detail {
 			kernel_weights& kernelGradient,
 			bias& biasGradient)
 		{
-			result.fill(0.0);
-			kernelGradient.fill(0.0);
+			result.fill(0.0f);
+			kernelGradient.fill(0.0f);
 
 			for (size_t kernel = 0; kernel < grad.size<0>(); ++kernel)
 			{
-				double sum = 0.0;
+				number_type sum = 0.0f;
 
 				for (size_t x = 0; x < grad.size<1>(); ++x)
 				{
-					double g = grad(kernel, x);
+					number_type g = grad(kernel, x);
 					sum += g;
 
 					const size_t baseX = x * algebra::detail::dimension<Stride, 0>::size;
@@ -161,7 +168,7 @@ namespace detail {
 		void update_weights(
 			const kernel_weights& kernelGradient,
 			const bias& biasGradient,
-			const double rate)
+			const number_type rate)
 		{
 			for (size_t kernel = 0; kernel < m_weights.m_kernels.size<0>(); ++kernel)
 			{
@@ -191,13 +198,14 @@ namespace detail {
 		typedef typename algebra::metrics<Kernels>::tensor_type bias;
 		typedef typename convolution_kernels<kernel_weights, bias> weights_type;
 		typedef typename weights_type::serializer serializer;
+		typedef typename weights_type::number_type number_type;
 
 		convolution_2d()
 			: m_weights()
 		{}
 
 		convolution_2d(
-			std::function<double()> initializer)
+			std::function<number_type()> initializer)
 			: m_weights(initializer)
 		{
 		}
@@ -212,7 +220,7 @@ namespace detail {
 				{
 					for (size_t strideY = 0; strideY < result.size<2>(); ++strideY)
 					{
-						double sum = 0.0;
+						number_type sum = 0.0f;
 
 						const size_t baseX = strideX * algebra::detail::dimension<Stride, 0>::size;
 						const size_t baseY = strideY * algebra::detail::dimension<Stride, 1>::size;
@@ -238,18 +246,18 @@ namespace detail {
 			kernel_weights& kernelGradient,
 			bias& biasGradient)
 		{
-			result.fill(0.0);
-			kernelGradient.fill(0.0);
+			result.fill(0.0f);
+			kernelGradient.fill(0.0f);
 
 			for (size_t kernel = 0; kernel < grad.size<0>(); ++kernel)
 			{
-				double sum = 0.0;
+				number_type sum = 0.0f;
 
 				for (size_t x = 0; x < grad.size<1>(); ++x)
 				{
 					for (size_t y = 0; y < grad.size<2>(); ++y)
 					{
-						double g = grad(kernel, x, y);
+						number_type g = grad(kernel, x, y);
 						sum += g;
 
 						const size_t baseX = x * algebra::detail::dimension<Stride, 0>::size;
@@ -273,7 +281,7 @@ namespace detail {
 		void update_weights(
 			const kernel_weights& kernelGradient,
 			bias& biasGradient,
-			const double rate)
+			const number_type rate)
 		{
 			for (size_t kernel = 0; kernel < m_weights.m_bias.size<0>(); ++kernel)
 			{
@@ -306,13 +314,14 @@ namespace detail {
 		typedef typename algebra::metrics<Kernels>::tensor_type bias;
 		typedef typename convolution_kernels<kernel_weights, bias> weights_type;
 		typedef typename weights_type::serializer serializer;
+		typedef typename weights_type::number_type number_type;
 
 		convolution_3d()
 			: m_weights()
 		{}
 
 		convolution_3d(
-			std::function<double()> initializer)
+			std::function<number_type()> initializer)
 			: m_weights(initializer)
 		{
 		}
@@ -329,7 +338,7 @@ namespace detail {
 					{
 						for (size_t strideZ = 0; strideZ < result.size<3>(); ++strideZ)
 						{
-							double sum = 0.0;
+							number_type sum = 0.0f;
 
 							const size_t baseX = strideX * algebra::detail::dimension<Stride, 0>::size;
 							const size_t baseY = strideY * algebra::detail::dimension<Stride, 1>::size;
@@ -360,12 +369,12 @@ namespace detail {
 			kernel_weights& kernelGradient,
 			bias& biasGradient)
 		{
-			result.fill(0.0);
-			kernelGradient.fill(0.0);
+			result.fill(0.0f);
+			kernelGradient.fill(0.0f);
 
 			for (size_t kernel = 0; kernel < grad.size<0>(); ++kernel)
 			{
-				double sum = 0.0;
+				number_type sum = 0.0f;
 
 				for (size_t x = 0; x < grad.size<1>(); ++x)
 				{
@@ -373,7 +382,7 @@ namespace detail {
 					{
 						for (size_t z = 0; z < grad.size<3>(); ++z)
 						{
-							double g = grad(kernel, x, y, z);
+							number_type g = grad(kernel, x, y, z);
 							sum += g;
 
 							const size_t baseX = x * algebra::detail::dimension<Stride, 0>::size;
@@ -402,7 +411,7 @@ namespace detail {
 		void update_weights(
 			const kernel_weights& kernelGradient,
 			const bias& biasGradient,
-			const double rate)
+			const number_type rate)
 		{
 			for (size_t kernel = 0; kernel < m_weights.m_bias.size<0>(); ++kernel)
 			{
@@ -460,7 +469,7 @@ template <class InputMetrics, class Core, class Stride, const size_t Kernels>
 		{}
 
 		convolution(
-			std::function<double()> initializer)
+			std::function<number_type()> initializer)
 			: base_type(), m_impl(initializer), m_input(), m_biasGradient()
 		{
 		}
@@ -485,7 +494,7 @@ template <class InputMetrics, class Core, class Stride, const size_t Kernels>
 		}
 
 		void update_weights(
-			const double rate)
+			const number_type rate)
 		{
 			m_impl.update_weights(
 				m_kernelGradient,

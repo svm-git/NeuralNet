@@ -36,8 +36,8 @@ struct arguments
 	std::wstring mnist_path;
 	std::wstring model_path;
 	size_t epochs;
-	double start_rate;
-	double epoch_step;
+	float start_rate;
+	float epoch_step;
 	size_t training_percent;
 };
 
@@ -71,8 +71,8 @@ bool parse_arguments(
 {
 	args.train = true;
 	args.epochs = 35;
-	args.start_rate = 0.3;
-	args.epoch_step = 0.9;
+	args.start_rate = 0.3f;
+	args.epoch_step = 0.9f;
 	args.model_path = L"";
 	args.mnist_path = L"";
 	args.training_percent = 30;
@@ -97,14 +97,14 @@ bool parse_arguments(
 		}
 		else if (0 == rawArg.find(L"-rate:"))
 		{
-			args.start_rate = _wtof(rawArg.substr(6).c_str());
-			if (false == (0.0 < args.start_rate))
+			args.start_rate = (float)_wtof(rawArg.substr(6).c_str());
+			if (false == (0.0f < args.start_rate))
 				return false;
 		}
 		else if (0 == rawArg.find(L"-step:"))
 		{
-			args.epoch_step = _wtof(rawArg.substr(6).c_str());
-			if (false == (0.0 < args.epoch_step) || false == (args.epoch_step < 1.0))
+			args.epoch_step = (float)_wtof(rawArg.substr(6).c_str());
+			if (false == (0.0f < args.epoch_step) || false == (args.epoch_step < 1.0f))
 				return false;
 		}
 		else if (0 == rawArg.find(L"-train:"))
@@ -134,8 +134,8 @@ const output_metrics::tensor_type& get_target(
 		for (size_t i = 0; i < 10; ++i)
 		{
 			output_metrics::tensor_type target;
-			target.fill(0.0);
-			target(i) = 1.0;
+			target.fill(0.0f);
+			target(i) = 1.0f;
 
 			targets.push_back(target);
 		}
@@ -149,9 +149,9 @@ const output_metrics::tensor_type& get_target(
 
 const int get_result(
 	const output_metrics::tensor_type& output,
-	double& confidence)
+	float& confidence)
 {
-	double max = output(0);
+	float max = output(0);
 	size_t maxIndex = 0;
 	for (size_t i = 1; i < output.size<0>(); ++i)
 	{
@@ -166,12 +166,12 @@ const int get_result(
 	return (int)maxIndex;
 }
 
-std::vector<double> get_learning_rates(
-	double rate,
-	const double factor,
+std::vector<float> get_learning_rates(
+	float rate,
+	const float factor,
 	const size_t levels)
 {
-	std::vector<double> result;
+	std::vector<float> result;
 	result.reserve(levels);
 
 	for (size_t i = 0; i < levels; ++i)
@@ -193,7 +193,7 @@ void test_success_rate(
 	for (auto digit : training)
 	{
 		auto result = network.process(digit.second);
-		double confidence;
+		float confidence;
 		int recognized = get_result(result, confidence);
 
 		if (digit.first != recognized)
@@ -203,8 +203,8 @@ void test_success_rate(
 	}
 
 	std::cout << prefix.c_str()
-		<< " success rate: " << 100.0 * ((double)(training.size() - errors) / (double)training.size())
-		<< "% error rate: " << 100.0 * ((double)(errors) / (double)training.size())
+		<< " success rate: " << 100.0 * ((float)(training.size() - errors) / (float)training.size())
+		<< "% error rate: " << 100.0 * ((float)(errors) / (float)training.size())
 		<< "%\r\n";
 }
 
@@ -215,7 +215,7 @@ int train_network(
 	mnist_data& full,
 	std::mt19937& gen)
 {
-	std::uniform_real_distribution<double> distr(0, 1);
+	std::uniform_real_distribution<float> distr(0, 1);
 
 	mnist_data training;
 	mnist_data test;
@@ -233,7 +233,7 @@ int train_network(
 		while (full.size() > segment)
 		{
 			size_t segmentSize = full.size() - segment;
-			size_t nextIndex = segment + (size_t)(((double)segmentSize) * distr(gen));
+			size_t nextIndex = segment + (size_t)(((float)segmentSize) * distr(gen));
 
 			if (segmentSize > 1)
 			{
@@ -260,7 +260,7 @@ int train_network(
 		<< "Epochs: " << args.epochs << "; training set: " << training.size() << " images; test set: " << test.size() << " images."
 		<< "\r\n";
 
-	std::vector<double> rates = get_learning_rates(args.start_rate, args.epoch_step, args.epochs);
+	std::vector<float> rates = get_learning_rates(args.start_rate, args.epoch_step, args.epochs);
 
 	std::vector<const mnist_digit*> input;
 
@@ -279,7 +279,7 @@ int train_network(
 
 			while (input.size() > 0)
 			{
-				size_t nextIndex = (size_t)(((double)input.size()) * distr(gen));
+				size_t nextIndex = (size_t)(((float)input.size()) * distr(gen));
 				const mnist_digit* digit = input[nextIndex];
 
 				if (input.size() > 1)
@@ -377,7 +377,7 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	std::random_device rd;
 	std::mt19937 gen(rd());
-	std::uniform_real_distribution<double> weight_distr(-0.5, 0.5);
+	std::uniform_real_distribution<float> weight_distr(-0.5, 0.5);
 
 	auto random_values = [&weight_distr, &gen]() { return weight_distr(gen); };
 
@@ -405,19 +405,19 @@ int _tmain(int argc, _TCHAR* argv[])
 		neural_network::make_ensemble(
 			neural_network::make_network(
 				neural_network::make_fully_connected_layer<digit::metrics, m49>(
-					random_values, 0.0003),
+					random_values, 0.0003f),
 				neural_network::make_relu_activation_layer<m49>(),
 				neural_network::make_fully_connected_layer<m49, output_metrics>(
-					random_values, 0.0003),
+					random_values, 0.0003f),
 				neural_network::make_logistic_activation_layer<output_metrics>()
 			),
 			neural_network::make_network(
 				neural_network::make_max_pooling_layer<digit::metrics, m2x2, m2x2>(),
 				neural_network::make_fully_connected_layer<m14x14, m49>(
-					random_values, 0.0003),
+					random_values, 0.0003f),
 				neural_network::make_relu_activation_layer<m49>(),
 				neural_network::make_fully_connected_layer<m49, output_metrics>(
-					random_values, 0.0003),
+					random_values, 0.0003f),
 				neural_network::make_logistic_activation_layer<output_metrics>()
 			),
 			neural_network::make_network(
@@ -431,10 +431,10 @@ int _tmain(int argc, _TCHAR* argv[])
 				neural_network::make_relu_activation_layer<mK2x2x2>(),
 				neural_network::make_max_pooling_layer<mK2x2x2, mPooling, mPooling>(),
 				neural_network::make_fully_connected_layer<mPoolingOut, output_metrics>(
-					random_values, 0.0003),
+					random_values, 0.0003f),
 				neural_network::make_relu_activation_layer<output_metrics>(),
 				neural_network::make_fully_connected_layer<output_metrics, output_metrics>(
-					random_values, 0.0003),
+					random_values, 0.0003f),
 				neural_network::make_logistic_activation_layer<output_metrics>()
 			)
 		),

@@ -49,18 +49,18 @@ namespace neural_network {
 			serialization::composite_serializer<
 				serialization::tensor_serializer<weights_type>,
 				serialization::tensor_serializer<bias_type>,
-				serialization::value_serializer<double>>
+				serialization::value_serializer<number_type>>
 		> serializer_impl_type;
 
 		fully_connected(
-			const double regularization = 0.000001)
+			const number_type regularization = 0.000001f)
 				: base_type(), m_input(), m_weights(), m_weightsGradient(), m_bias(), m_biasGradient(), m_regularization(regularization)
 		{
 		}
 
 		fully_connected(
-			std::function<double()> initializer,
-			const double regularization = 0.000001)
+			std::function<number_type()> initializer,
+			const number_type regularization = 0.000001f)
 				: base_type(), m_input(), m_weights(initializer), m_weightsGradient(), m_bias(initializer), m_biasGradient(), m_regularization(regularization)
 		{
 		}
@@ -74,7 +74,7 @@ namespace neural_network {
 
 			for (size_t j = 0; j < rout.size<0>(); ++j)
 			{
-				double sum = 0.0;
+				number_type sum = 0.0f;
 				for (size_t i = 0; i < rin.size<0>(); ++i)
 				{
 					sum += m_weights(i, j) * rin(i);
@@ -94,7 +94,7 @@ namespace neural_network {
 
 			for (size_t i = 0; i < rgradResult.size<0>(); ++i)
 			{
-				double sum = 0.0;
+				number_type sum = 0.0f;
 				for (size_t j = 0; j < rgrad.size<0>(); ++j)
 				{
 					sum += m_weights(i, j) * rgrad(j);
@@ -114,7 +114,7 @@ namespace neural_network {
 		}
 
 		void update_weights(
-			const double rate)
+			const number_type rate)
 		{
 			for (size_t i = 0; i < m_weights.size<0>(); ++i)
 			{
@@ -157,7 +157,7 @@ namespace neural_network {
 		weights_type m_weightsGradient;
 		bias_type m_bias;
 		bias_type m_biasGradient;
-		double m_regularization;
+		number_type m_regularization;
 	};
 
 	template <class Input, class Output, class... Args>

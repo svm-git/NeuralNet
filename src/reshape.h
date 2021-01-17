@@ -88,7 +88,7 @@ namespace detail {
 		}
 
 		void update_weights(
-			const double)
+			const float)
 		{}
 	};
 

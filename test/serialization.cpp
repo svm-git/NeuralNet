@@ -65,9 +65,9 @@ void test_serialization()
 {
 	scenario sc("Test for neural_network::serialization primitives");
 
-	test_value_serializer<double>(
-		"Test value_serializer<double>",
-		123.456);
+	test_value_serializer<float>(
+		"Test value_serializer<float>",
+		123.456f);
 
 	test_value_serializer<size_t>(
 		"Test value_serializer<size_t>",
@@ -75,7 +75,7 @@ void test_serialization()
 
 	std::random_device rd;
 	std::mt19937 gen(rd());
-	std::uniform_real_distribution<double> distr(-0.5, 0.5);
+	std::uniform_real_distribution<float> distr(-0.5f, 0.5f);
 
 	auto random_values = [&distr, &gen]() { return distr(gen); };
 
@@ -126,34 +126,34 @@ void test_serialization()
 		typedef neural_network::serialization::chunk_serializer<
 			neural_network::serialization::chunk_types::fully_connected_layer,
 			neural_network::serialization::composite_serializer<
-				neural_network::serialization::value_serializer<double>,
+				neural_network::serialization::value_serializer<float>,
 				neural_network::serialization::tensor_serializer<m4x3x2>,
 				neural_network::serialization::tensor_serializer<m4x3>>
 		> serializer;
 
 		static_assert(serializer::serialized_data_size <= sizeof(buffer), "Stack buffer is not large enough.");
 
-		double expectedDouble = 654.321;
+		float expectedFloat = 654.321f;
 		m4x3x2 expectedT1(random_values);
 		m4x3 expectedT2(random_values);
 
 		membuf outbuf(buffer, sizeof(buffer));
 		std::ostream out(&outbuf);
 
-		serializer::write(out, expectedDouble, expectedT1, expectedT2);
+		serializer::write(out, expectedFloat, expectedT1, expectedT2);
 		test::assert(serializer::serialized_data_size == out.tellp(), "Invalid stream position after writing composite chunk value.");
 
 		membuf inbuf(buffer, sizeof(buffer));
 		std::istream in(&inbuf);
 
-		double actualDouble = 0.0;
+		float actualFloat = 0.0f;
 		m4x3x2 actualT1;
 		m4x3 actualT2;
 
-		serializer::read(in, actualDouble, actualT1, actualT2);
+		serializer::read(in, actualFloat, actualT1, actualT2);
 		test::assert(serializer::serialized_data_size == in.tellg(), "Invalid stream position after reading composite chunk value.");
 
-		test::assert(actualDouble == expectedDouble, "Double value that was read does not match the expected value that was written.");
+		test::assert(actualFloat == expectedFloat, "Float value that was read does not match the expected value that was written.");
 
 		for (size_t x = 0; x < expectedT1.size<0>(); ++x)
 		{

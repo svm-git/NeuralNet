@@ -40,7 +40,7 @@ namespace neural_network {
 		{}
 
 		void update_weights(
-			const double)
+			const number_type)
 		{}
 
 	protected:
@@ -69,9 +69,9 @@ namespace neural_network {
 
 			input.transform(
 				m_output,
-				[](const double& i)
+				[](const number_type& i)
 				{
-					return std::max(i, 0.0);
+					return std::max(i, 0.0f);
 				});
 
 			return m_output;
@@ -82,9 +82,9 @@ namespace neural_network {
 			grad.transform(
 				m_input,
 				m_gradient,
-				[](const double& g, const double& i)
+				[](const number_type& g, const number_type& i)
 				{
-					return (i > 0.0) ? g : 0.0;
+					return (i > 0.0f) ? g : 0.0f;
 				});
 
 			return m_gradient;
@@ -134,7 +134,7 @@ namespace neural_network {
 
 			input.transform(
 				m_output,
-				[](const double& i)
+				[](const number_type& i)
 			{
 				return this_type::logistic(i);
 			});
@@ -147,10 +147,10 @@ namespace neural_network {
 			grad.transform(
 				m_input,
 				m_gradient,
-				[](const double& g, const double& i)
+				[](const number_type& g, const number_type& i)
 			{
 				auto f = this_type::logistic(i);
-				return g * f * (1.0 - f);
+				return g * f * (1.0f - f);
 			});
 
 			return m_gradient;
@@ -177,9 +177,9 @@ namespace neural_network {
 		};
 
 	private:
-		static double logistic(const double& x)
+		static number_type logistic(const number_type& x)
 		{
-			return 1.0 / (1.0 + std::exp(-x));
+			return 1.0f / (1.0f + std::exp(-x));
 		}
 	};
 

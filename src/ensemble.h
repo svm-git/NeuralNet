@@ -87,7 +87,10 @@ namespace detail {
 		localResult.transform(
 			result,
 			result,
-			[](const double& l, const double r) { return r + l; });
+			[](const typename Network::number_type& l, const typename Network::number_type& r)
+			{
+				return r + l;
+			});
 	}
 
 	template <class Network, class... Args>
@@ -105,6 +108,8 @@ namespace detail {
 		typedef typename Network::input input;
 		typedef typename base_type::common_output common_output;
 		typedef typename base_type::common_output::metrics::template expand<ensemble_size>::type::tensor_type output;
+
+		typedef typename input::number_type number_type;
 
 		network_ensemble_impl()
 			: m_network()
@@ -145,7 +150,7 @@ namespace detail {
 		}
 
 		void update_weights(
-			const double rate)
+			const number_type rate)
 		{
 			m_network.update_weights(rate);
 
@@ -195,6 +200,8 @@ namespace detail {
 		typedef typename Network::output common_output;
 		typedef typename Network::output::metrics::template expand<ensemble_size>::type::tensor_type output;
 
+		typedef typename input::number_type number_type;
+
 		network_ensemble_impl()
 			: m_network()
 		{}
@@ -230,7 +237,7 @@ namespace detail {
 		}
 
 		void update_weights(
-			const double rate)
+			const number_type rate)
 		{
 			m_network.update_weights(rate);
 		}
@@ -276,6 +283,8 @@ namespace detail {
 		typedef typename ensemble_type::input input;
 		typedef typename ensemble_type::output output;
 
+		typedef typename input::number_type number_type;
+
 		network_ensemble()
 			: m_ensemble(), m_output(), m_gradient(), m_local()
 		{
@@ -294,13 +303,13 @@ namespace detail {
 
 		const input& compute_gradient(const output& grad)
 		{
-			m_gradient.fill(0.0);
+			m_gradient.fill(0.0f);
 			m_ensemble.compute_gradient(grad, m_local, m_gradient);
 			return m_gradient;
 		}
 
 		void update_weights(
-			const double rate)
+			const number_type rate)
 		{
 			m_ensemble.update_weights(rate);
 		}

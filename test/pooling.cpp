@@ -35,12 +35,12 @@ void test_pooling()
 {
 	scenario sc("Test for neural_network::*_pooling layers");
 
-	const double minRnd = 0.5;
-	const double maxRnd = 1.5;
+	const float minRnd = 0.5;
+	const float maxRnd = 1.5;
 
 	std::random_device rd;
 	std::mt19937 gen(rd());
-	std::uniform_real_distribution<double> distr(minRnd, maxRnd);
+	std::uniform_real_distribution<float> distr(minRnd, maxRnd);
 
 	auto random_values = [&distr, &gen]() { return distr(gen); };
 
@@ -58,7 +58,7 @@ void test_pooling()
 		test::assert(tmp.size<0>() == 1, "Invalid size of 1D max pooling output tensor.");
 
 		layer.compute_gradient(tmp);
-		layer.update_weights(0.1);
+		layer.update_weights(0.1f);
 
 		test_layer_serialization("1D Max Pooling Layer Serialization Tests", layer);
 	}
@@ -77,7 +77,7 @@ void test_pooling()
 		test::assert(tmp.size<0>() == 3, "Invalid size of 2D max pooling output tensor.");
 
 		layer.compute_gradient(tmp);
-		layer.update_weights(0.1);
+		layer.update_weights(0.1f);
 
 		test_layer_serialization("2D Max Pooling Layer Serialization Tests", layer);
 	}
@@ -97,7 +97,7 @@ void test_pooling()
 		test::assert(tmp.size<1>() == 2, "Invalid size of 3D max pooling output tensor.");
 
 		layer.compute_gradient(tmp);
-		layer.update_weights(0.1);
+		layer.update_weights(0.1f);
 
 		test_layer_serialization("3D Max Pooling Layer Serialization Tests", layer);
 	}
@@ -118,7 +118,7 @@ void test_pooling()
 		test::assert(tmp.size<2>() == 2, "Invalid size of 4D max pooling output tensor.");
 
 		layer.compute_gradient(tmp);
-		layer.update_weights(0.1);
+		layer.update_weights(0.1f);
 
 		test_layer_serialization("4D Max Pooling Layer Serialization Tests", layer);
 	}
@@ -139,7 +139,7 @@ void test_pooling()
 		test::assert(tmp.size<0>() == 2, "Invalid size of 1D max pooling output tensor.");
 
 		layer.compute_gradient(tmp);
-		layer.update_weights(0.1);
+		layer.update_weights(0.1f);
 
 		test_layer_serialization("1D Max Pooling With Core Layer Serialization Tests", layer);
 	}
@@ -161,7 +161,7 @@ void test_pooling()
 		test::assert(tmp.size<1>() == 4, "Invalid size of 2D max pooling output tensor.");
 
 		layer.compute_gradient(tmp);
-		layer.update_weights(0.1);
+		layer.update_weights(0.1f);
 
 		test_layer_serialization("2D Max Pooling With Core Layer Serialization Tests", layer);
 	}
@@ -184,7 +184,7 @@ void test_pooling()
 		test::assert(tmp.size<2>() == 1, "Invalid size of 3D max pooling output tensor.");
 
 		layer.compute_gradient(tmp);
-		layer.update_weights(0.1);
+		layer.update_weights(0.1f);
 
 		test_layer_serialization("3D Max Pooling With Core Layer Serialization Tests", layer);
 	}

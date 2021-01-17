@@ -41,7 +41,7 @@ void test_connected()
 	
 	m3x2x1::tensor_type ret = layer.process(tmp);
 	layer.compute_gradient(ret);
-	layer.update_weights(0.9);
+	layer.update_weights(0.9f);
 
 	test_layer_serialization("Fully Connected Layer Serialization Tests", layer);
 

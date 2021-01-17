@@ -67,7 +67,7 @@ mnist_data load_mnist(
 				{
 					for (size_t x = 0; x < d.size<0>(); ++x)
 					{
-						d(y, x) = (double)(unsigned char)buffer[y * d.size<0>() + x] / 255.0;
+						d(y, x) = (float)(unsigned char)buffer[y * d.size<0>() + x] / 255.0f;
 					}
 				}
 

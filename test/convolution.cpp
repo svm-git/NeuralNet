@@ -37,7 +37,7 @@ void test_convolution()
 
 	std::random_device rd;
 	std::mt19937 gen(rd());
-	std::uniform_real_distribution<double> distr(-0.5, 0.5);
+	std::uniform_real_distribution<float> distr(-0.5, 0.5);
 
 	auto random_values = [&distr, &gen]() { return distr(gen); };
 
@@ -53,7 +53,7 @@ void test_convolution()
 		m9::tensor_type input(random_values);
 		auto output = layer.process(input);
 		auto grad = layer.compute_gradient(output);
-		layer.update_weights(0.001);
+		layer.update_weights(0.001f);
 
 		test_layer_serialization("1D Convolution Layer Serialization Tests", layer);
 	}
@@ -69,7 +69,7 @@ void test_convolution()
 		m10x10::tensor_type input(random_values);
 		auto output = layer.process(input);
 		auto grad = layer.compute_gradient(output);
-		layer.update_weights(0.001);
+		layer.update_weights(0.001f);
 
 		test_layer_serialization("2D Convolution Layer Serialization Tests", layer);
 	}
@@ -87,7 +87,7 @@ void test_convolution()
 		m11x11x3::tensor_type input(random_values);
 		auto output = layer.process(input);
 		auto grad = layer.compute_gradient(output);
-		layer.update_weights(0.001);
+		layer.update_weights(0.001f);
 
 		test_layer_serialization("3D Convolution Layer Serialization Tests", layer);
 	}

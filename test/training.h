@@ -32,8 +32,8 @@ void train_test_network(
 	const Input& input,
 	const Truth& truth,
 	Loss& loss,
-	double& initialLoss,
-	double& finalLoss)
+	typename Input::number_type& initialLoss,
+	typename Input::number_type& finalLoss)
 {
 	initialLoss = loss.compute(net.process(input), truth);
 
@@ -43,7 +43,7 @@ void train_test_network(
 		test::verbose(ss.str().c_str());
 	}
 
-	double rate = 7;
+	typename Input::number_type rate = 7.0f;
 	int retry = 0;
 	int epoch = 0;
 	int iteration = 0;
@@ -51,13 +51,13 @@ void train_test_network(
 	while (retry < 20 && iteration < 100000)
 	{
 		++iteration;
-		double pretrained = loss.compute(
+		float pretrained = loss.compute(
 			net.process(input),
 			truth);
 
 		net.train(input, truth, loss, rate);
 
-		double posttrained = loss.compute(
+		float posttrained = loss.compute(
 			net.process(input),
 			truth);
 
@@ -69,7 +69,7 @@ void train_test_network(
 		{
 			if (5 < retry)
 			{
-				rate = rate * 0.9;
+				rate = rate * 0.9f;
 				++epoch;
 			}
 

@@ -39,7 +39,7 @@ void test_ensemble()
 
 	std::random_device rd;
 	std::mt19937 gen(rd());
-	std::uniform_real_distribution<double> distr(-0.5, 0.5);
+	std::uniform_real_distribution<float> distr(-0.5f, 0.5f);
 
 	auto random_values = [&distr, &gen]() { return distr(gen); };
 
@@ -56,7 +56,7 @@ void test_ensemble()
 		neural_network::make_network(
 
 			neural_network::make_fully_connected_layer<m4x2, m4x2>(
-				random_values, 0.00005),
+				random_values, 0.00005f),
 
 			neural_network::make_relu_activation_layer<m4x2>()
 		),
@@ -68,7 +68,7 @@ void test_ensemble()
 			neural_network::make_network(
 
 				neural_network::make_fully_connected_layer<m4x2, m2x2>(
-					random_values, 0.00003),
+					random_values, 0.00003f),
 
 				neural_network::make_relu_activation_layer<m2x2>()
 			),
@@ -77,12 +77,12 @@ void test_ensemble()
 			neural_network::make_network(
 
 				neural_network::make_fully_connected_layer<m4x2, m5>(
-					random_values, 0.00001),
+					random_values, 0.00001f),
 
 				neural_network::make_relu_activation_layer<m5>(),
 
 				neural_network::make_fully_connected_layer<m5, m2x2>(
-					random_values, 0.00002),
+					random_values, 0.00002f),
 
 				neural_network::make_relu_activation_layer<m2x2>()
 			),
@@ -91,17 +91,17 @@ void test_ensemble()
 			neural_network::make_network(
 
 				neural_network::make_fully_connected_layer<m4x2, m7>(
-					random_values, 0.00001),
+					random_values, 0.00001f),
 
 				neural_network::make_relu_activation_layer<m7>(),
 
 				neural_network::make_fully_connected_layer<m7, m5>(
-					random_values, 0.00002),
+					random_values, 0.00002f),
 
 				neural_network::make_relu_activation_layer<m5>(),
 
 				neural_network::make_fully_connected_layer<m5, m2x2>(
-					random_values, 0.00003),
+					random_values, 0.00003f),
 
 				neural_network::make_relu_activation_layer<m2x2>()
 			)
@@ -114,7 +114,7 @@ void test_ensemble()
 		neural_network::make_network(
 
 			neural_network::make_fully_connected_layer<m2x2, m4>(
-				random_values, 0.00003),
+				random_values, 0.00003f),
 
 			neural_network::make_logistic_activation_layer<m4>()
 		)
@@ -123,11 +123,11 @@ void test_ensemble()
 	m4x2::tensor_type input(random_values);
 	m4::tensor_type truth;
 
-	truth(0) = 1.0;
+	truth(0) = 1.0f;
 
 	neural_network::squared_error_loss<m4> loss;
 
-	double initialLoss = 0.0, finalLoss = 0.0;
+	float initialLoss = 0.0f, finalLoss = 0.0f;
 
 	train_test_network(net, input, truth, loss, initialLoss, finalLoss);
 

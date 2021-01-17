@@ -43,6 +43,12 @@ namespace detail {
 
 		static_assert(Metrics::rank == 1, "Invalid metric rank for scalar max pooling.");
 
+		static_assert(
+			std::is_same<typename input::number_type, typename input::number_type>::value,
+			"Input and output tensor value types do not match.");
+
+		typedef typename input::number_type number_type;
+
 		scalar_max_pooling()
 			: m_mask()
 		{}
@@ -51,14 +57,14 @@ namespace detail {
 			const input& input,
 			output& result)
 		{
-			m_mask(0) = 0.0;
+			m_mask(0) = 0.0f;
 
-			double max = input(0);
+			number_type max = input(0);
 			size_t imax = 0;
 
 			for (size_t i = 1; i < input.size<0>(); ++i)
 			{
-				m_mask(i) = 0.0;
+				m_mask(i) = 0.0f;
 
 				auto e = input(i);
 				if (max < e)
@@ -68,7 +74,7 @@ namespace detail {
 				}
 			}
 
-			m_mask(imax) = 1.0;
+			m_mask(imax) = 1.0f;
 			result(0) = max;
 		}
 
@@ -78,7 +84,7 @@ namespace detail {
 		{
 			for (size_t i = 0; i < result.size<0>(); ++i)
 			{
-				result(i) = (0.0 < m_mask(i)) ? grad(0) : 0.0;
+				result(i) = (0.0f < m_mask(i)) ? grad(0) : 0.0f;
 			}
 		}
 
@@ -100,6 +106,12 @@ namespace detail {
 
 		static_assert(2 <= Metrics::rank, "Metric rank is too small for generic max pooling.");
 
+		static_assert(
+			std::is_same<typename input::number_type, typename input::number_type>::value,
+			"Input and output tensor value types do not match.");
+
+		typedef typename input::number_type number_type;
+
 		generic_max_pooling()
 			: m_mask()
 		{}
@@ -113,14 +125,14 @@ namespace detail {
 
 			for (size_t j = 0; j < rin.size<1>(); ++j)
 			{
-				m_mask(0, j) = 0.0;
+				m_mask(0, j) = 0.0f;
 
-				double max = rin(0, j);
+				number_type max = rin(0, j);
 				size_t imax = 0;
 
 				for (size_t i = 1; i < rin.size<0>(); ++i)
 				{
-					m_mask(i, j) = 0.0;
+					m_mask(i, j) = 0.0f;
 
 					auto e = rin(i, j);
 					if (max < e)
@@ -130,7 +142,7 @@ namespace detail {
 					}
 				}
 
-				m_mask(imax, j) = 1.0;
+				m_mask(imax, j) = 1.0f;
 				rout(j) = max;
 			}
 		}
@@ -146,7 +158,7 @@ namespace detail {
 			{
 				for (size_t j = 0; j < rresult.size<1>(); ++j)
 				{
-					rresult(i, j) = (0.0 < m_mask(i, j)) ? rgrad(j) : 0.0;
+					rresult(i, j) = (0.0f < m_mask(i, j)) ? rgrad(j) : 0.0f;
 				}
 			}
 		}
@@ -176,6 +188,12 @@ namespace detail {
 		typedef typename Metrics::tensor_type input;
 		typedef typename algebra::detail::apply_core_with_stride<Metrics, Core, Stride, Metrics::rank>::metrics::tensor_type output;
 
+		static_assert(
+			std::is_same<typename input::number_type, typename input::number_type>::value,
+			"Input and output tensor value types do not match.");
+
+		typedef typename input::number_type number_type;
+
 		max_pooling_1d()
 			: m_mask()
 		{}
@@ -184,13 +202,13 @@ namespace detail {
 			const input& input,
 			output& result)
 		{
-			m_mask.fill(0.0);
+			m_mask.fill(0.0f);
 
 			for (size_t stride = 0; stride < result.size<0>(); ++stride)
 			{
 				const size_t baseX = stride * algebra::detail::dimension<Stride, 0>::size;
 
-				double max = input(baseX);
+				number_type max = input(baseX);
 				size_t maxX = baseX;
 
 				for (size_t x = 1; x < algebra::detail::dimension<Core, 0>::size; ++x)
@@ -204,7 +222,7 @@ namespace detail {
 				}
 
 				result(stride) = max;
-				m_mask(maxX) += 1.0;
+				m_mask(maxX) += 1.0f;
 			}
 		}
 
@@ -212,17 +230,17 @@ namespace detail {
 			const output& grad,
 			input& result)
 		{
-			result.fill(0.0);
+			result.fill(0.0f);
 
 			for (size_t stride = 0; stride < grad.size<0>(); ++stride)
 			{
-				double g = grad(stride);
+				number_type g = grad(stride);
 
 				const size_t baseX = stride * algebra::detail::dimension<Stride, 0>::size;
 
 				for (size_t x = 0; x < algebra::detail::dimension<Core, 0>::size; ++x)
 				{
-					if (0.0 < m_mask(baseX + x))
+					if (0.0f < m_mask(baseX + x))
 					{
 						result(baseX + x) += g;
 					}
@@ -245,6 +263,12 @@ namespace detail {
 		typedef typename Metrics::tensor_type input;
 		typedef typename algebra::detail::apply_core_with_stride<Metrics, Core, Stride, Metrics::rank>::metrics::tensor_type output;
 
+		static_assert(
+			std::is_same<typename input::number_type, typename input::number_type>::value,
+			"Input and output tensor value types do not match.");
+
+		typedef typename input::number_type number_type;
+
 		max_pooling_2d()
 			: m_mask()
 		{}
@@ -253,7 +277,7 @@ namespace detail {
 			const input& input,
 			output& result)
 		{
-			m_mask.fill(0.0);
+			m_mask.fill(0.0f);
 
 			for (size_t strideX = 0; strideX < result.size<0>(); ++strideX)
 			{
@@ -262,7 +286,7 @@ namespace detail {
 					const size_t baseX = strideX * algebra::detail::dimension<Stride, 0>::size;
 					const size_t baseY = strideY * algebra::detail::dimension<Stride, 1>::size;
 
-					double max = input(baseX, baseY);
+					number_type max = input(baseX, baseY);
 					size_t maxX = baseX;
 					size_t maxY = baseY;
 
@@ -281,7 +305,7 @@ namespace detail {
 					}
 
 					result(strideX, strideY) = max;
-					m_mask(maxX, maxY) += 1.0;
+					m_mask(maxX, maxY) += 1.0f;
 				}
 			}
 		}
@@ -290,13 +314,13 @@ namespace detail {
 			const output& grad,
 			input& result)
 		{
-			result.fill(0.0);
+			result.fill(0.0f);
 
 			for (size_t strideX = 0; strideX < grad.size<0>(); ++strideX)
 			{
 				for (size_t strideY = 0; strideY < grad.size<1>(); ++strideY)
 				{
-					double g = grad(strideX, strideY);
+					number_type g = grad(strideX, strideY);
 
 					const size_t baseX = strideX * algebra::detail::dimension<Stride, 0>::size;
 					const size_t baseY = strideY * algebra::detail::dimension<Stride, 1>::size;
@@ -305,7 +329,7 @@ namespace detail {
 					{
 						for (size_t y = 0; y < algebra::detail::dimension<Core, 1>::size; ++y)
 						{
-							if (0.0 < m_mask(baseX + x, baseY + y))
+							if (0.0f < m_mask(baseX + x, baseY + y))
 							{
 								result(baseX + x, baseY + y) += g;
 							}
@@ -330,6 +354,12 @@ namespace detail {
 		typedef typename Metrics::tensor_type input;
 		typedef typename algebra::detail::apply_core_with_stride<Metrics, Core, Stride, Metrics::rank>::metrics::tensor_type output;
 
+		static_assert(
+			std::is_same<typename input::number_type, typename input::number_type>::value,
+			"Input and output tensor value types do not match.");
+
+		typedef typename input::number_type number_type;
+
 		max_pooling_3d()
 			: m_mask()
 		{}
@@ -338,7 +368,7 @@ namespace detail {
 			const input& input,
 			output& result)
 		{
-			m_mask.fill(0.0);
+			m_mask.fill(0.0f);
 
 			for (size_t strideX = 0; strideX < result.size<0>(); ++strideX)
 			{
@@ -350,7 +380,7 @@ namespace detail {
 						const size_t baseY = strideY * algebra::detail::dimension<Stride, 1>::size;
 						const size_t baseZ = strideZ * algebra::detail::dimension<Stride, 2>::size;
 
-						double max = input(baseX, baseY, baseZ);
+						number_type max = input(baseX, baseY, baseZ);
 						size_t maxX = baseX;
 						size_t maxY = baseY;
 						size_t maxZ = baseZ;
@@ -374,7 +404,7 @@ namespace detail {
 						}
 
 						result(strideX, strideY, strideZ) = max;
-						m_mask(maxX, maxY, maxZ) += 1.0;
+						m_mask(maxX, maxY, maxZ) += 1.0f;
 					}
 				}
 			}
@@ -384,7 +414,7 @@ namespace detail {
 			const output& grad,
 			input& result)
 		{
-			result.fill(0.0);
+			result.fill(0.0f);
 
 			for (size_t strideX = 0; strideX < grad.size<0>(); ++strideX)
 			{
@@ -392,7 +422,7 @@ namespace detail {
 				{
 					for (size_t strideZ = 0; strideZ < grad.size<2>(); ++strideZ)
 					{
-						double g = grad(strideX, strideY, strideZ);
+						number_type g = grad(strideX, strideY, strideZ);
 
 						const size_t baseX = strideX * algebra::detail::dimension<Stride, 0>::size;
 						const size_t baseY = strideY * algebra::detail::dimension<Stride, 1>::size;
@@ -404,7 +434,7 @@ namespace detail {
 							{
 								for (size_t z = 0; z < algebra::detail::dimension<Core, 2>::size; ++z)
 								{
-									if (0.0 < m_mask(baseX + x, baseY + y, baseZ + z))
+									if (0.0f < m_mask(baseX + x, baseY + y, baseZ + z))
 									{
 										result(baseX + x, baseY + y, baseZ + z) += g;
 									}
@@ -506,7 +536,7 @@ namespace detail {
 		}
 
 		void update_weights(
-			const double)
+			const number_type)
 		{}
 
 		struct serializer
@@ -565,7 +595,7 @@ namespace detail {
 		}
 
 		void update_weights(
-			const double)
+			const number_type)
 		{}
 
 	private:

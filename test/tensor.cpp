@@ -33,12 +33,12 @@ void test_tensor()
 {
 	scenario sc("Test for neural_network::algebra::tensor");
 
-	const double minRnd = 0.5;
-	const double maxRnd = 1.5;
+	const float minRnd = 0.5f;
+	const float maxRnd = 1.5f;
 
 	std::random_device rd;
 	std::mt19937 gen(rd());
-	std::uniform_real_distribution<double> distr(minRnd, maxRnd);
+	std::uniform_real_distribution<float> distr(minRnd, maxRnd);
 
 	auto random_values = [&distr, &gen]() { return distr(gen); };
 
@@ -55,7 +55,7 @@ void test_tensor()
 		test::assert(t.size<0>() == 4, "Invalid size<0> of 1-dimension tensor.");
 
 		for (int i = 0; i < t.size<0>(); ++i)
-			test::assert(0.0 == t(i), "Invalid initial value (i) of 1-dimension tensor.");
+			test::assert(0.0f == t(i), "Invalid initial value (i) of 1-dimension tensor.");
 
 		t(2) = 2;
 		test::assert(2 == t(2), "Invalid value at position (2)");
@@ -98,10 +98,10 @@ void test_tensor()
 
 		for (int i = 0; i < t.size<0>(); ++i)
 			for (int j = 0; j < t.size<1>(); ++j)
-				test::assert(0.0 == t(i, j), "Invalid initial value (i, j) of 2-dimension tensor.");
+				test::assert(0.0f == t(i, j), "Invalid initial value (i, j) of 2-dimension tensor.");
 
-		t(3, 2) = 3.2;
-		test::assert(3.2 == t(3, 2), "Invalid value at position (3, 2)");
+		t(3, 2) = 3.2f;
+		test::assert(3.2f == t(3, 2), "Invalid value at position (3, 2)");
 
 		test::check_exception<std::invalid_argument>(
 			[&t]() { t(4, 0);  },
@@ -149,10 +149,10 @@ void test_tensor()
 		for (int i = 0; i < t.size<0>(); ++i)
 			for (int j = 0; j < t.size<1>(); ++j)
 				for (int k = 0; k < t.size<2>(); ++k)
-					test::assert(0.0 == t(i, j, k), "Invalid initial value (i, j, k) of 3-dimension tensor.");
+					test::assert(0.0f == t(i, j, k), "Invalid initial value (i, j, k) of 3-dimension tensor.");
 
-		t(3, 2, 1) = 3.21;
-		test::assert(3.21 == t(3, 2, 1), "Invalid value at position (3, 2, 1)");
+		t(3, 2, 1) = 3.21f;
+		test::assert(3.21f == t(3, 2, 1), "Invalid value at position (3, 2, 1)");
 
 		test::check_exception<std::invalid_argument>(
 			[&t]() { t(4, 0, 0);  },

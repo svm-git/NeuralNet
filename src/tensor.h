@@ -141,16 +141,17 @@ namespace detail {
 			dimension_size = metrics::dimension_size,
 			data_size = metrics::data_size };
 
-		typedef typename std::array<double, data_size> buffer_type;
+		typedef float number_type;
+		typedef typename std::array<number_type, data_size> buffer_type;
 		typedef typename std::shared_ptr<buffer_type> buffer_ptr;
 
 		tensor()
 			: m_pData(std::make_shared<buffer_type>())
 		{
-			m_pData->fill(0.0);
+			m_pData->fill(0.0f);
 		}
 
-		tensor(std::function<double()> initializer)
+		tensor(std::function<number_type()> initializer)
 			: m_pData(std::make_shared<buffer_type>())
 		{
 			std::generate(
@@ -173,7 +174,7 @@ namespace detail {
 		}
 
 		template <typename ...IndexArgs>
-		const double& operator()(IndexArgs... idx) const
+		const number_type& operator()(IndexArgs... idx) const
 		{
 			if (false == metrics::is_valid_index(idx...))
 				throw std::invalid_argument("Index out of range.");
@@ -182,7 +183,7 @@ namespace detail {
 		}
 
 		template <typename ...IndexArgs>
-		double& operator()(IndexArgs... idx)
+		number_type& operator()(IndexArgs... idx)
 		{
 			if (false == metrics::is_valid_index(idx...))
 				throw std::invalid_argument("Index out of range.");
@@ -225,7 +226,7 @@ namespace detail {
 			return Other::tensor_type(m_pData);
 		}
 
-		void fill(const double val)
+		void fill(const number_type val)
 		{
 			m_pData->fill(val);
 		}

@@ -33,23 +33,24 @@ namespace neural_network {
 	{
 	public:
 		typedef typename squared_error_loss<ValueMetrics> this_type;
-		typedef typename ValueMetrics::tensor_type value_type;
+		typedef typename ValueMetrics::tensor_type tensor_type;
+		typedef typename tensor_type::number_type number_type;
 
 		squared_error_loss()
 			: m_gradient()
 		{}
 
-		const double compute(
-			const value_type& result,
-			const value_type& truth)
+		const number_type compute(
+			const tensor_type& result,
+			const tensor_type& truth)
 		{
-			double loss = 0.0;
+			number_type loss = 0.0f;
 
-			value_type tmp;
+			tensor_type tmp;
 			result.transform(
 				truth,
 				tmp,
-				[&loss](const double& r, const double& t)
+				[&loss](const number_type& r, const number_type& t)
 				{
 					auto delta = (r - t);
 					loss += (delta * delta);
@@ -59,14 +60,14 @@ namespace neural_network {
 			return loss;
 		}
 
-		const value_type& compute_gradient(
-			const value_type& result,
-			const value_type& truth)
+		const tensor_type& compute_gradient(
+			const tensor_type& result,
+			const tensor_type& truth)
 		{
 			result.transform(
 				truth,
 				m_gradient,
-				[](const double& r, const double& t)
+				[](const number_type& r, const number_type& t)
 				{
 					return (r - t);
 				});
@@ -75,6 +76,6 @@ namespace neural_network {
 		}
 	
 	private:
-		value_type m_gradient;
+		tensor_type m_gradient;
 	};
 }
