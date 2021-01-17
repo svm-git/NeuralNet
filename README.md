@@ -84,7 +84,7 @@ To create a new instance of a fully connected layer, use *neural_network::make_f
 
     std::random_device rd;
     std::mt19937 gen(rd());
-    std::uniform_real_distribution<double> distr(-0.5, 0.5);
+    std::uniform_real_distribution<float> distr(-0.5, 0.5);
 
     auto random_values = [&distr, &gen]() { return distr(gen); };
 
@@ -92,7 +92,7 @@ To create a new instance of a fully connected layer, use *neural_network::make_f
     typedef neural_network::algebra::metrics<5> Output;
     
     auto layer = neural_network::make_fully_connected_layer<Input, Output>(
-        random_values, 0.00003);
+        random_values, 0.00003f);
 
 ### ReLU Activation Layer
 
@@ -149,7 +149,7 @@ To create a convolution layer, use *neural_network::make_convolution_layer* help
 
     std::random_device rd;
     std::mt19937 gen(rd());
-    std::uniform_real_distribution<double> distr(-0.5, 0.5);
+    std::uniform_real_distribution<float> distr(-0.5f, 0.5f);
 
     auto random_values = [&distr, &gen]() { return distr(gen); };
     
@@ -190,7 +190,7 @@ The network ensemble is compatible with a layer interface, and can be used as a 
 
     std::random_device rd;
     std::mt19937 gen(rd());
-    std::uniform_real_distribution<double> distr(-0.5, 0.5);
+    std::uniform_real_distribution<float> distr(-0.5f, 0.5f);
 
     auto random_values = [&distr, &gen]() { return distr(gen); };
 
@@ -208,7 +208,7 @@ The network ensemble is compatible with a layer interface, and can be used as a 
         neural_network::make_network(
             neural_network::make_reshape_layer<m4x2, m8>(),
             neural_network::make_fully_connected_layer<m8, m8>(
-                random_values, 0.00005),
+                random_values, 0.00005f),
             neural_network::make_relu_activation_layer<m8>(),
             neural_network::make_reshape_layer<m8, m4x2>()
         ),
@@ -220,7 +220,7 @@ The network ensemble is compatible with a layer interface, and can be used as a 
             neural_network::make_network(
                 neural_network::make_reshape_layer<m4x2, m8>(),
                 neural_network::make_fully_connected_layer<m8, m4>(
-                    random_values, 0.00003),
+                    random_values, 0.00003f),
                 neural_network::make_relu_activation_layer<m4>(),
                 neural_network::make_reshape_layer<m4, m2x2>()
             ),
@@ -229,10 +229,10 @@ The network ensemble is compatible with a layer interface, and can be used as a 
             neural_network::make_network(
                 neural_network::make_reshape_layer<m4x2, m8>(),
                 neural_network::make_fully_connected_layer<m8, m5>(
-                    random_values, 0.00001),
+                    random_values, 0.00001f),
                 neural_network::make_relu_activation_layer<m5>(),
                 neural_network::make_fully_connected_layer<m5, m4>(
-                    random_values, 0.00002),
+                    random_values, 0.00002f),
                 neural_network::make_relu_activation_layer<m4>(),
                 neural_network::make_reshape_layer<m4, m2x2>()
             ),
@@ -241,13 +241,13 @@ The network ensemble is compatible with a layer interface, and can be used as a 
             neural_network::make_network(
                 neural_network::make_reshape_layer<m4x2, m8>(),
                 neural_network::make_fully_connected_layer<m8, m7>(
-                    random_values, 0.00001),
+                    random_values, 0.00001f),
                 neural_network::make_relu_activation_layer<m7>(),
                 neural_network::make_fully_connected_layer<m7, m5>(
-                    random_values, 0.00002),
+                    random_values, 0.00002f),
                 neural_network::make_relu_activation_layer<m5>(),
                 neural_network::make_fully_connected_layer<m5, m4>(
-                    random_values, 0.00003),
+                    random_values, 0.00003f),
                 neural_network::make_relu_activation_layer<m4>(),
                 neural_network::make_reshape_layer<m4, m2x2>()
             )
@@ -260,7 +260,7 @@ The network ensemble is compatible with a layer interface, and can be used as a 
         neural_network::make_network(
             neural_network::make_reshape_layer<m2x2, m4>(),
             neural_network::make_fully_connected_layer<m4, m4>(
-                random_values, 0.00003),
+                random_values, 0.00003f),
             neural_network::make_logistic_activation_layer<m4>()
         )
     );
