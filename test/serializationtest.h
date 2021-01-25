@@ -69,7 +69,7 @@ void test_layer_serialization(
 	std::ostream out(&outbuf);
 
 	neural_network::serialization::write(out, layer);
-	test::assert(neural_network::serialization::model_size(layer) == static_cast<size_t>(out.tellp()), "Invalid stream position after writing layer.");
+	test::check_true(neural_network::serialization::model_size(layer) == static_cast<size_t>(out.tellp()), "Invalid stream position after writing layer.");
 
 	membuf inbuf(buffer, sizeof(buffer));
 	std::istream in(&inbuf);
@@ -77,5 +77,5 @@ void test_layer_serialization(
 	Layer other;
 
 	neural_network::serialization::read(in, other);
-	test::assert(neural_network::serialization::model_size(layer) == static_cast<size_t>(in.tellg()), "Invalid stream position after reading layer.");
+	test::check_true(neural_network::serialization::model_size(layer) == static_cast<size_t>(in.tellg()), "Invalid stream position after reading layer.");
 }

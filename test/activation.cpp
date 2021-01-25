@@ -29,6 +29,64 @@ SOFTWARE.
 
 #include "..\src\activation.h"
 
+template <typename Tensor>
+void check_tensors_3d(
+	const Tensor& expected,
+	const Tensor& actual)
+{
+	for (size_t x = 0; x < expected.size<0>(); ++x)
+	{
+		for (size_t y = 0; y < expected.size<1>(); ++y)
+		{
+			for (size_t z = 0; z < expected.size<2>(); ++z)
+			{
+				test::check_true(expected(x, y, z) == actual(x, y, z), "Unexpected mismatch between C++ and OpenCL results.");
+			}
+		}
+	}
+}
+
+::boost::compute::device find_device(
+	int deviceType)
+{
+	for (auto device : ::boost::compute::system::devices())
+	{
+		if (device.type() & deviceType)
+			return device;
+	}
+
+	return ::boost::compute::system::default_device();
+}
+
+template <typename Layer>
+void test_activation_layer_on_device(
+	::boost::compute::command_queue& queue)
+{
+	typename Layer::input input;
+
+	for (size_t x = 0; x < input.size<0>(); ++x)
+	{
+		for (size_t y = 0; y < input.size<1>(); ++y)
+		{
+			for (size_t z = 0; z < input.size<2>(); ++z)
+			{
+				input(x, y, z) = ((x + y + z) & 1) ? 0.5f : -0.5f;
+			}
+		}
+	}
+
+	typename Layer cppLayer;
+	typename Layer openclLayer;
+
+	check_tensors_3d(
+		cppLayer.process(input),
+		openclLayer.process(input, queue));
+
+	check_tensors_3d(
+		cppLayer.compute_gradient(input),
+		openclLayer.compute_gradient(input, queue));
+}
+
 void test_activation()
 {
 	scenario sc("Test for neural_network::*_activation classes");
@@ -139,6 +197,32 @@ void test_activation()
 		logistic.compute_gradient(tmp);
 
 		test_layer_serialization("3D Logistic Activation Layer Serialization Tests", logistic);
+	}
+
+	{
+		auto device = find_device(::boost::compute::device::cpu);
+		::boost::compute::context context(device);
+		::boost::compute::command_queue queue(context, device);
+
+		{
+			test::verbose("OpenCL ReLU Activation Tests");
+
+			typedef neural_network::algebra::metrics<3, 2, 1> m3x2x1;
+			typedef neural_network::algebra::metrics<300, 20, 10> m300x20x10;
+
+			test_activation_layer_on_device<neural_network::relu_activation<m3x2x1>>(queue);
+			test_activation_layer_on_device<neural_network::relu_activation<m300x20x10>>(queue);
+		}
+
+		{
+			test::verbose("OpenCL Logistic Activation Tests");
+
+			typedef neural_network::algebra::metrics<3, 2, 1> m3x2x1;
+			typedef neural_network::algebra::metrics<300, 20, 10> m300x20x10;
+
+			test_activation_layer_on_device<neural_network::logistic_activation<m3x2x1>>(queue);
+			test_activation_layer_on_device<neural_network::logistic_activation<m300x20x10>>(queue);
+		}
 	}
 
 	sc.pass();

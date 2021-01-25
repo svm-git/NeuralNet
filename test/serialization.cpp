@@ -49,16 +49,16 @@ void test_value_serializer(
 	std::ostream out(&outbuf);
 
 	serializer::write(out, expected);
-	test::assert(serializer::serialized_data_size == out.tellp(), "Invalid stream position after writing value.");
+	test::check_true(serializer::serialized_data_size == out.tellp(), "Invalid stream position after writing value.");
 
 	membuf inbuf(buffer, sizeof(buffer));
 	std::istream in(&inbuf);
 
 	_Val actual;
 	serializer::read(in, actual);
-	test::assert(serializer::serialized_data_size == in.tellg(), "Invalid stream position after reading value.");
+	test::check_true(serializer::serialized_data_size == in.tellg(), "Invalid stream position after reading value.");
 
-	test::assert(expected == actual, "Value that was read does not match the value that was written.");
+	test::check_true(expected == actual, "Value that was read does not match the value that was written.");
 }
 
 void test_serialization()
@@ -94,14 +94,14 @@ void test_serialization()
 
 		m4x3x2 expected(random_values);
 		serializer::write(out, expected);
-		test::assert(serializer::serialized_data_size == out.tellp(), "Invalid stream position after writing tensor.");
+		test::check_true(serializer::serialized_data_size == out.tellp(), "Invalid stream position after writing tensor.");
 
 		membuf inbuf(buffer, sizeof(buffer));
 		std::istream in(&inbuf);
 
 		m4x3x2 actual;
 		serializer::read(in, actual);
-		test::assert(serializer::serialized_data_size == in.tellg(), "Invalid stream position after reading tensor.");
+		test::check_true(serializer::serialized_data_size == in.tellg(), "Invalid stream position after reading tensor.");
 
 		for (size_t x = 0; x < expected.size<0>(); ++x)
 		{
@@ -109,7 +109,7 @@ void test_serialization()
 			{
 				for (size_t z = 0; z < expected.size<2>(); ++z)
 				{
-					test::assert(actual(x, y, z) == expected(x, y, z), "Tensor element that was read does not match the expected element that was written.");
+					test::check_true(actual(x, y, z) == expected(x, y, z), "Tensor element that was read does not match the expected element that was written.");
 				}
 			}
 		}
@@ -141,7 +141,7 @@ void test_serialization()
 		std::ostream out(&outbuf);
 
 		serializer::write(out, expectedFloat, expectedT1, expectedT2);
-		test::assert(serializer::serialized_data_size == out.tellp(), "Invalid stream position after writing composite chunk value.");
+		test::check_true(serializer::serialized_data_size == out.tellp(), "Invalid stream position after writing composite chunk value.");
 
 		membuf inbuf(buffer, sizeof(buffer));
 		std::istream in(&inbuf);
@@ -151,9 +151,9 @@ void test_serialization()
 		m4x3 actualT2;
 
 		serializer::read(in, actualFloat, actualT1, actualT2);
-		test::assert(serializer::serialized_data_size == in.tellg(), "Invalid stream position after reading composite chunk value.");
+		test::check_true(serializer::serialized_data_size == in.tellg(), "Invalid stream position after reading composite chunk value.");
 
-		test::assert(actualFloat == expectedFloat, "Float value that was read does not match the expected value that was written.");
+		test::check_true(actualFloat == expectedFloat, "Float value that was read does not match the expected value that was written.");
 
 		for (size_t x = 0; x < expectedT1.size<0>(); ++x)
 		{
@@ -161,7 +161,7 @@ void test_serialization()
 			{
 				for (size_t z = 0; z < expectedT1.size<2>(); ++z)
 				{
-					test::assert(actualT1(x, y, z) == expectedT1(x, y, z), "Tensor element that was read does not match the expected element that was written for rank-3 tensor.");
+					test::check_true(actualT1(x, y, z) == expectedT1(x, y, z), "Tensor element that was read does not match the expected element that was written for rank-3 tensor.");
 				}
 			}
 		}
@@ -170,7 +170,7 @@ void test_serialization()
 		{
 			for (size_t y = 0; y < actualT2.size<1>(); ++y)
 			{
-				test::assert(actualT2(x, y) == expectedT2(x, y), "Tensor element that was read does not match the expected element that was written for rank-2 tensor.");
+				test::check_true(actualT2(x, y) == expectedT2(x, y), "Tensor element that was read does not match the expected element that was written for rank-2 tensor.");
 			}
 		}
 	}

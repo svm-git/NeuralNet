@@ -13,3 +13,9 @@
 #include <tchar.h>
 
 // TODO: reference additional headers your program requires here
+
+#define NEURAL_NET_ENABLE_OPEN_CL
+#define CL_TARGET_OPENCL_VERSION 120
+#define BOOST_COMPUTE_DEBUG_KERNEL_COMPILATION
+
+#define _SCL_SECURE_NO_WARNINGS

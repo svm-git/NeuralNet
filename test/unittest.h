@@ -70,12 +70,12 @@ public:
 		}
 	}
 
-	// Utility function to assert a test condition.
+	// Utility function to check that a test condition is true.
 	//
 	// Sample usage:
-	//		test::assert(some_check, "My check failed");
+	//		test::check_true(some_check, "My check failed");
 	//
-	static void assert(bool test, const char* message)
+	static void check_true(bool test, const char* message)
 	{
 		if (true == test)
 			return;

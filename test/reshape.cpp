@@ -42,13 +42,13 @@ void test_reshape()
 
 	auto r = layer.process(i);
 
-	test::assert(r.size<0>() == 6, "Invalid size of reshaped tensor.");
+	test::check_true(r.size<0>() == 6, "Invalid size of reshaped tensor.");
 
 	auto g = layer.compute_gradient(r);
 
-	test::assert(g.size<0>() == 3, "Invalid size<0> of reshaped gradient tensor.");
-	test::assert(g.size<1>() == 2, "Invalid size<1> of reshaped gradient tensor.");
-	test::assert(g.size<2>() == 1, "Invalid size<2> of reshaped gradient tensor.");
+	test::check_true(g.size<0>() == 3, "Invalid size<0> of reshaped gradient tensor.");
+	test::check_true(g.size<1>() == 2, "Invalid size<1> of reshaped gradient tensor.");
+	test::check_true(g.size<2>() == 1, "Invalid size<2> of reshaped gradient tensor.");
 
 	test_layer_serialization("Reshape Layer Serialization Tests", layer);
 

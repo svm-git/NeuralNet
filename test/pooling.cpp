@@ -55,7 +55,7 @@ void test_pooling()
 
 		auto tmp = layer.process(input);
 
-		test::assert(tmp.size<0>() == 1, "Invalid size of 1D max pooling output tensor.");
+		test::check_true(tmp.size<0>() == 1, "Invalid size of 1D max pooling output tensor.");
 
 		layer.compute_gradient(tmp);
 		layer.update_weights(0.1f);
@@ -74,7 +74,7 @@ void test_pooling()
 
 		auto tmp = layer.process(input);
 
-		test::assert(tmp.size<0>() == 3, "Invalid size of 2D max pooling output tensor.");
+		test::check_true(tmp.size<0>() == 3, "Invalid size of 2D max pooling output tensor.");
 
 		layer.compute_gradient(tmp);
 		layer.update_weights(0.1f);
@@ -93,8 +93,8 @@ void test_pooling()
 
 		auto tmp = layer.process(input);
 
-		test::assert(tmp.size<0>() == 3, "Invalid size of 3D max pooling output tensor.");
-		test::assert(tmp.size<1>() == 2, "Invalid size of 3D max pooling output tensor.");
+		test::check_true(tmp.size<0>() == 3, "Invalid size of 3D max pooling output tensor.");
+		test::check_true(tmp.size<1>() == 2, "Invalid size of 3D max pooling output tensor.");
 
 		layer.compute_gradient(tmp);
 		layer.update_weights(0.1f);
@@ -113,9 +113,9 @@ void test_pooling()
 
 		auto tmp = layer.process(input);
 
-		test::assert(tmp.size<0>() == 4, "Invalid size of 4D max pooling output tensor.");
-		test::assert(tmp.size<1>() == 3, "Invalid size of 4D max pooling output tensor.");
-		test::assert(tmp.size<2>() == 2, "Invalid size of 4D max pooling output tensor.");
+		test::check_true(tmp.size<0>() == 4, "Invalid size of 4D max pooling output tensor.");
+		test::check_true(tmp.size<1>() == 3, "Invalid size of 4D max pooling output tensor.");
+		test::check_true(tmp.size<2>() == 2, "Invalid size of 4D max pooling output tensor.");
 
 		layer.compute_gradient(tmp);
 		layer.update_weights(0.1f);
@@ -136,7 +136,7 @@ void test_pooling()
 
 		auto tmp = layer.process(input);
 
-		test::assert(tmp.size<0>() == 2, "Invalid size of 1D max pooling output tensor.");
+		test::check_true(tmp.size<0>() == 2, "Invalid size of 1D max pooling output tensor.");
 
 		layer.compute_gradient(tmp);
 		layer.update_weights(0.1f);
@@ -157,8 +157,8 @@ void test_pooling()
 
 		auto tmp = layer.process(input);
 
-		test::assert(tmp.size<0>() == 3, "Invalid size of 2D max pooling output tensor.");
-		test::assert(tmp.size<1>() == 4, "Invalid size of 2D max pooling output tensor.");
+		test::check_true(tmp.size<0>() == 3, "Invalid size of 2D max pooling output tensor.");
+		test::check_true(tmp.size<1>() == 4, "Invalid size of 2D max pooling output tensor.");
 
 		layer.compute_gradient(tmp);
 		layer.update_weights(0.1f);
@@ -179,9 +179,9 @@ void test_pooling()
 
 		auto tmp = layer.process(input);
 
-		test::assert(tmp.size<0>() == 9, "Invalid size of 3D max pooling output tensor.");
-		test::assert(tmp.size<1>() == 9, "Invalid size of 3D max pooling output tensor.");
-		test::assert(tmp.size<2>() == 1, "Invalid size of 3D max pooling output tensor.");
+		test::check_true(tmp.size<0>() == 9, "Invalid size of 3D max pooling output tensor.");
+		test::check_true(tmp.size<1>() == 9, "Invalid size of 3D max pooling output tensor.");
+		test::check_true(tmp.size<2>() == 1, "Invalid size of 3D max pooling output tensor.");
 
 		layer.compute_gradient(tmp);
 		layer.update_weights(0.1f);

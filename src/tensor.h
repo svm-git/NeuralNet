@@ -28,6 +28,18 @@ SOFTWARE.
 #include <array>
 #include <functional>
 
+#ifdef NEURAL_NET_ENABLE_OPEN_CL
+
+#pragma warning (push)
+#pragma warning (disable: 4127 4512)
+
+#include <boost/compute/core.hpp>
+#include <boost/compute/container/mapped_view.hpp>
+
+#pragma warning (pop)
+
+#endif
+
 namespace neural_network {
 namespace algebra {
 
@@ -230,6 +242,28 @@ namespace detail {
 		{
 			m_pData->fill(val);
 		}
+
+#ifdef NEURAL_NET_ENABLE_OPEN_CL
+
+		::boost::compute::mapped_view<number_type> get_device_view(
+			const ::boost::compute::context& context)
+		{
+			return ::boost::compute::mapped_view<number_type>(
+				std::addressof((*m_pData)[0]),
+				this_type::data_size,
+				context);
+		}
+
+		::boost::compute::mapped_view<number_type> get_device_view(
+			const ::boost::compute::context& context) const
+		{
+			return ::boost::compute::mapped_view<number_type>(
+				std::addressof((*m_pData)[0]),
+				this_type::data_size,
+				context);
+		}
+
+#endif
 
 	private:
 		std::shared_ptr<buffer_type> m_pData;

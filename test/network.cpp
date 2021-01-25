@@ -74,7 +74,7 @@ void test_network()
 
 	train_test_network(net, input, truth, loss, initialLoss, finalLoss);
 
-	test::assert(finalLoss < initialLoss, "Training did not improve the network.");
+	test::check_true(finalLoss < initialLoss, "Training did not improve the network.");
 
 	test_layer_serialization("Network Serialization Tests", net);
 

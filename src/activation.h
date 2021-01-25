@@ -27,6 +27,12 @@ SOFTWARE.
 #include "layer.h"
 #include "serialization.h"
 
+#ifdef NEURAL_NET_ENABLE_OPEN_CL
+
+#include "opencl/activation.h"
+
+#endif
+
 namespace neural_network {
 
 	template <typename Metrics>
@@ -61,6 +67,9 @@ namespace neural_network {
 
 		relu_activation()
 			: base_type()
+#ifdef NEURAL_NET_ENABLE_OPEN_CL
+			, m_kernelProgram(), m_activationKernelName(), m_gradientKernelName()
+#endif
 		{}
 
 		const output& process(const input& input)
@@ -110,6 +119,114 @@ namespace neural_network {
 				serializer_impl_type::write(out);
 			}
 		};
+
+#ifdef NEURAL_NET_ENABLE_OPEN_CL
+
+		const output& process(
+			const input& input,
+			::boost::compute::command_queue& queue)
+		{
+			return this->dispatch_process<input::data_size>(input, queue);
+		}
+
+		const input& compute_gradient(
+			const output& gradient,
+			::boost::compute::command_queue& queue)
+		{
+			return this->dispatch_compute_gradient<input::data_size>(gradient, queue);
+		}
+	
+	private:
+		typedef typename opencl::detail::relu_activation_opencl<input, output> opencl_impl;
+
+		template <const size_t TensorSize>
+		const output&  dispatch_process(
+			const input& input,
+			::boost::compute::command_queue&,
+			std::enable_if_t<
+				(TensorSize < opencl::detail::layer_kernels::block_size)
+			>* = 0)
+		{
+			return this->process(input);
+		}
+
+		template <const size_t TensorSize>
+		const output&  dispatch_process(
+			const input& input,
+			::boost::compute::command_queue& queue,
+			std::enable_if_t<
+				!(TensorSize < opencl::detail::layer_kernels::block_size)
+			>* = 0)
+		{
+			m_input = input;
+
+			auto context = queue.get_context();
+
+			initialize_opencl(context);
+
+			opencl_impl::process(
+				m_input,
+				m_output,
+				m_kernelProgram,
+				m_activationKernelName,
+				context,
+				queue);
+
+			return m_output;
+		}
+
+		template <const size_t TensorSize>
+		const input&  dispatch_compute_gradient(
+			const output& gradient,
+			::boost::compute::command_queue&,
+			std::enable_if_t<
+				(TensorSize < opencl::detail::layer_kernels::block_size)
+			>* = 0)
+		{
+			return this->compute_gradient(gradient);
+		}
+
+		template <const size_t TensorSize>
+		const input&  dispatch_compute_gradient(
+			const output& gradient,
+			::boost::compute::command_queue& queue,
+			std::enable_if_t<
+				!(TensorSize < opencl::detail::layer_kernels::block_size)
+			>* = 0)
+		{
+			auto context = queue.get_context();
+
+			initialize_opencl(context);
+
+			opencl_impl::compute_gradient(
+				m_input,
+				gradient,
+				m_gradient,
+				m_kernelProgram,
+				m_gradientKernelName,
+				context,
+				queue);
+
+			return m_gradient;
+		}
+
+		void initialize_opencl(
+			const ::boost::compute::context& context)
+		{
+			if (0 == m_activationKernelName.size())
+			{
+				m_kernelProgram = opencl::detail::layer_kernels::make_program(context);
+
+				m_activationKernelName = opencl::detail::layer_kernels::get_relu_kernel_name();
+				m_gradientKernelName = opencl::detail::layer_kernels::get_relu_gradient_kernel_name();
+			}
+		}
+
+	private:
+		::boost::compute::program m_kernelProgram;
+		std::string m_activationKernelName;
+		std::string m_gradientKernelName;
+#endif
 	};
 
 	template <typename Metrics>
@@ -126,6 +243,9 @@ namespace neural_network {
 
 		logistic_activation()
 			: base_type()
+#ifdef NEURAL_NET_ENABLE_OPEN_CL
+			, m_kernelProgram(), m_activationKernelName(), m_gradientKernelName()
+#endif
 		{}
 
 		const output& process(const input& input)
@@ -175,6 +295,116 @@ namespace neural_network {
 				serializer_impl_type::write(out);
 			}
 		};
+
+#ifdef NEURAL_NET_ENABLE_OPEN_CL
+
+		const output& process(
+			const input& input,
+			::boost::compute::command_queue& queue)
+		{
+			return this->dispatch_process<input::data_size>(input, queue);
+		}
+
+		const input& compute_gradient(
+			const output& gradient,
+			::boost::compute::command_queue& queue)
+		{
+			return this->dispatch_compute_gradient<input::data_size>(gradient, queue);
+		}
+	
+	private:
+		typedef typename opencl::detail::logistic_activation_opencl<input, output> opencl_impl;
+
+		template <const size_t TensorSize>
+		const output&  dispatch_process(
+			const input& input,
+			::boost::compute::command_queue&,
+			std::enable_if_t<
+				(TensorSize < opencl::detail::layer_kernels::block_size)
+			>* = 0)
+		{
+			return this->process(input);
+		}
+
+		template <const size_t TensorSize>
+		const output& dispatch_process(
+			const input& input,
+			::boost::compute::command_queue& queue,
+			std::enable_if_t<
+				!(TensorSize < opencl::detail::layer_kernels::block_size)
+			>* = 0)
+		{
+			m_input = input;
+
+			auto context = queue.get_context();
+
+			initialize_opencl(context);
+
+			opencl_impl::process(
+				m_input,
+				m_output,
+				m_kernelProgram,
+				m_activationKernelName,
+				context,
+				queue);
+
+			return m_output;
+		}
+
+		template <const size_t TensorSize>
+		const input&  dispatch_compute_gradient(
+			const output& gradient,
+			::boost::compute::command_queue&,
+			std::enable_if_t<
+				(TensorSize < opencl::detail::layer_kernels::block_size)
+			>* = 0)
+		{
+			return this->compute_gradient(gradient);
+		}
+
+		template <const size_t TensorSize>
+		const input&  dispatch_compute_gradient(
+			const output& gradient,
+			::boost::compute::command_queue& queue,
+			std::enable_if_t<
+				!(TensorSize < opencl::detail::layer_kernels::block_size)
+			>* = 0)
+		{
+			auto context = queue.get_context();
+
+			initialize_opencl(context);
+
+			opencl_impl::compute_gradient(
+				m_input,
+				gradient,
+				m_gradient,
+				m_kernelProgram,
+				m_gradientKernelName,
+				context,
+				queue);
+
+			return m_gradient;
+		}
+
+		void initialize_opencl(
+			const ::boost::compute::context& context)
+		{
+			if (0 == m_activationKernelName.size())
+			{
+				m_kernelProgram = opencl::detail::layer_kernels::make_program(
+					context);
+
+				m_activationKernelName = opencl::detail::layer_kernels::get_logistic_kernel_name();
+				m_gradientKernelName = opencl::detail::layer_kernels::get_logistic_gradient_kernel_name();
+			}
+		}
+
+	private:
+		::boost::compute::program m_kernelProgram;
+		std::string m_activationKernelName;
+		std::string m_gradientKernelName;
+
+#endif
 
 	private:
 		static number_type logistic(const number_type& x)

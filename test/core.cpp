@@ -28,6 +28,7 @@ SOFTWARE.
 
 #include "unittest.h"
 #include "training.h"
+
 #include "..\src\core.h"
 
 void test_core()
