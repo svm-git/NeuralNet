@@ -30,9 +30,9 @@ namespace neural_network {
 namespace opencl {
 namespace detail {
 
-	template <typename Input, typename Output>
-	struct relu_activation_opencl
+	struct generic_activation
 	{
+		template <typename Input, typename Output>
 		static void process(
 			const typename Input& input,
 			typename Output& output,
@@ -53,8 +53,9 @@ namespace detail {
 				queue);
 		}
 
+		template <typename Input, typename Output>
 		static void compute_gradient(
-			const typename Input& input,
+			const typename Output& output,
 			const typename Output& gradient,
 			typename Input &result,
 			const ::boost::compute::program& program,
@@ -62,59 +63,12 @@ namespace detail {
 			const ::boost::compute::context& context,
 			::boost::compute::command_queue& queue)
 		{
-			auto inputView = input.get_device_view(context);
-			auto gradientView = gradient.get_device_view(context);
-			auto resultView = result.get_device_view(context);
-
-			layer_kernels::execute_activation_gradient_kernel(
-				inputView,
-				gradientView,
-				resultView,
-				static_cast<int>(Input::data_size),
-				program,
-				kernelName,
-				queue);
-		}
-	};
-
-	template <typename Input, typename Output>
-	struct logistic_activation_opencl
-	{
-		static void process(
-			const typename Input& input,
-			const typename Output& output,
-			const ::boost::compute::program& program,
-			const std::string& kernelName,
-			const ::boost::compute::context& context,
-			::boost::compute::command_queue& queue)
-		{
-			auto inputView = input.get_device_view(context);
 			auto outputView = output.get_device_view(context);
-
-			layer_kernels::execute_activation_kernel(
-				inputView,
-				outputView,
-				Input::data_size,
-				program,
-				kernelName,
-				queue);
-		}
-
-		static void compute_gradient(
-			const typename Input& input,
-			const typename Output& gradient,
-			typename Input& result,
-			const ::boost::compute::program& program,
-			const std::string& kernelName,
-			const ::boost::compute::context& context,
-			::boost::compute::command_queue& queue)
-		{
-			auto inputView = input.get_device_view(context);
 			auto gradientView = gradient.get_device_view(context);
 			auto resultView = result.get_device_view(context);
 
 			layer_kernels::execute_activation_gradient_kernel(
-				inputView,
+				outputView,
 				gradientView,
 				resultView,
 				static_cast<int>(Input::data_size),
@@ -123,6 +77,7 @@ namespace detail {
 				queue);
 		}
 	};
+
 }
 }
 }

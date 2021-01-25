@@ -89,11 +89,11 @@ namespace neural_network {
 		const input& compute_gradient(const output& grad)
 		{
 			grad.transform(
-				m_input,
+				m_output,
 				m_gradient,
-				[](const number_type& g, const number_type& i)
+				[](const number_type& g, const number_type& o)
 				{
-					return (i > 0.0f) ? g : 0.0f;
+					return (o > 0.0f) ? g : 0.0f;
 				});
 
 			return m_gradient;
@@ -137,8 +137,6 @@ namespace neural_network {
 		}
 	
 	private:
-		typedef typename opencl::detail::relu_activation_opencl<input, output> opencl_impl;
-
 		template <const size_t TensorSize>
 		const output&  dispatch_process(
 			const input& input,
@@ -164,7 +162,7 @@ namespace neural_network {
 
 			initialize_opencl(context);
 
-			opencl_impl::process(
+			opencl::detail::generic_activation::process(
 				m_input,
 				m_output,
 				m_kernelProgram,
@@ -198,8 +196,8 @@ namespace neural_network {
 
 			initialize_opencl(context);
 
-			opencl_impl::compute_gradient(
-				m_input,
+			opencl::detail::generic_activation::compute_gradient(
+				m_output,
 				gradient,
 				m_gradient,
 				m_kernelProgram,
@@ -265,12 +263,11 @@ namespace neural_network {
 		const input& compute_gradient(const output& grad)
 		{
 			grad.transform(
-				m_input,
+				m_output,
 				m_gradient,
-				[](const number_type& g, const number_type& i)
+				[](const number_type& g, const number_type& o)
 			{
-				auto f = this_type::logistic(i);
-				return g * f * (1.0f - f);
+				return g * o * (1.0f - o);
 			});
 
 			return m_gradient;
@@ -313,8 +310,6 @@ namespace neural_network {
 		}
 	
 	private:
-		typedef typename opencl::detail::logistic_activation_opencl<input, output> opencl_impl;
-
 		template <const size_t TensorSize>
 		const output&  dispatch_process(
 			const input& input,
@@ -340,7 +335,7 @@ namespace neural_network {
 
 			initialize_opencl(context);
 
-			opencl_impl::process(
+			opencl::detail::generic_activation::process(
 				m_input,
 				m_output,
 				m_kernelProgram,
@@ -374,8 +369,8 @@ namespace neural_network {
 
 			initialize_opencl(context);
 
-			opencl_impl::compute_gradient(
-				m_input,
+			opencl::detail::generic_activation::compute_gradient(
+				m_output,
 				gradient,
 				m_gradient,
 				m_kernelProgram,
@@ -409,7 +404,15 @@ namespace neural_network {
 	private:
 		static number_type logistic(const number_type& x)
 		{
-			return 1.0f / (1.0f + std::exp(-x));
+			if (x > 0.0f)
+			{
+				return (1.0f / (1.0f + std::exp(-x)));
+			}
+			else
+			{
+				number_type e = std::exp(x);
+				return e / (1.0f + e);
+			}
 		}
 	};
 

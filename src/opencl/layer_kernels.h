@@ -78,9 +78,9 @@ namespace detail {
 					}
 			
 					__kernel void neural_net_relu_gradient_kernel(
-						__global const float * vIn,
+						__global const float * vOut,
 						__global const float * vGrad,
-						__global float * vOut,
+						__global float * vRes,
 						int length)
 					{
 						int pos = get_global_id(0) * BLOCK_SIZE;
@@ -92,8 +92,7 @@ namespace detail {
 
 						for (; pos < end; ++pos)
 						{
-							float val = vIn[pos];
-							vOut[pos] = (val > 0.0f) ? vGrad[pos] : 0.0f;
+							vRes[pos] = (vOut[pos] > 0.0f) ? vGrad[pos] : 0.0f;
 						}
 					}
 
@@ -125,9 +124,9 @@ namespace detail {
 					}
 
 					__kernel void neural_net_logistic_gradient_kernel(
-						__global const float * vIn,
+						__global const float * vOut,
 						__global const float * vGrad,
-						__global float * vOut,
+						__global float * vRes,
 						int length)
 					{
 						int pos = get_global_id(0) * BLOCK_SIZE;
@@ -139,18 +138,8 @@ namespace detail {
 
 						for (; pos < end; ++pos)
 						{
-							float x = vIn[pos];
-							if (x > 0.0f)
-							{
-								x = 1.0f / (1.0f + exp(-x));
-							}
-							else
-							{
-								x = exp(x);
-								x = x / (1.0f + x);
-							}
-
-							vOut[pos] = vGrad[pos] * x * (1.0f - x);
+							float f = vOut[pos];
+							vRes[pos] = vGrad[pos] * f * (1.0f - f);
 						}
 					}
 				);
@@ -190,7 +179,7 @@ namespace detail {
 		}
 
 		static void execute_activation_gradient_kernel(
-			::boost::compute::mapped_view<float>& inputView,
+			::boost::compute::mapped_view<float>& outputView,
 			::boost::compute::mapped_view<float>& gradientView,
 			::boost::compute::mapped_view<float>& resultView,
 			const size_t dataSize,
@@ -200,7 +189,7 @@ namespace detail {
 		{
 			auto kernel = program.create_kernel(kernelName);
 
-			kernel.set_arg(0, inputView.get_buffer());
+			kernel.set_arg(0, outputView.get_buffer());
 			kernel.set_arg(1, gradientView.get_buffer());
 			kernel.set_arg(2, resultView.get_buffer());
 			kernel.set_arg(3, static_cast<int>(dataSize));
