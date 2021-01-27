@@ -27,6 +27,12 @@ SOFTWARE.
 #include "layer.h"
 #include "serialization.h"
 
+#ifdef NEURAL_NET_ENABLE_OPEN_CL
+
+#include "opencl/connected.h"
+
+#endif
+
 namespace neural_network {
 
 	template <typename InputMetrics, typename OutputMetrics>
@@ -40,8 +46,8 @@ namespace neural_network {
 		typedef typename algebra::metrics<output::data_size> reshaped_output;
 
 		typedef typename algebra::metrics<
-			reshaped_input::data_size,
-			reshaped_output::data_size>::tensor_type weights_type;
+			reshaped_output::data_size,
+			reshaped_input::data_size>::tensor_type weights_type;
 		typedef typename reshaped_output::tensor_type bias_type;
 	
 		typedef typename serialization::chunk_serializer<
@@ -55,6 +61,9 @@ namespace neural_network {
 		fully_connected(
 			const number_type regularization = 0.000001f)
 				: base_type(), m_input(), m_weights(), m_weightsGradient(), m_bias(), m_biasGradient(), m_regularization(regularization)
+#ifdef NEURAL_NET_ENABLE_OPEN_CL
+				, m_kernelProgram(), m_processKernelName(), m_gradientKernelName(), m_weightsKernelName()
+#endif
 		{
 		}
 
@@ -62,6 +71,9 @@ namespace neural_network {
 			std::function<number_type()> initializer,
 			const number_type regularization = 0.000001f)
 				: base_type(), m_input(), m_weights(initializer), m_weightsGradient(), m_bias(initializer), m_biasGradient(), m_regularization(regularization)
+#ifdef NEURAL_NET_ENABLE_OPEN_CL
+				, m_kernelProgram(), m_processKernelName(), m_gradientKernelName(), m_weightsKernelName()
+#endif
 		{
 		}
 
@@ -77,7 +89,7 @@ namespace neural_network {
 				number_type sum = 0.0f;
 				for (size_t i = 0; i < rin.size<0>(); ++i)
 				{
-					sum += m_weights(i, j) * rin(i);
+					sum += m_weights(j, i) * rin(i);
 				}
 
 				rout(j) = sum + m_bias(j);
@@ -97,9 +109,9 @@ namespace neural_network {
 				number_type sum = 0.0f;
 				for (size_t j = 0; j < rgrad.size<0>(); ++j)
 				{
-					sum += m_weights(i, j) * rgrad(j);
-					
-					m_weightsGradient(i, j) = rin(i) * rgrad(j);
+					sum += m_weights(j, i) * rgrad(j);
+
+					m_weightsGradient(j, i) = rin(i) * rgrad(j);
 				}
 
 				rgradResult(i) = sum;
@@ -151,6 +163,164 @@ namespace neural_network {
 			}
 		};
 
+#ifdef NEURAL_NET_ENABLE_OPEN_CL
+
+		const output& process(
+			const input& input,
+			::boost::compute::command_queue& queue)
+		{
+			return this->dispatch_process<input::data_size>(input, queue);
+		}
+
+		const input& compute_gradient(
+			const output& gradient,
+			::boost::compute::command_queue& queue)
+		{
+			return this->dispatch_compute_gradient<input::data_size>(gradient, queue);
+		}
+
+		void update_weights(
+			const number_type rate,
+			::boost::compute::command_queue& queue)
+		{
+			this->dispatch_update_weights<weights_type::data_size>(rate, queue);
+		}
+
+	private:
+		template <const size_t TensorSize>
+		const output& dispatch_process(
+			const input& input,
+			::boost::compute::command_queue&,
+			std::enable_if_t<
+				(TensorSize < opencl::detail::layer_kernels::min_matrix_size)
+			>* = 0)
+		{
+			return this->process(input);
+		}
+
+		template <const size_t TensorSize>
+		const output& dispatch_process(
+			const input& input,
+			::boost::compute::command_queue& queue,
+			std::enable_if_t<
+				!(TensorSize < opencl::detail::layer_kernels::min_matrix_size)
+			>* = 0)
+		{
+			m_input = input;
+
+			auto context = queue.get_context();
+
+			initialize_opencl(context);
+
+			reshaped_input::tensor_type rin = m_input.reshape<reshaped_input>();
+			reshaped_output::tensor_type rout = m_output.reshape<reshaped_output>();
+
+			opencl::detail::fully_connected::process(
+				rin,
+				m_weights,
+				m_bias,
+				rout,
+				m_kernelProgram,
+				m_processKernelName,
+				context,
+				queue);
+
+			return m_output;
+		}
+
+		template <const size_t TensorSize>
+		const input& dispatch_compute_gradient(
+			const output& gradient,
+			::boost::compute::command_queue&,
+			std::enable_if_t<
+				(TensorSize < opencl::detail::layer_kernels::min_matrix_size)
+			>* = 0)
+		{
+			return this->compute_gradient(gradient);
+		}
+
+		template <const size_t TensorSize>
+		const input& dispatch_compute_gradient(
+			const output& gradient,
+			::boost::compute::command_queue& queue,
+			std::enable_if_t<
+				!(TensorSize < opencl::detail::layer_kernels::min_matrix_size)
+			>* = 0)
+		{
+			auto context = queue.get_context();
+
+			initialize_opencl(context);
+
+			reshaped_input::tensor_type rin = m_input.reshape<reshaped_input>();
+			reshaped_input::tensor_type rgradResult = m_gradient.reshape<reshaped_input>();
+			reshaped_output::tensor_type rgrad = gradient.reshape<reshaped_output>();
+
+			opencl::detail::fully_connected::compute_gradient(
+				rin,
+				m_weights,
+				rgrad,
+				rgradResult,
+				m_weightsGradient,
+				m_biasGradient,
+				m_kernelProgram,
+				m_gradientKernelName,
+				context,
+				queue);
+
+			return m_gradient;
+		}
+
+		template <const size_t TensorSize>
+		void dispatch_update_weights(
+			const number_type rate,
+			::boost::compute::command_queue&,
+			std::enable_if_t<
+				(TensorSize < opencl::detail::layer_kernels::min_matrix_size)
+			>* = 0)
+		{
+			this->update_weights(rate);
+		}
+
+		template <const size_t TensorSize>
+		void dispatch_update_weights(
+			const number_type rate,
+			::boost::compute::command_queue& queue,
+			std::enable_if_t<
+				!(TensorSize < opencl::detail::layer_kernels::min_matrix_size)
+			>* = 0)
+		{
+			auto context = queue.get_context();
+
+			initialize_opencl(context);
+
+			opencl::detail::fully_connected::update_weights(
+				m_weightsGradient,
+				m_weights,
+				m_biasGradient,
+				m_bias,
+				rate,
+				m_regularization,
+				m_kernelProgram,
+				m_weightsKernelName,
+				context,
+				queue);
+		}
+
+		void initialize_opencl(
+			const ::boost::compute::context& context)
+		{
+			if (0 == m_processKernelName.size())
+			{
+				m_kernelProgram = opencl::detail::layer_kernels::make_program(context);
+
+				m_processKernelName = opencl::detail::layer_kernels::get_fully_connected_kernel_name();
+				m_gradientKernelName = opencl::detail::layer_kernels::get_fully_connected_gradient_kernel_name();
+				m_weightsKernelName = opencl::detail::layer_kernels::get_update_weights_kernel_name();
+			}
+		}
+
+#endif
+
 	private:
 		input m_input;
 		weights_type m_weights;
@@ -158,6 +328,16 @@ namespace neural_network {
 		bias_type m_bias;
 		bias_type m_biasGradient;
 		number_type m_regularization;
+
+#ifdef NEURAL_NET_ENABLE_OPEN_CL
+
+	private:
+		::boost::compute::program m_kernelProgram;
+		std::string m_processKernelName;
+		std::string m_gradientKernelName;
+		std::string m_weightsKernelName;
+
+#endif
 	};
 
 	template <class Input, class Output, class... Args>

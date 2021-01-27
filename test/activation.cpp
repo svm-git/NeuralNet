@@ -29,34 +29,7 @@ SOFTWARE.
 
 #include "..\src\activation.h"
 
-template <typename Tensor>
-void check_tensors_3d(
-	const Tensor& expected,
-	const Tensor& actual)
-{
-	for (size_t x = 0; x < expected.size<0>(); ++x)
-	{
-		for (size_t y = 0; y < expected.size<1>(); ++y)
-		{
-			for (size_t z = 0; z < expected.size<2>(); ++z)
-			{
-				test::check_true(expected(x, y, z) == actual(x, y, z), "Unexpected mismatch between C++ and OpenCL results.");
-			}
-		}
-	}
-}
-
-::boost::compute::device find_device(
-	int deviceType)
-{
-	for (auto device : ::boost::compute::system::devices())
-	{
-		if (device.type() & deviceType)
-			return device;
-	}
-
-	return ::boost::compute::system::default_device();
-}
+#include "opencltest.h"
 
 template <typename Layer>
 void test_activation_layer_on_device(
@@ -200,7 +173,7 @@ void test_activation()
 	}
 
 	{
-		auto device = find_device(::boost::compute::device::cpu);
+		auto device = find_test_device();
 		::boost::compute::context context(device);
 		::boost::compute::command_queue queue(context, device);
 

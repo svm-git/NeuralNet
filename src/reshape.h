@@ -27,6 +27,12 @@ SOFTWARE.
 #include "layer.h"
 #include "serialization.h"
 
+#ifdef NEURAL_NET_ENABLE_OPEN_CL
+
+#include "opencl/layer_kernels.h"
+
+#endif
+
 namespace neural_network {
 
 namespace detail {
@@ -64,7 +70,7 @@ namespace detail {
 }
 
 	template <typename InputMetrics, typename OutputMetrics>
-	class reshape : public layer_base <InputMetrics, OutputMetrics>
+	class reshape : public layer_base<InputMetrics, OutputMetrics>
 	{
 	public:
 		typedef typename reshape<InputMetrics, OutputMetrics> this_type;
@@ -88,8 +94,33 @@ namespace detail {
 		}
 
 		void update_weights(
-			const float)
+			const number_type)
 		{}
+
+#ifdef NEURAL_NET_ENABLE_OPEN_CL
+
+		const output& process(
+			const input& input,
+			::boost::compute::command_queue&)
+		{
+			return this->process(input);
+		}
+
+		const input& compute_gradient(
+			const output& gradient,
+			::boost::compute::command_queue&)
+		{
+			return this->compute_gradient(gradient);
+		}
+
+		void update_weights(
+			const number_type rate,
+			::boost::compute::command_queue&)
+		{
+			this->update_weights(rate);
+		}
+
+#endif
 	};
 
 	template <class Input, class Output, class... Args>

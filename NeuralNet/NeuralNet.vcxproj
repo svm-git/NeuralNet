@@ -164,11 +164,13 @@
     <ClInclude Include="..\src\loss.h" />
     <ClInclude Include="..\src\network.h" />
     <ClInclude Include="..\src\opencl\activation.h" />
+    <ClInclude Include="..\src\opencl\connected.h" />
     <ClInclude Include="..\src\opencl\layer_kernels.h" />
     <ClInclude Include="..\src\pooling.h" />
     <ClInclude Include="..\src\reshape.h" />
     <ClInclude Include="..\src\serialization.h" />
     <ClInclude Include="..\src\tensor.h" />
+    <ClInclude Include="..\test\opencltest.h" />
     <ClInclude Include="..\test\serializationtest.h" />
     <ClInclude Include="..\test\training.h" />
     <ClInclude Include="..\test\unittest.h" />

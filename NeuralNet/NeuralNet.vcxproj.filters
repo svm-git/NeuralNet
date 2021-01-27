@@ -81,6 +81,12 @@
     <ClInclude Include="..\src\opencl\layer_kernels.h">
       <Filter>Source Files\opencl</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\opencl\connected.h">
+      <Filter>Source Files\opencl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\test\opencltest.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">

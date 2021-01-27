@@ -29,6 +29,8 @@ SOFTWARE.
 
 #include "..\src\reshape.h"
 
+#include "opencltest.h"
+
 void test_reshape()
 {
 	scenario sc("Test for neural_network::reshape layer");
@@ -51,6 +53,20 @@ void test_reshape()
 	test::check_true(g.size<2>() == 1, "Invalid size<2> of reshaped gradient tensor.");
 
 	test_layer_serialization("Reshape Layer Serialization Tests", layer);
+
+	{
+		auto device = find_test_device();
+		::boost::compute::context context(device);
+		::boost::compute::command_queue queue(context, device);
+
+		{
+			test::verbose("OpenCL Reshape Layer Tests");
+
+			r = layer.process(i, queue);
+			g = layer.compute_gradient(r, queue);
+			layer.update_weights(0.01f, queue);
+		}
+	}
 
 	sc.pass();
 }

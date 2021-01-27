@@ -24,10 +24,51 @@ SOFTWARE.
 
 #include "stdafx.h"
 
+#include <random>
+
 #include "unittest.h"
 #include "serializationtest.h"
 
 #include "..\src\connected.h"
+
+#include "opencltest.h"
+
+template <typename Layer>
+void test_dense_layer_on_device(
+	::boost::compute::command_queue& queue)
+{
+	std::random_device rd;
+	std::mt19937 gen(rd());
+	std::uniform_real_distribution<float> distr(-0.5f, 0.5f);
+
+	auto random_values = [&distr, &gen]() { return distr(gen); };
+
+	const unsigned long seedValue = 123;
+
+	gen.seed(seedValue);
+	typename Layer cppLayer(random_values);
+
+	gen.seed(seedValue);
+	typename Layer openclLayer(random_values);
+
+	typename Layer::input input(random_values);
+	typename Layer::output gradient(random_values);
+
+	check_tensors_2d(
+		cppLayer.process(input),
+		openclLayer.process(input, queue));
+
+	check_tensors_3d(
+		cppLayer.compute_gradient(gradient),
+		openclLayer.compute_gradient(gradient, queue));
+
+	cppLayer.update_weights(0.001f);
+	openclLayer.update_weights(0.001f, queue);
+
+	check_tensors_2d(
+		cppLayer.process(input),
+		openclLayer.process(input, queue));
+}
 
 void test_connected()
 {
@@ -44,6 +85,22 @@ void test_connected()
 	layer.update_weights(0.9f);
 
 	test_layer_serialization("Fully Connected Layer Serialization Tests", layer);
+
+	{
+		auto device = find_test_device();
+		::boost::compute::context context(device);
+		::boost::compute::command_queue queue(context, device);
+
+		{
+			test::verbose("OpenCL Fully Connected Layer Tests");
+
+			typedef neural_network::algebra::metrics<3, 2, 1> m3x2x1;
+			typedef neural_network::algebra::metrics<30, 20, 10> m30x20x10;
+
+			test_dense_layer_on_device<neural_network::fully_connected<m3x2x1, m5x4>>(queue);
+			test_dense_layer_on_device<neural_network::fully_connected<m30x20x10, m5x4>>(queue);
+		}
+	}
 
 	sc.pass();
 }
