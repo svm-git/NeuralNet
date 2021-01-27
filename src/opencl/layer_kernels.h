@@ -219,6 +219,26 @@ namespace detail {
 							weights[pos] += (gradient[pos] + regularization * weights[pos]) * rate;
 						}
 					}
+
+					__kernel void neural_net_squared_error_loss_gradient_kernel(
+						__global const float * vResult,
+						__global const float * vTruth,
+						__global float * vGradient,
+						int length)
+					{
+						int pos = get_global_id(0) * BLOCK_SIZE;
+						int end = pos + BLOCK_SIZE;
+						if (length < end)
+						{
+							end = length;
+						}
+
+						for (; pos < end; ++pos)
+						{
+							vGradient[pos] = vResult[pos] - vTruth[pos];
+						}
+					}
+
 				);
 
 				std::stringstream options;
@@ -401,6 +421,31 @@ namespace detail {
 		static inline std::string get_update_weights_kernel_name()
 		{
 			return "neural_net_update_weights_kernel";
+		}
+
+		static void execute_squared_error_loss_gradient_kernel(
+			::boost::compute::mapped_view<float>& resultView,
+			::boost::compute::mapped_view<float>& truthView,
+			::boost::compute::mapped_view<float>& gradientView,
+			const size_t length,
+			const ::boost::compute::program& program,
+			const std::string& kernelName,
+			::boost::compute::command_queue& queue)
+		{
+			auto kernel = program.create_kernel(kernelName);
+
+			kernel.set_arg(0, resultView.get_buffer());
+			kernel.set_arg(1, truthView.get_buffer());
+			kernel.set_arg(2, gradientView.get_buffer());
+			kernel.set_arg(3, static_cast<int>(length));
+
+			queue.enqueue_1d_range_kernel(kernel, 0, get_block_count(length), 0);
+			queue.finish();
+		}
+
+		static inline std::string get_squared_error_loss_gradient_kernel_name()
+		{
+			return "neural_net_squared_error_loss_gradient_kernel";
 		}
 	};
 

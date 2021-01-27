@@ -166,6 +166,7 @@
     <ClInclude Include="..\src\opencl\activation.h" />
     <ClInclude Include="..\src\opencl\connected.h" />
     <ClInclude Include="..\src\opencl\layer_kernels.h" />
+    <ClInclude Include="..\src\opencl\loss.h" />
     <ClInclude Include="..\src\pooling.h" />
     <ClInclude Include="..\src\reshape.h" />
     <ClInclude Include="..\src\serialization.h" />
@@ -183,6 +184,7 @@
     <ClCompile Include="..\test\convolution.cpp" />
     <ClCompile Include="..\test\core.cpp" />
     <ClCompile Include="..\test\ensemble.cpp" />
+    <ClCompile Include="..\test\loss.cpp" />
     <ClCompile Include="..\test\network.cpp" />
     <ClCompile Include="..\test\pooling.cpp" />
     <ClCompile Include="..\test\reshape.cpp" />

@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2020 svm-git
+Copyright (c) 2020-2021 svm-git
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -193,6 +193,7 @@ void test_pooling();
 void test_convolution();
 void test_network();
 void test_ensemble();
+void test_loss();
 
 void test_serialization();
 

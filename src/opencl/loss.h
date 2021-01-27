@@ -22,44 +22,42 @@ SOFTWARE.
 
 */
 
-#include "stdafx.h"
+#pragma once
 
-#include "unittest.h"
+#include "layer_kernels.h"
 
-void run_tests()
-{
-	try
+namespace neural_network {
+namespace opencl {
+namespace detail {
+
+	struct squared_error_loss
 	{
-		test_tensor();
+		template <typename Tensor>
+		static void compute_gradient(
+			const typename Tensor& result,
+			const typename Tensor& truth,
+			typename Tensor& gradient,
+			const ::boost::compute::program& program,
+			const std::string& kernelName,
+			const ::boost::compute::context& context,
+			::boost::compute::command_queue& queue)
+		{
+			auto resultView = result.get_device_view(context);
+			auto truthView = truth.get_device_view(context);
+			auto gradientView = gradient.get_device_view(context);
 
-		test_core();
+			layer_kernels::execute_squared_error_loss_gradient_kernel(
+				resultView,
+				truthView,
+				gradientView,
+				Tensor::data_size,
+				program,
+				kernelName,
+				queue);
+		}
 
-		test_serialization();
+	};
 
-		test_loss();
-
-		test_activation();
-
-		test_connected();
-
-		test_reshape();
-
-		test_pooling();
-
-		test_convolution();
-
-		test_network();
-
-		test_ensemble();
-
-		test::log("===========================================");
-		test::log("All unit tests PASS");
-	}
-	catch (const std::exception& e)
-	{
-		test::log("===========================================");
-		test::log((std::string("Unexpected exception during unit tests: ") + e.what()).c_str());
-		test::log("===========================================");
-		test::log("Unit tests FAILED");
-	}
+}
+}
 }
