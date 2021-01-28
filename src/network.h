@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2020 svm-git
+Copyright (c) 2020-2021 svm-git
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -26,6 +26,12 @@ SOFTWARE.
 
 #include "serialization.h"
 
+#ifdef NEURAL_NET_ENABLE_OPEN_CL
+
+#include "opencl/layer_kernels.h"
+
+#endif
+
 namespace neural_network {
 
 namespace detail {
@@ -45,6 +51,29 @@ namespace detail {
 
 		net.update_weights(-std::abs(rate));
 	}
+
+#ifdef NEURAL_NET_ENABLE_OPEN_CL
+
+	template <class Network, class Loss>
+	void train_network(
+		Network& net,
+		const typename Network::input& input,
+		const typename Network::output& truth,
+		Loss& loss,
+		const typename Network::number_type rate,
+		::boost::compute::command_queue& queue)
+	{
+		net.compute_gradient(
+			loss.compute_gradient(
+				net.process(input, queue),
+				truth,
+				queue),
+			queue);
+
+		net.update_weights(-std::abs(rate), queue);
+	}
+
+#endif
 
 }
 
@@ -127,6 +156,47 @@ namespace detail {
 			}
 		};
 
+#ifdef NEURAL_NET_ENABLE_OPEN_CL
+
+		const output& process(
+			const input& input,
+			::boost::compute::command_queue& queue)
+		{
+			return base_type::process(
+				m_layer.process(input, queue),
+				queue);
+		}
+
+		const input& compute_gradient(
+			const output& gradient,
+			::boost::compute::command_queue& queue)
+		{
+			return m_layer.compute_gradient(
+				base_type::compute_gradient(gradient, queue),
+				queue);
+		}
+
+		void update_weights(
+			const number_type rate,
+			::boost::compute::command_queue& queue)
+		{
+			base_type::update_weights(rate, queue);
+			m_layer.update_weights(rate, queue);
+		}
+
+		template <class Loss>
+		void train(
+			const typename input& input,
+			const typename output& truth,
+			Loss& loss,
+			const number_type rate,
+			::boost::compute::command_queue& queue)
+		{
+			detail::train_network(*this, input, truth, loss, rate, queue);
+		}
+
+#endif
+
 	private:
 		Layer m_layer;
 	};
@@ -174,7 +244,7 @@ namespace detail {
 			Loss& loss,
 			const number_type rate)
 		{
-			train_network(*this, input, truth, loss, rate);
+			detail::train_network(*this, input, truth, loss, rate);
 		}
 
 		struct serializer
@@ -197,6 +267,42 @@ namespace detail {
 				Layer::serializer::write(out, layer.m_layer);
 			}
 		};
+
+#ifdef NEURAL_NET_ENABLE_OPEN_CL
+
+		const output& process(
+			const input& input,
+			::boost::compute::command_queue& queue)
+		{
+			return m_layer.process(input, queue);
+		}
+
+		const input& compute_gradient(
+			const output& gradient,
+			::boost::compute::command_queue& queue)
+		{
+			return m_layer.compute_gradient(gradient, queue);
+		}
+
+		void update_weights(
+			const number_type rate,
+			::boost::compute::command_queue& queue)
+		{
+			m_layer.update_weights(rate, queue);
+		}
+
+		template <class Loss>
+		void train(
+			const typename input& input,
+			const typename output& truth,
+			Loss& loss,
+			const number_type rate,
+			::boost::compute::command_queue& queue)
+		{
+			detail::train_network(*this, input, truth, loss, rate, queue);
+		}
+
+#endif
 
 	private:
 		Layer m_layer;

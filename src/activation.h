@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2020 svm-git
+Copyright (c) 2020-2021 svm-git
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -48,6 +48,15 @@ namespace neural_network {
 		void update_weights(
 			const number_type)
 		{}
+
+#ifdef NEURAL_NET_ENABLE_OPEN_CL
+
+		void update_weights(
+			const number_type,
+			::boost::compute::command_queue&)
+		{}
+
+#endif
 
 	protected:
 		input m_input;

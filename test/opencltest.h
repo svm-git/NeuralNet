@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2020-21 svm-git
+Copyright (c) 2020-2021 svm-git
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,8 @@ SOFTWARE.
 #pragma once
 
 #include <boost/compute/core.hpp>
+
+#include "training.h"
 
 template <const int DeviceType = ::boost::compute::device::cpu>
 ::boost::compute::device find_test_device()
@@ -69,3 +71,44 @@ void check_tensors_3d(
 	}
 }
 
+template <class Network, class Input, class Result, class Loss>
+void train_test_network_on_device(
+	Network& net,
+	const Input& input,
+	const Result& truth,
+	Loss& loss,
+	typename Input::number_type startingRate,
+	typename Input::number_type& initialLoss,
+	typename Input::number_type& finalLoss,
+	::boost::compute::command_queue& queue)
+{
+	auto processFunc = [&net, &queue](const typename Input& in)
+	{
+		return net.process(in, queue);
+	};
+
+	auto trainFunc = [&net, &loss, &queue](
+		const typename Input& input,
+		const typename Result& truth,
+		const typename Input::number_type rate)
+	{
+		net.train(input, truth, loss, rate, queue);
+	};
+
+	auto lossFunc = [&loss, &queue](
+		const typename Result& result,
+		const typename Result& truth)
+	{
+		return loss.compute(result, truth, queue);
+	};
+
+	train_test_network_impl(
+		input,
+		truth,
+		processFunc,
+		trainFunc,
+		lossFunc,
+		startingRate,
+		initialLoss,
+		finalLoss);
+}

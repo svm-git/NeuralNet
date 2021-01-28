@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2020 svm-git
+Copyright (c) 2020-2021 svm-git
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -27,6 +27,12 @@ SOFTWARE.
 #include "layer.h"
 #include "core.h"
 #include "serialization.h"
+
+#ifdef NEURAL_NET_ENABLE_OPEN_CL
+
+#include "opencl/layer_kernels.h"
+
+#endif
 
 namespace neural_network {
 
@@ -522,6 +528,31 @@ template <class InputMetrics, class Core, class Stride, const size_t Kernels>
 				serializer_impl_type::write(out, layer.m_impl.m_weights);
 			}
 		};
+
+#ifdef NEURAL_NET_ENABLE_OPEN_CL
+
+		const output& process(
+			const input& input,
+			::boost::compute::command_queue&)
+		{
+			return this->process(input);
+		}
+
+		const input& compute_gradient(
+			const output& gradient,
+			::boost::compute::command_queue&)
+		{
+			return this->compute_gradient(gradient);
+		}
+
+		void update_weights(
+			const number_type rate,
+			::boost::compute::command_queue&)
+		{
+			this->update_weights(rate);
+		}
+
+#endif
 
 	private:
 		impl m_impl;
