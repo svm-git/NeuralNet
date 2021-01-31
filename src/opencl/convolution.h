@@ -30,70 +30,8 @@ namespace neural_network {
 namespace opencl {
 namespace detail {
 
-	struct fully_connected
+	struct convolution
 	{
-		template <typename Input, typename Output, typename Weights>
-		static void process(
-			const typename Input& input,
-			const typename Weights& weights,
-			const typename Output& bias,
-			typename Output& output,
-			const ::boost::compute::program& program,
-			const std::string& kernelName,
-			const ::boost::compute::context& context,
-			::boost::compute::command_queue& queue)
-		{
-			auto inputView = input.get_device_view(context);
-			auto weightsView = weights.get_device_view(context);
-			auto biasView = bias.get_device_view(context);
-			auto outputView = output.get_device_view(context);
-
-			layer_kernels::execute_fully_connected_kernel(
-				inputView,
-				weightsView,
-				biasView,
-				outputView,
-				Output::data_size,
-				Input::data_size,
-				program,
-				kernelName,
-				queue);
-		}
-
-		template <typename Input, typename Output, typename Weights>
-		static void compute_gradient(
-			const typename Input& input,
-			const typename Weights& weights,
-			const typename Output& gradient,
-			typename Input& resultGradient,
-			typename Weights& weightsGradient,
-			typename Output& biasGradient,
-			const ::boost::compute::program& program,
-			const std::string& kernelName,
-			const ::boost::compute::context& context,
-			::boost::compute::command_queue& queue)
-		{
-			auto inputView = input.get_device_view(context);
-			auto weightsView = weights.get_device_view(context);
-			auto gradientView = gradient.get_device_view(context);
-			auto resultGradientView = resultGradient.get_device_view(context);
-			auto weightsGradientView = weightsGradient.get_device_view(context);
-			auto biasGradientView = biasGradient.get_device_view(context);
-
-			layer_kernels::execute_fully_connected_gradient_kernel(
-				inputView,
-				weightsView,
-				gradientView,
-				resultGradientView,
-				weightsGradientView,
-				biasGradientView,
-				Output::data_size,
-				Input::data_size,
-				program,
-				kernelName,
-				queue);
-		}
-
 		template <typename Weights, typename Bias>
 		static void update_weights(
 			const typename Weights& weightsGradient,
@@ -101,7 +39,6 @@ namespace detail {
 			const typename Bias& biasGradient,
 			typename Bias& bias,
 			float rate,
-			float regularization,
 			const ::boost::compute::program& program,
 			const std::string& kernelName,
 			const ::boost::compute::context& context,
@@ -120,12 +57,13 @@ namespace detail {
 				Weights::data_size,
 				Bias::data_size,
 				rate,
-				regularization,
+				0.0f,
 				program,
 				kernelName,
 				queue);
 		}
 	};
+
 }
 }
 }

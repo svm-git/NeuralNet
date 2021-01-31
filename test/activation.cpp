@@ -173,9 +173,8 @@ void test_activation()
 	}
 
 	{
-		auto device = find_test_device();
-		::boost::compute::context context(device);
-		::boost::compute::command_queue queue(context, device);
+		auto context = find_test_device_context();
+		::boost::compute::command_queue queue(context, context.get_device());
 
 		{
 			test::verbose("OpenCL ReLU Activation Tests");

@@ -165,6 +165,7 @@
     <ClInclude Include="..\src\network.h" />
     <ClInclude Include="..\src\opencl\activation.h" />
     <ClInclude Include="..\src\opencl\connected.h" />
+    <ClInclude Include="..\src\opencl\convolution.h" />
     <ClInclude Include="..\src\opencl\layer_kernels.h" />
     <ClInclude Include="..\src\opencl\loss.h" />
     <ClInclude Include="..\src\pooling.h" />

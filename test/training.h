@@ -26,7 +26,7 @@ SOFTWARE.
 
 #include <sstream>
 
-template <class Input, class Result, class Process, class Train, class Loss>
+template <const int MaxIterations, class Input, class Result, class Process, class Train, class Loss>
 void train_test_network_impl(
 	const Input& input,
 	const Result& truth,
@@ -50,7 +50,7 @@ void train_test_network_impl(
 	int epoch = 0;
 	int iteration = 0;
 
-	while (retry < 20 && iteration < 100000)
+	while (retry < 20 && iteration < MaxIterations)
 	{
 		++iteration;
 		float pretrained = loss(
@@ -119,7 +119,7 @@ void train_test_network(
 		return loss.compute(result, truth);
 	};
 
-	train_test_network_impl(
+	train_test_network_impl<100000>(
 		input,
 		truth,
 		processFunc,

@@ -90,6 +90,9 @@
     <ClInclude Include="..\src\opencl\loss.h">
       <Filter>Source Files\opencl</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\opencl\convolution.h">
+      <Filter>Source Files\opencl</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">

@@ -41,7 +41,7 @@ namespace detail {
 	{
 		enum 
 		{ 
-			block_size = 512,
+			block_size = 128,
 			min_matrix_size = 1024
 		};
 
@@ -372,7 +372,7 @@ namespace detail {
 			queue.finish();
 		}
 
-		static void execute_fully_connected_update_weights_kernel(
+		static void execute_generic_update_weights_kernel(
 			::boost::compute::mapped_view<float>& weightsGradientView,
 			::boost::compute::mapped_view<float>& weightsView,
 			::boost::compute::mapped_view<float>& biasGradientView,

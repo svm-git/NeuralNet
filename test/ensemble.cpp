@@ -144,9 +144,8 @@ void test_ensemble()
 	{
 		test::verbose("OpenCL Network Ensemble Training Tests");
 
-		auto device = find_test_device();
-		::boost::compute::context context(device);
-		::boost::compute::command_queue queue(context, device);
+		auto context = find_test_device_context();
+		::boost::compute::command_queue queue(context, context.get_device());
 
 		typedef neural_network::algebra::metrics<8> m8;
 		typedef neural_network::algebra::metrics<29> m29;
@@ -235,12 +234,12 @@ void test_ensemble()
 
 		float initialLoss = 0.0f, finalLoss = 0.0f;
 
-		train_test_network_on_device(
+		train_test_network_on_device<1000>(
 			openclNet,
 			input,
 			truth,
 			loss,
-			0.17f,
+			1.7f,
 			initialLoss,
 			finalLoss,
 			queue);

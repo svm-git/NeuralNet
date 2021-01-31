@@ -87,9 +87,8 @@ void test_connected()
 	test_layer_serialization("Fully Connected Layer Serialization Tests", layer);
 
 	{
-		auto device = find_test_device();
-		::boost::compute::context context(device);
-		::boost::compute::command_queue queue(context, device);
+		auto context = find_test_device_context();
+		::boost::compute::command_queue queue(context, context.get_device());
 
 		{
 			test::verbose("OpenCL Fully Connected Layer Tests");

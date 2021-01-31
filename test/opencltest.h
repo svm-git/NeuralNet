@@ -40,6 +40,26 @@ template <const int DeviceType = ::boost::compute::device::cpu>
 	return ::boost::compute::system::default_device();
 }
 
+template <const int DeviceType = ::boost::compute::device::cpu>
+::boost::compute::context find_test_device_context()
+{
+	static ::boost::compute::context testContext(
+		find_test_device<DeviceType>());
+
+	return testContext;
+}
+
+template <typename Tensor>
+void check_tensors_1d(
+	const Tensor& expected,
+	const Tensor& actual)
+{
+	for (size_t x = 0; x < expected.size<0>(); ++x)
+	{
+		test::check_true(expected(x) == actual(x), "Unexpected mismatch between C++ and OpenCL results.");
+	}
+}
+
 template <typename Tensor>
 void check_tensors_2d(
 	const Tensor& expected,
@@ -71,7 +91,27 @@ void check_tensors_3d(
 	}
 }
 
-template <class Network, class Input, class Result, class Loss>
+template <typename Tensor>
+void check_tensors_4d(
+	const Tensor& expected,
+	const Tensor& actual)
+{
+	for (size_t x = 0; x < expected.size<0>(); ++x)
+	{
+		for (size_t y = 0; y < expected.size<1>(); ++y)
+		{
+			for (size_t z = 0; z < expected.size<2>(); ++z)
+			{
+				for (size_t q = 0; q < expected.size<3>(); ++q)
+				{
+					test::check_true(expected(x, y, z, q) == actual(x, y, z, q), "Unexpected mismatch between C++ and OpenCL results.");
+				}
+			}
+		}
+	}
+}
+
+template <const int MaxIterations, class Network, class Input, class Result, class Loss>
 void train_test_network_on_device(
 	Network& net,
 	const Input& input,
@@ -102,7 +142,7 @@ void train_test_network_on_device(
 		return loss.compute(result, truth, queue);
 	};
 
-	train_test_network_impl(
+	train_test_network_impl<MaxIterations>(
 		input,
 		truth,
 		processFunc,

@@ -61,9 +61,8 @@ void test_loss()
 {
 	scenario sc("Test for neural_network::*_loss classes");
 
-	auto device = find_test_device();
-	::boost::compute::context context(device);
-	::boost::compute::command_queue queue(context, device);
+	auto context = find_test_device_context();
+	::boost::compute::command_queue queue(context, context.get_device());
 
 	{
 		test::verbose("OpenCL Squared Error Loss function Tests");

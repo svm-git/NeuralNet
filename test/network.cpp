@@ -87,9 +87,8 @@ void test_network()
 	{
 		test::verbose("OpenCL Network Training Tests");
 
-		auto device = find_test_device();
-		::boost::compute::context context(device);
-		::boost::compute::command_queue queue(context, device);
+		auto context = find_test_device_context();
+		::boost::compute::command_queue queue(context, context.get_device());
 
 		typedef neural_network::algebra::metrics<16, 32> m16x32;
 		typedef neural_network::algebra::metrics<32, 32> m32x32;
@@ -117,7 +116,7 @@ void test_network()
 
 		float initialLoss = 0.0f, finalLoss = 0.0f;
 
-		train_test_network_on_device(
+		train_test_network_on_device<10000>(
 			openclNet,
 			input,
 			truth,

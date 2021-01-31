@@ -30,7 +30,7 @@ SOFTWARE.
 
 #ifdef NEURAL_NET_ENABLE_OPEN_CL
 
-#include "opencl/layer_kernels.h"
+#include "opencl/convolution.h"
 
 #endif
 
@@ -109,11 +109,17 @@ namespace detail {
 
 		convolution_1d()
 			: m_weights()
+#ifdef NEURAL_NET_ENABLE_OPEN_CL
+			, m_kernelProgram(), m_weightsKernelName()
+#endif
 		{}
 
 		convolution_1d(
 			std::function<number_type()> initializer)
-			: m_weights(initializer)
+				: m_weights(initializer)
+#ifdef NEURAL_NET_ENABLE_OPEN_CL
+				, m_kernelProgram(), m_weightsKernelName()
+#endif
 		{
 		}
 
@@ -187,7 +193,69 @@ namespace detail {
 			}
 		}
 
+#ifdef NEURAL_NET_ENABLE_OPEN_CL
+
+		template<const size_t KernelSize>
+		void dispatch_update_weights(
+			const kernel_weights& kernelGradient,
+			const bias& biasGradient,
+			const number_type rate,
+			::boost::compute::command_queue&,
+			std::enable_if_t<
+				(KernelSize < opencl::detail::layer_kernels::block_size)
+			>* = 0)
+		{
+			this->update_weights(kernelGradient, biasGradient, rate);
+		}
+
+		template<const size_t KernelSize>
+		void dispatch_update_weights(
+			const kernel_weights& kernelGradient,
+			const bias& biasGradient,
+			const number_type rate,
+			::boost::compute::command_queue& queue,
+			std::enable_if_t<
+				!(KernelSize < opencl::detail::layer_kernels::block_size)
+			>* = 0)
+		{
+			auto context = queue.get_context();
+
+			initialize_opencl(context);
+
+			opencl::detail::convolution::update_weights(
+				kernelGradient,
+				m_weights.m_kernels,
+				biasGradient,
+				m_weights.m_bias,
+				rate,
+				m_kernelProgram,
+				m_weightsKernelName,
+				context,
+				queue);
+		}
+
+		void initialize_opencl(
+			const ::boost::compute::context& context)
+		{
+			if (0 == m_weightsKernelName.size())
+			{
+				m_kernelProgram = opencl::detail::layer_kernels::make_program(context);
+
+				m_weightsKernelName = opencl::detail::layer_kernels::get_update_weights_kernel_name();
+			}
+		}
+
+#endif
+
 		weights_type m_weights;
+
+#ifdef NEURAL_NET_ENABLE_OPEN_CL
+
+	private:
+		::boost::compute::program m_kernelProgram;
+		std::string m_weightsKernelName;
+
+#endif
 	};
 
 	template <class Metrics, class Core, class Stride, const size_t Kernels>
@@ -208,11 +276,17 @@ namespace detail {
 
 		convolution_2d()
 			: m_weights()
+#ifdef NEURAL_NET_ENABLE_OPEN_CL
+			, m_kernelProgram(), m_weightsKernelName()
+#endif
 		{}
 
 		convolution_2d(
 			std::function<number_type()> initializer)
-			: m_weights(initializer)
+				: m_weights(initializer)
+#ifdef NEURAL_NET_ENABLE_OPEN_CL
+				, m_kernelProgram(), m_weightsKernelName()
+#endif
 		{
 		}
 
@@ -286,7 +360,7 @@ namespace detail {
 
 		void update_weights(
 			const kernel_weights& kernelGradient,
-			bias& biasGradient,
+			const bias& biasGradient,
 			const number_type rate)
 		{
 			for (size_t kernel = 0; kernel < m_weights.m_bias.size<0>(); ++kernel)
@@ -303,7 +377,69 @@ namespace detail {
 			}
 		}
 
+#ifdef NEURAL_NET_ENABLE_OPEN_CL
+
+		template<const size_t KernelSize>
+		void dispatch_update_weights(
+			const kernel_weights& kernelGradient,
+			const bias& biasGradient,
+			const number_type rate,
+			::boost::compute::command_queue&,
+			std::enable_if_t<
+				(KernelSize < opencl::detail::layer_kernels::block_size)
+			>* = 0)
+		{
+			this->update_weights(kernelGradient, biasGradient, rate);
+		}
+
+		template<const size_t KernelSize>
+		void dispatch_update_weights(
+			const kernel_weights& kernelGradient,
+			const bias& biasGradient,
+			const number_type rate,
+			::boost::compute::command_queue& queue,
+			std::enable_if_t<
+				!(KernelSize < opencl::detail::layer_kernels::block_size)
+			>* = 0)
+		{
+			auto context = queue.get_context();
+
+			initialize_opencl(context);
+
+			opencl::detail::convolution::update_weights(
+				kernelGradient,
+				m_weights.m_kernels,
+				biasGradient,
+				m_weights.m_bias,
+				rate,
+				m_kernelProgram,
+				m_weightsKernelName,
+				context,
+				queue);
+		}
+
+		void initialize_opencl(
+			const ::boost::compute::context& context)
+		{
+			if (0 == m_weightsKernelName.size())
+			{
+				m_kernelProgram = opencl::detail::layer_kernels::make_program(context);
+
+				m_weightsKernelName = opencl::detail::layer_kernels::get_update_weights_kernel_name();
+			}
+		}
+
+#endif
+
 		weights_type m_weights;
+
+#ifdef NEURAL_NET_ENABLE_OPEN_CL
+
+	private:
+		::boost::compute::program m_kernelProgram;
+		std::string m_weightsKernelName;
+
+#endif
 	};
 
 	template <class Metrics, class Core, class Stride, const size_t Kernels>
@@ -324,11 +460,17 @@ namespace detail {
 
 		convolution_3d()
 			: m_weights()
+#ifdef NEURAL_NET_ENABLE_OPEN_CL
+			, m_kernelProgram(), m_weightsKernelName()
+#endif
 		{}
 
 		convolution_3d(
 			std::function<number_type()> initializer)
-			: m_weights(initializer)
+				: m_weights(initializer)
+#ifdef NEURAL_NET_ENABLE_OPEN_CL
+				, m_kernelProgram(), m_weightsKernelName()
+#endif
 		{
 		}
 
@@ -436,7 +578,69 @@ namespace detail {
 			}
 		}
 
+#ifdef NEURAL_NET_ENABLE_OPEN_CL
+
+		template<const size_t KernelSize>
+		void dispatch_update_weights(
+			const kernel_weights& kernelGradient,
+			const bias& biasGradient,
+			const number_type rate,
+			::boost::compute::command_queue&,
+			std::enable_if_t<
+				(KernelSize < opencl::detail::layer_kernels::block_size)
+			>* = 0)
+		{
+			this->update_weights(kernelGradient, biasGradient, rate);
+		}
+
+		template<const size_t KernelSize>
+		void dispatch_update_weights(
+			const kernel_weights& kernelGradient,
+			const bias& biasGradient,
+			const number_type rate,
+			::boost::compute::command_queue& queue,
+			std::enable_if_t<
+				!(KernelSize < opencl::detail::layer_kernels::block_size)
+			>* = 0)
+		{
+			auto context = queue.get_context();
+
+			initialize_opencl(context);
+
+			opencl::detail::convolution::update_weights(
+				kernelGradient,
+				m_weights.m_kernels,
+				biasGradient,
+				m_weights.m_bias,
+				rate,
+				m_kernelProgram,
+				m_weightsKernelName,
+				context,
+				queue);
+		}
+
+		void initialize_opencl(
+			const ::boost::compute::context& context)
+		{
+			if (0 == m_weightsKernelName.size())
+			{
+				m_kernelProgram = opencl::detail::layer_kernels::make_program(context);
+
+				m_weightsKernelName = opencl::detail::layer_kernels::get_update_weights_kernel_name();
+			}
+		}
+
+#endif
+
 		weights_type m_weights;
+
+#ifdef NEURAL_NET_ENABLE_OPEN_CL
+
+	private:
+		::boost::compute::program m_kernelProgram;
+		std::string m_weightsKernelName;
+
+#endif
 	};
 
 	template <class Metrics, class Core, class Stride, const size_t Kernels>
@@ -547,10 +751,14 @@ template <class InputMetrics, class Core, class Stride, const size_t Kernels>
 
 		void update_weights(
 			const number_type rate,
-			::boost::compute::command_queue&)
+			::boost::compute::command_queue& queue)
 		{
-			this->update_weights(rate);
-		}
+			m_impl.dispatch_update_weights<impl::kernel_weights::data_size>(
+				m_kernelGradient,
+				m_biasGradient,
+				rate,
+				queue);
+	}
 
 #endif
 
