@@ -169,14 +169,14 @@ namespace neural_network {
 			const input& input,
 			::boost::compute::command_queue& queue)
 		{
-			return this->dispatch_process<input::data_size>(input, queue);
+			return this->dispatch_process<weights_type::data_size>(input, queue);
 		}
 
 		const input& compute_gradient(
 			const output& gradient,
 			::boost::compute::command_queue& queue)
 		{
-			return this->dispatch_compute_gradient<input::data_size>(gradient, queue);
+			return this->dispatch_compute_gradient<weights_type::data_size>(gradient, queue);
 		}
 
 		void update_weights(

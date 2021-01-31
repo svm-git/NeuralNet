@@ -27,6 +27,12 @@ SOFTWARE.
 #include "layer.h"
 #include "serialization.h"
 
+#ifdef NEURAL_NET_ENABLE_OPEN_CL
+
+#include "opencl/layer_kernels.h"
+
+#endif
+
 namespace neural_network {
 	
 namespace detail {
@@ -92,6 +98,74 @@ namespace detail {
 				return r + l;
 			});
 	}
+
+#ifdef NEURAL_NET_ENABLE_OPEN_CL
+
+	template <class Network, class Output>
+	void process_and_copy_network_result_on_device(
+		Network& network,
+		const size_t index,
+		const typename Network::input& input,
+		Output& output,
+		::boost::compute::command_queue& queue)
+	{
+		typedef typename typename Network::output local_output_type;
+		typedef typename algebra::metrics<local_output_type::data_size> reshaped_local_output_metrics;
+		typedef typename Output::metrics::shrink::type shrink_metrics;
+
+		typedef typename algebra::metrics<Output::dimension_size, shrink_metrics::data_size> reshaped_output_metrics;
+
+		auto localResult = network
+			.process(input, queue)
+			.reshape<reshaped_local_output_metrics>();
+
+		auto reshaped_output = output.reshape<reshaped_output_metrics>();
+
+		for (size_t i = 0; i < localResult.size<0>(); ++i)
+		{
+			// Reshaped tensors share the same data, therefore
+			// data in 'output' tensor is updated by this loop.
+			reshaped_output(index, i) = localResult(i);
+		}
+	}
+
+	template <class Network, class Gradient>
+	void compute_gradient_and_add_result_on_device(
+		Network& network,
+		const size_t index,
+		const Gradient& grad,
+		typename Network::output& local,
+		typename Network::input& result,
+		::boost::compute::command_queue& queue)
+	{
+		typedef typename algebra::metrics<Network::output::data_size> reshaped_local_metrics;
+		typedef typename Gradient::metrics::shrink::type shrink_metrics;
+
+		typedef typename algebra::metrics<Gradient::dimension_size, shrink_metrics::data_size> reshaped_gradient_metrics;
+
+		auto gradient = grad.reshape<reshaped_gradient_metrics>();
+		auto localGradient = local.reshape<reshaped_local_metrics>();
+
+		for (size_t i = 0; i < localGradient.size<0>(); ++i)
+		{
+			localGradient(i) = gradient(index, i);
+		}
+
+		// Reshaped tensors share the same data, therefore
+		// data in 'local' tensor is initialized by the loop above.
+		auto localResult = network.compute_gradient(local, queue);
+
+		// result = result + localResult
+		localResult.transform(
+			result,
+			result,
+			[](const typename Network::number_type& l, const typename Network::number_type& r)
+		{
+			return r + l;
+		});
+	}
+
+#endif
 
 	template <class Network, class... Args>
 	class network_ensemble_impl : protected network_ensemble_impl<Args...>
@@ -184,6 +258,51 @@ namespace detail {
 			}
 		};
 
+#ifdef NEURAL_NET_ENABLE_OPEN_CL
+
+		template <class Output>
+		void process(
+			const input& input,
+			Output& output,
+			::boost::compute::command_queue& queue)
+		{
+			process_and_copy_network_result_on_device(
+				m_network,
+				this_type::ensemble_size - 1,
+				input,
+				output,
+				queue);
+		}
+
+		template <class Output, class LocalGradient, class Gradient>
+		void compute_gradient(
+			const Output& grad,
+			LocalGradient& local,
+			Gradient& result,
+			::boost::compute::command_queue& queue)
+		{
+			compute_gradient_and_add_result_on_device(
+				m_network,
+				this_type::ensemble_size - 1,
+				grad,
+				local,
+				result,
+				queue);
+
+			base_type::compute_gradient(grad, local, result, queue);
+		}
+
+		void update_weights(
+			const number_type rate,
+			::boost::compute::command_queue& queue)
+		{
+			m_network.update_weights(rate, queue);
+
+			base_type::update_weights(rate, queue);
+		}
+
+#endif
+
 	private:
 		Network m_network;
 	};
@@ -263,6 +382,47 @@ namespace detail {
 			}
 		};
 
+#ifdef NEURAL_NET_ENABLE_OPEN_CL
+
+		template <class Output>
+		void process(
+			const input& input,
+			Output& output,
+			::boost::compute::command_queue& queue)
+		{
+			process_and_copy_network_result_on_device(
+				m_network,
+				this_type::ensemble_size - 1,
+				input,
+				output,
+				queue);
+		}
+
+		template <class Output, class LocalGradient, class Gradient>
+		void compute_gradient(
+			const Output& grad,
+			LocalGradient& local,
+			Gradient& result,
+			::boost::compute::command_queue& queue)
+		{
+			compute_gradient_and_add_result_on_device(
+				m_network,
+				this_type::ensemble_size - 1,
+				grad,
+				local,
+				result,
+				queue);
+		}
+
+		void update_weights(
+			const number_type rate,
+			::boost::compute::command_queue& queue)
+		{
+			m_network.update_weights(rate, queue);
+		}
+
+#endif
+
 	private:
 		Network m_network;
 	};
@@ -334,6 +494,34 @@ namespace detail {
 				serializer_impl_type::write(out, network.m_ensemble);
 			}
 		};
+
+#ifdef NEURAL_NET_ENABLE_OPEN_CL
+
+		const output& process(
+			const input& input,
+			::boost::compute::command_queue& queue)
+		{
+			m_ensemble.process(input, m_output, queue);
+			return m_output;
+		}
+
+		const input& compute_gradient(
+			const output& grad,
+			::boost::compute::command_queue& queue)
+		{
+			m_gradient.fill(0.0f);
+			m_ensemble.compute_gradient(grad, m_local, m_gradient, queue);
+			return m_gradient;
+		}
+
+		void update_weights(
+			const number_type rate,
+			::boost::compute::command_queue& queue)
+		{
+			m_ensemble.update_weights(rate, queue);
+		}
+
+#endif
 
 	private:
 		ensemble_type m_ensemble;
