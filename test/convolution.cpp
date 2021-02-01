@@ -97,26 +97,26 @@ void test_2d_convolution_layer_on_device(
 {
 	test_convolution_layer_on_device<Layer>(
 		[&queue](Layer& cppLayer, Layer& openclLayer, const typename Layer::input& input)
-	{
-		check_tensors_3d(
-			cppLayer.process(input),
-			openclLayer.process(input, queue));
-	},
+		{
+			check_tensors_3d(
+				cppLayer.process(input),
+				openclLayer.process(input, queue));
+		},
 		[&queue](Layer& cppLayer, Layer& openclLayer, const typename Layer::output& gradient)
-	{
-		check_tensors_2d(
-			cppLayer.compute_gradient(gradient),
-			openclLayer.compute_gradient(gradient, queue));
-	},
+		{
+			check_tensors_2d(
+				cppLayer.compute_gradient(gradient),
+				openclLayer.compute_gradient(gradient, queue));
+		},
 		[&queue](Layer& cppLayer, Layer& openclLayer, const typename Layer::input& input)
-	{
-		cppLayer.update_weights(0.001f);
-		openclLayer.update_weights(0.001f, queue);
+		{
+			cppLayer.update_weights(0.001f);
+			openclLayer.update_weights(0.001f, queue);
 
-		check_tensors_3d(
-			cppLayer.process(input),
-			openclLayer.process(input, queue));
-	});
+			check_tensors_3d(
+				cppLayer.process(input),
+				openclLayer.process(input, queue));
+		});
 }
 
 template <typename Layer>
@@ -125,26 +125,26 @@ void test_3d_convolution_layer_on_device(
 {
 	test_convolution_layer_on_device<Layer>(
 		[&queue](Layer& cppLayer, Layer& openclLayer, const typename Layer::input& input)
-	{
-		check_tensors_4d(
-			cppLayer.process(input),
-			openclLayer.process(input, queue));
-	},
+		{
+			check_tensors_4d(
+				cppLayer.process(input),
+				openclLayer.process(input, queue));
+		},
 		[&queue](Layer& cppLayer, Layer& openclLayer, const typename Layer::output& gradient)
-	{
-		check_tensors_3d(
-			cppLayer.compute_gradient(gradient),
-			openclLayer.compute_gradient(gradient, queue));
-	},
+		{
+			check_tensors_3d(
+				cppLayer.compute_gradient(gradient),
+				openclLayer.compute_gradient(gradient, queue));
+		},
 		[&queue](Layer& cppLayer, Layer& openclLayer, const typename Layer::input& input)
-	{
-		cppLayer.update_weights(0.001f);
-		openclLayer.update_weights(0.001f, queue);
+		{
+			cppLayer.update_weights(0.001f);
+			openclLayer.update_weights(0.001f, queue);
 
-		check_tensors_4d(
-			cppLayer.process(input),
-			openclLayer.process(input, queue));
-	});
+			check_tensors_4d(
+				cppLayer.process(input),
+				openclLayer.process(input, queue));
+		});
 }
 
 void test_convolution()
@@ -219,7 +219,7 @@ void test_convolution()
 			typedef neural_network::algebra::metrics<3> m3;
 			typedef neural_network::algebra::metrics<9> m9;
 
-			test_1d_convolution_layer_on_device<neural_network::convolution<m9, m3, m2, 4>>(queue);
+			test_1d_convolution_layer_on_device<neural_network::convolution<m9, m3, m2, 1>>(queue);
 			test_1d_convolution_layer_on_device<neural_network::convolution<m9, m3, m2, 96>>(queue);
 		}
 
@@ -229,7 +229,7 @@ void test_convolution()
 			typedef neural_network::algebra::metrics<2, 2> m2x2;
 			typedef neural_network::algebra::metrics<10, 10> m10x10;
 
-			test_2d_convolution_layer_on_device<neural_network::convolution<m10x10, m2x2, m2x2, 4>>(queue);
+			test_2d_convolution_layer_on_device<neural_network::convolution<m10x10, m2x2, m2x2, 1>>(queue);
 			test_2d_convolution_layer_on_device<neural_network::convolution<m10x10, m2x2, m2x2, 36>>(queue);
 		}
 
@@ -241,7 +241,7 @@ void test_convolution()
 			typedef neural_network::algebra::metrics<11, 11, 3> m11x11x3;
 			typedef neural_network::algebra::metrics<7, 5, 5> m7x4x4;
 
-			test_3d_convolution_layer_on_device<neural_network::convolution<m11x11x3, m3x3x2, m2x2x2, 7>>(queue);
+			test_3d_convolution_layer_on_device<neural_network::convolution<m11x11x3, m3x3x2, m2x2x2, 1>>(queue);
 			test_3d_convolution_layer_on_device<neural_network::convolution<m11x11x3, m3x3x2, m2x2x2, 19>>(queue);
 		}
 	}

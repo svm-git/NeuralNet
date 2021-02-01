@@ -118,7 +118,7 @@ namespace detail {
 			std::function<number_type()> initializer)
 				: m_weights(initializer)
 #ifdef NEURAL_NET_ENABLE_OPEN_CL
-				, m_kernelProgram(), m_weightsKernelName()
+				, m_kernelProgram(), m_processKernelName(), m_weightsKernelName()
 #endif
 		{
 		}
@@ -195,6 +195,43 @@ namespace detail {
 
 #ifdef NEURAL_NET_ENABLE_OPEN_CL
 
+		template <const size_t Kernels>
+		void dispatch_process(
+			const input& input,
+			output& result,
+			::boost::compute::command_queue&,
+			std::enable_if_t<
+				(Kernels < 2)
+			>* = 0)
+		{
+			this->process(input, result);
+		}
+
+		template <const size_t Kernels>
+		void dispatch_process(
+			const input& input,
+			output& result,
+			::boost::compute::command_queue& queue,
+			std::enable_if_t<
+				!(Kernels < 2)
+			>* = 0)
+		{
+			auto context = queue.get_context();
+
+			initialize_opencl(context);
+
+			opencl::detail::convolution::process_1d(
+				input,
+				m_weights.m_kernels,
+				m_weights.m_bias,
+				result,
+				algebra::detail::dimension<Stride, 0>::size,
+				m_kernelProgram,
+				m_processKernelName,
+				context,
+				queue);
+		}
+
 		template<const size_t KernelSize>
 		void dispatch_update_weights(
 			const kernel_weights& kernelGradient,
@@ -241,6 +278,7 @@ namespace detail {
 			{
 				m_kernelProgram = opencl::detail::layer_kernels::make_program(context);
 
+				m_processKernelName = opencl::detail::layer_kernels::get_1d_convolution_kernel_name();
 				m_weightsKernelName = opencl::detail::layer_kernels::get_update_weights_kernel_name();
 			}
 		}
@@ -253,6 +291,7 @@ namespace detail {
 
 	private:
 		::boost::compute::program m_kernelProgram;
+		std::string m_processKernelName;
 		std::string m_weightsKernelName;
 
 #endif
@@ -277,7 +316,7 @@ namespace detail {
 		convolution_2d()
 			: m_weights()
 #ifdef NEURAL_NET_ENABLE_OPEN_CL
-			, m_kernelProgram(), m_weightsKernelName()
+			, m_kernelProgram(), m_processKernelName(), m_weightsKernelName()
 #endif
 		{}
 
@@ -285,7 +324,7 @@ namespace detail {
 			std::function<number_type()> initializer)
 				: m_weights(initializer)
 #ifdef NEURAL_NET_ENABLE_OPEN_CL
-				, m_kernelProgram(), m_weightsKernelName()
+				, m_kernelProgram(), m_processKernelName(), m_weightsKernelName()
 #endif
 		{
 		}
@@ -379,6 +418,44 @@ namespace detail {
 
 #ifdef NEURAL_NET_ENABLE_OPEN_CL
 
+		template <const size_t Kernels>
+		void dispatch_process(
+			const input& input,
+			output& result,
+			::boost::compute::command_queue&,
+			std::enable_if_t<
+				(Kernels < 2)
+			>* = 0)
+		{
+			this->process(input, result);
+		}
+
+		template <const size_t Kernels>
+		void dispatch_process(
+			const input& input,
+			output& result,
+			::boost::compute::command_queue& queue,
+			std::enable_if_t<
+				!(Kernels < 2)
+			>* = 0)
+		{
+			auto context = queue.get_context();
+
+			initialize_opencl(context);
+
+			opencl::detail::convolution::process_2d(
+				input,
+				m_weights.m_kernels,
+				m_weights.m_bias,
+				result,
+				algebra::detail::dimension<Stride, 0>::size,
+				algebra::detail::dimension<Stride, 1>::size,
+				m_kernelProgram,
+				m_processKernelName,
+				context,
+				queue);
+		}
+
 		template<const size_t KernelSize>
 		void dispatch_update_weights(
 			const kernel_weights& kernelGradient,
@@ -425,6 +502,7 @@ namespace detail {
 			{
 				m_kernelProgram = opencl::detail::layer_kernels::make_program(context);
 
+				m_processKernelName = opencl::detail::layer_kernels::get_2d_convolution_kernel_name();
 				m_weightsKernelName = opencl::detail::layer_kernels::get_update_weights_kernel_name();
 			}
 		}
@@ -437,6 +515,7 @@ namespace detail {
 
 	private:
 		::boost::compute::program m_kernelProgram;
+		std::string m_processKernelName;
 		std::string m_weightsKernelName;
 
 #endif
@@ -461,7 +540,7 @@ namespace detail {
 		convolution_3d()
 			: m_weights()
 #ifdef NEURAL_NET_ENABLE_OPEN_CL
-			, m_kernelProgram(), m_weightsKernelName()
+			, m_kernelProgram(), m_processKernelName(), m_weightsKernelName()
 #endif
 		{}
 
@@ -469,7 +548,7 @@ namespace detail {
 			std::function<number_type()> initializer)
 				: m_weights(initializer)
 #ifdef NEURAL_NET_ENABLE_OPEN_CL
-				, m_kernelProgram(), m_weightsKernelName()
+				, m_kernelProgram(), m_processKernelName(), m_weightsKernelName()
 #endif
 		{
 		}
@@ -580,6 +659,45 @@ namespace detail {
 
 #ifdef NEURAL_NET_ENABLE_OPEN_CL
 
+		template <const size_t Kernels>
+		void dispatch_process(
+			const input& input,
+			output& result,
+			::boost::compute::command_queue&,
+			std::enable_if_t<
+				(Kernels < 2)
+			>* = 0)
+		{
+			this->process(input, result);
+		}
+
+		template <const size_t Kernels>
+		void dispatch_process(
+			const input& input,
+			output& result,
+			::boost::compute::command_queue& queue,
+			std::enable_if_t<
+				!(Kernels < 2)
+			>* = 0)
+		{
+			auto context = queue.get_context();
+
+			initialize_opencl(context);
+
+			opencl::detail::convolution::process_3d(
+				input,
+				m_weights.m_kernels,
+				m_weights.m_bias,
+				result,
+				algebra::detail::dimension<Stride, 0>::size,
+				algebra::detail::dimension<Stride, 1>::size,
+				algebra::detail::dimension<Stride, 2>::size,
+				m_kernelProgram,
+				m_processKernelName,
+				context,
+				queue);
+		}
+
 		template<const size_t KernelSize>
 		void dispatch_update_weights(
 			const kernel_weights& kernelGradient,
@@ -626,6 +744,7 @@ namespace detail {
 			{
 				m_kernelProgram = opencl::detail::layer_kernels::make_program(context);
 
+				m_processKernelName = opencl::detail::layer_kernels::get_3d_convolution_kernel_name();
 				m_weightsKernelName = opencl::detail::layer_kernels::get_update_weights_kernel_name();
 			}
 		}
@@ -638,6 +757,7 @@ namespace detail {
 
 	private:
 		::boost::compute::program m_kernelProgram;
+		std::string m_processKernelName;
 		std::string m_weightsKernelName;
 
 #endif
@@ -737,9 +857,11 @@ template <class InputMetrics, class Core, class Stride, const size_t Kernels>
 
 		const output& process(
 			const input& input,
-			::boost::compute::command_queue&)
+			::boost::compute::command_queue& queue)
 		{
-			return this->process(input);
+			m_input = input;
+			m_impl.dispatch_process<Kernels>(input, m_output, queue);
+			return m_output;
 		}
 
 		const input& compute_gradient(
@@ -758,7 +880,7 @@ template <class InputMetrics, class Core, class Stride, const size_t Kernels>
 				m_biasGradient,
 				rate,
 				queue);
-	}
+		}
 
 #endif
 

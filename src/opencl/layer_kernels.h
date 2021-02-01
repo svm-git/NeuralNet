@@ -239,6 +239,141 @@ namespace detail {
 						}
 					}
 
+					__kernel void neural_net_1d_convolution_kernel(
+						__global const float * vInput,
+						__global const float * mKernels,
+						__global const float * vBias,
+						__global float * vResult,
+						int kernelSizeX,
+						int nStridesX,
+						int strideSizeX)
+					{
+						int iKernel = get_global_id(0);
+
+						int resultBase = iKernel * nStridesX;
+						int kernelBase = iKernel * kernelSizeX;
+
+						for (int strideX = 0; strideX < nStridesX; ++strideX)
+						{
+							float sum = 0.0f;
+
+							int baseX = strideX * strideSizeX;
+
+							for (int x = 0; x < kernelSizeX; ++x)
+							{
+								sum += mKernels[kernelBase + x] * vInput[baseX + x];
+							}
+
+							vResult[resultBase + strideX] = sum + vBias[iKernel];
+						}
+					}
+
+					__kernel void neural_net_2d_convolution_kernel(
+						__global const float * vInput,
+						__global const float * mKernels,
+						__global const float * vBias,
+						__global float * vResult,
+						int inputSizeY,
+						int kernelSizeX,
+						int kernelSizeY,
+						int nStridesX,
+						int nStridesY,
+						int strideSizeX,
+						int strideSizeY)
+					{
+						int iKernel = get_global_id(0);
+
+						int resultBase = iKernel * nStridesX * nStridesY;
+						int kernelBase = iKernel * kernelSizeX * kernelSizeY;
+
+						for (int strideX = 0; strideX < nStridesX; ++strideX)
+						{
+							int resultBaseY = resultBase + (strideX * nStridesY);
+
+							for (int strideY = 0; strideY < nStridesY; ++strideY)
+							{
+								float sum = 0.0f;
+
+								int baseX = strideX * strideSizeX;
+								int baseY = strideY * strideSizeY;
+
+								for (int x = 0; x < kernelSizeX; ++x)
+								{
+									int kernelBaseY = kernelBase + (x * kernelSizeY);
+									int inputBaseY = ((baseX + x) * inputSizeY) + baseY;
+
+									for (int y = 0; y < kernelSizeY; ++y)
+									{
+										sum += mKernels[kernelBaseY + y] * vInput[inputBaseY + y];
+									}
+								}
+
+								vResult[resultBaseY + strideY] = sum + vBias[iKernel];
+							}
+						}
+					}
+
+					__kernel void neural_net_3d_convolution_kernel(
+						__global const float * vInput,
+						__global const float * mKernels,
+						__global const float * vBias,
+						__global float * vResult,
+						int inputSizeY,
+						int inputSizeZ,
+						int kernelSizeX,
+						int kernelSizeY,
+						int kernelSizeZ,
+						int nStridesX,
+						int nStridesY,
+						int nStridesZ,
+						int strideSizeX,
+						int strideSizeY,
+						int strideSizeZ)
+					{
+						int iKernel = get_global_id(0);
+
+						int resultBase = iKernel * nStridesX * nStridesY * nStridesZ;
+						int kernelBase = iKernel * kernelSizeX * kernelSizeY * kernelSizeZ;
+
+						for (int strideX = 0; strideX < nStridesX; ++strideX)
+						{
+							int resultBaseY = resultBase + (strideX * nStridesY * nStridesZ);
+
+							for (int strideY = 0; strideY < nStridesY; ++strideY)
+							{
+								int resultBaseZ = resultBaseY + (strideY * nStridesZ);
+
+								for (int strideZ = 0; strideZ < nStridesZ; ++strideZ)
+								{
+									float sum = 0.0f;
+
+									int baseX = strideX * strideSizeX;
+									int baseY = strideY * strideSizeY;
+									int baseZ = strideZ * strideSizeZ;
+
+									for (int x = 0; x < kernelSizeX; ++x)
+									{
+										int kernelBaseY = kernelBase + (x * kernelSizeY * kernelSizeZ);
+										int inputBaseY = (((baseX + x) * inputSizeY) + baseY) * inputSizeZ;
+
+										for (int y = 0; y < kernelSizeY; ++y)
+										{
+											int kernelBaseZ = kernelBaseY + (y * kernelSizeZ);
+											int inputBaseZ = inputBaseY + (y * inputSizeZ) + baseZ;
+
+											for (int z = 0; z < kernelSizeZ; ++z)
+											{
+												sum += mKernels[kernelBaseZ + z] * vInput[inputBaseZ + z];
+											}
+										}
+									}
+
+									vResult[resultBaseZ + strideZ] = sum + vBias[iKernel];
+								}
+							}
+						}
+					}
+
 				);
 
 				std::stringstream options;
@@ -446,6 +581,126 @@ namespace detail {
 		static inline std::string get_squared_error_loss_gradient_kernel_name()
 		{
 			return "neural_net_squared_error_loss_gradient_kernel";
+		}
+
+		static void execute_1d_convolution_kernel(
+			::boost::compute::mapped_view<float>& inputView,
+			::boost::compute::mapped_view<float>& kernelView,
+			::boost::compute::mapped_view<float>& biasView,
+			::boost::compute::mapped_view<float>& resultView,
+			const size_t kernels,
+			const size_t kernelSizeX,
+			const size_t strides,
+			const size_t strideSizeX,
+			const ::boost::compute::program& program,
+			const std::string& kernelName,
+			::boost::compute::command_queue& queue)
+		{
+			auto kernel = program.create_kernel(kernelName);
+
+			kernel.set_arg(0, inputView.get_buffer());
+			kernel.set_arg(1, kernelView.get_buffer());
+			kernel.set_arg(2, biasView.get_buffer());
+			kernel.set_arg(3, resultView.get_buffer());
+			kernel.set_arg(4, static_cast<int>(kernelSizeX));
+			kernel.set_arg(5, static_cast<int>(strides));
+			kernel.set_arg(6, static_cast<int>(strideSizeX));
+
+			queue.enqueue_1d_range_kernel(kernel, 0, kernels, 0);
+			queue.finish();
+		}
+
+		static inline std::string get_1d_convolution_kernel_name()
+		{
+			return "neural_net_1d_convolution_kernel";
+		}
+
+		static void execute_2d_convolution_kernel(
+			::boost::compute::mapped_view<float>& inputView,
+			::boost::compute::mapped_view<float>& kernelView,
+			::boost::compute::mapped_view<float>& biasView,
+			::boost::compute::mapped_view<float>& resultView,
+			const size_t inputSizeY,
+			const size_t kernels,
+			const size_t kernelSizeX,
+			const size_t kernelSizeY,
+			const size_t stridesX,
+			const size_t stridesY,
+			const size_t strideSizeX,
+			const size_t strideSizeY,
+			const ::boost::compute::program& program,
+			const std::string& kernelName,
+			::boost::compute::command_queue& queue)
+		{
+			auto kernel = program.create_kernel(kernelName);
+
+			kernel.set_arg(0, inputView.get_buffer());
+			kernel.set_arg(1, kernelView.get_buffer());
+			kernel.set_arg(2, biasView.get_buffer());
+			kernel.set_arg(3, resultView.get_buffer());
+			kernel.set_arg(4, static_cast<int>(inputSizeY));
+			kernel.set_arg(5, static_cast<int>(kernelSizeX));
+			kernel.set_arg(6, static_cast<int>(kernelSizeY));
+			kernel.set_arg(7, static_cast<int>(stridesX));
+			kernel.set_arg(8, static_cast<int>(stridesY));
+			kernel.set_arg(9, static_cast<int>(strideSizeX));
+			kernel.set_arg(10, static_cast<int>(strideSizeY));
+
+			queue.enqueue_1d_range_kernel(kernel, 0, kernels, 0);
+			queue.finish();
+		}
+
+		static inline std::string get_2d_convolution_kernel_name()
+		{
+			return "neural_net_2d_convolution_kernel";
+		}
+
+		static void execute_3d_convolution_kernel(
+			::boost::compute::mapped_view<float>& inputView,
+			::boost::compute::mapped_view<float>& kernelView,
+			::boost::compute::mapped_view<float>& biasView,
+			::boost::compute::mapped_view<float>& resultView,
+			const size_t inputSizeY,
+			const size_t inputSizeZ,
+			const size_t kernels,
+			const size_t kernelSizeX,
+			const size_t kernelSizeY,
+			const size_t kernelSizeZ,
+			const size_t stridesX,
+			const size_t stridesY,
+			const size_t stridesZ,
+			const size_t strideSizeX,
+			const size_t strideSizeY,
+			const size_t strideSizeZ,
+			const ::boost::compute::program& program,
+			const std::string& kernelName,
+			::boost::compute::command_queue& queue)
+		{
+			auto kernel = program.create_kernel(kernelName);
+
+			kernel.set_arg(0, inputView.get_buffer());
+			kernel.set_arg(1, kernelView.get_buffer());
+			kernel.set_arg(2, biasView.get_buffer());
+			kernel.set_arg(3, resultView.get_buffer());
+			kernel.set_arg(4, static_cast<int>(inputSizeY));
+			kernel.set_arg(5, static_cast<int>(inputSizeZ));
+			kernel.set_arg(6, static_cast<int>(kernelSizeX));
+			kernel.set_arg(7, static_cast<int>(kernelSizeY));
+			kernel.set_arg(8, static_cast<int>(kernelSizeZ));
+			kernel.set_arg(9, static_cast<int>(stridesX));
+			kernel.set_arg(10, static_cast<int>(stridesY));
+			kernel.set_arg(11, static_cast<int>(stridesZ));
+			kernel.set_arg(12, static_cast<int>(strideSizeX));
+			kernel.set_arg(13, static_cast<int>(strideSizeY));
+			kernel.set_arg(14, static_cast<int>(strideSizeZ));
+
+			queue.enqueue_1d_range_kernel(kernel, 0, kernels, 0);
+			queue.finish();
+		}
+
+		static inline std::string get_3d_convolution_kernel_name()
+		{
+			return "neural_net_3d_convolution_kernel";
 		}
 	};
 
