@@ -42,7 +42,8 @@ namespace detail {
 		enum 
 		{ 
 			block_size = 128,
-			min_matrix_size = 1024
+			min_matrix_size = 1024,
+			min_pooling_size = 32
 		};
 
 		static const size_t get_block_count(
@@ -374,6 +375,123 @@ namespace detail {
 						}
 					}
 
+					__kernel void neural_net_1d_max_pooling_kernel(
+						__global const float * vInput,
+						__global float * vResult,
+						__global float * vMask,
+						int coreSizeX,
+						int strideSizeX)
+					{
+						int strideX = get_global_id(0);
+
+						int baseX = strideX * strideSizeX;
+
+						float max = vInput[baseX];
+						int maxX = baseX;
+
+						for (int x = 1; x < coreSizeX; ++x)
+						{
+							int curX = baseX + x;
+							float e = vInput[curX];
+							if (max < e)
+							{
+								max = e;
+								maxX = curX;
+							}
+						}
+
+						vResult[strideX] = max;
+						vMask[maxX] = 1.0f;
+					}
+
+					__kernel void neural_net_2d_max_pooling_kernel(
+						__global const float * vInput,
+						__global float * vResult,
+						__global float * vMask,
+						int inputSizeY,
+						int coreSizeX,
+						int coreSizeY,
+						int strideSizeX,
+						int strideSizeY)
+					{
+						int strideX = get_global_id(0);
+						int strideY = get_global_id(1);
+						
+						int baseX = strideX * strideSizeX;
+						int baseY = strideY * strideSizeY;
+
+						int maxPos = baseX * inputSizeY + baseY;
+						float max = vInput[maxPos];
+
+						for (int x = 0; x < coreSizeX; ++x)
+						{
+							int inputBaseY = (baseX + x) * inputSizeY + baseY;
+
+							for (int y = 0; y < coreSizeY; ++y)
+							{
+								int inputY = inputBaseY + y;
+								float e = vInput[inputY];
+								if (max < e)
+								{
+									max = e;
+									maxPos = inputY;
+								}
+							}
+						}
+
+						vResult[(strideX * get_global_size(1)) + strideY] = max;
+						vMask[maxPos] = 1.0f;
+					}
+
+					__kernel void neural_net_3d_max_pooling_kernel(
+						__global const float * vInput,
+						__global float * vResult,
+						__global float * vMask,
+						int inputSizeY,
+						int inputSizeZ,
+						int coreSizeX,
+						int coreSizeY,
+						int coreSizeZ,
+						int strideSizeX,
+						int strideSizeY,
+						int strideSizeZ)
+					{
+						int strideX = get_global_id(0);
+						int strideY = get_global_id(1);
+						int strideZ = get_global_id(2);
+
+						int baseX = strideX * strideSizeX;
+						int baseY = strideY * strideSizeY;
+						int baseZ = strideZ * strideSizeZ;
+
+						int maxPos = (baseX * inputSizeY + baseY) * inputSizeZ + baseZ;
+						float max = vInput[maxPos];
+
+						for (int x = 0; x < coreSizeX; ++x)
+						{
+							int inputBaseY = ((baseX + x) * inputSizeY + baseY) * inputSizeZ;
+
+							for (int y = 0; y < coreSizeY; ++y)
+							{
+								int inputBaseZ = inputBaseY + (y * inputSizeZ) + baseZ;
+
+								for (int z = 0; z < coreSizeZ; ++z)
+								{ 
+									int inputZ = inputBaseZ + z;
+									float e = vInput[inputZ];
+									if (max < e)
+									{
+										max = e;
+										maxPos = inputZ;
+									}
+								}
+							}
+						}
+
+						vResult[(((strideX * get_global_size(1)) + strideY) * get_global_size(2)) + strideZ] = max;
+						vMask[maxPos] = 1.0f;
+					}
+
 				);
 
 				std::stringstream options;
@@ -702,6 +820,133 @@ namespace detail {
 		{
 			return "neural_net_3d_convolution_kernel";
 		}
+
+		static void execute_1d_max_pooling_kernel(
+			::boost::compute::mapped_view<float>& inputView,
+			::boost::compute::mapped_view<float>& resultView,
+			::boost::compute::mapped_view<float>& maskView,
+			const size_t coreSizeX,
+			const size_t stridesX,
+			const size_t strideSizeX,
+			const ::boost::compute::program& program,
+			const std::string& kernelName,
+			::boost::compute::command_queue& queue)
+		{
+			auto kernel = program.create_kernel(kernelName);
+
+			kernel.set_arg(0, inputView.get_buffer());
+			kernel.set_arg(1, resultView.get_buffer());
+			kernel.set_arg(2, maskView.get_buffer());
+			kernel.set_arg(3, static_cast<int>(coreSizeX));
+			kernel.set_arg(4, static_cast<int>(strideSizeX));
+
+			queue.enqueue_1d_range_kernel(
+				kernel,
+				0,
+				stridesX,
+				0);
+
+			queue.finish();
+		}
+
+		static inline std::string get_1d_max_pooling_kernel_name()
+		{
+			return "neural_net_1d_max_pooling_kernel";
+		}
+
+		static void execute_2d_max_pooling_kernel(
+			::boost::compute::mapped_view<float>& inputView,
+			::boost::compute::mapped_view<float>& resultView,
+			::boost::compute::mapped_view<float>& maskView,
+			const size_t inputSizeY,
+			const size_t coreSizeX,
+			const size_t coreSizeY,
+			const size_t stridesX,
+			const size_t stridesY,
+			const size_t strideSizeX,
+			const size_t strideSizeY,
+			const ::boost::compute::program& program,
+			const std::string& kernelName,
+			::boost::compute::command_queue& queue)
+		{
+			auto kernel = program.create_kernel(kernelName);
+
+			kernel.set_arg(0, inputView.get_buffer());
+			kernel.set_arg(1, resultView.get_buffer());
+			kernel.set_arg(2, maskView.get_buffer());
+			kernel.set_arg(3, static_cast<int>(inputSizeY));
+			kernel.set_arg(4, static_cast<int>(coreSizeX));
+			kernel.set_arg(5, static_cast<int>(coreSizeY));
+			kernel.set_arg(6, static_cast<int>(strideSizeX));
+			kernel.set_arg(7, static_cast<int>(strideSizeY));
+
+			const size_t map_global_work_size[2] = { stridesX, stridesY };
+
+			queue.enqueue_nd_range_kernel(
+				kernel,
+				2,
+				0,
+				map_global_work_size,
+				nullptr);
+
+			queue.finish();
+		}
+
+		static inline std::string get_2d_max_pooling_kernel_name()
+		{
+			return "neural_net_2d_max_pooling_kernel";
+		}
+
+		static void execute_3d_max_pooling_kernel(
+			::boost::compute::mapped_view<float>& inputView,
+			::boost::compute::mapped_view<float>& resultView,
+			::boost::compute::mapped_view<float>& maskView,
+			const size_t inputSizeY,
+			const size_t inputSizeZ,
+			const size_t coreSizeX,
+			const size_t coreSizeY,
+			const size_t coreSizeZ,
+			const size_t stridesX,
+			const size_t stridesY,
+			const size_t stridesZ,
+			const size_t strideSizeX,
+			const size_t strideSizeY,
+			const size_t strideSizeZ,
+			const ::boost::compute::program& program,
+			const std::string& kernelName,
+			::boost::compute::command_queue& queue)
+		{
+			auto kernel = program.create_kernel(kernelName);
+
+			kernel.set_arg(0, inputView.get_buffer());
+			kernel.set_arg(1, resultView.get_buffer());
+			kernel.set_arg(2, maskView.get_buffer());
+			kernel.set_arg(3, static_cast<int>(inputSizeY));
+			kernel.set_arg(4, static_cast<int>(inputSizeZ));
+			kernel.set_arg(5, static_cast<int>(coreSizeX));
+			kernel.set_arg(6, static_cast<int>(coreSizeY));
+			kernel.set_arg(7, static_cast<int>(coreSizeZ));
+			kernel.set_arg(8, static_cast<int>(strideSizeX));
+			kernel.set_arg(9, static_cast<int>(strideSizeY));
+			kernel.set_arg(10, static_cast<int>(strideSizeZ));
+
+			const size_t map_global_work_size[3] = { stridesX, stridesY, stridesZ };
+
+			queue.enqueue_nd_range_kernel(
+				kernel,
+				3,
+				0,
+				map_global_work_size,
+				nullptr);
+
+			queue.finish();
+		}
+
+		static inline std::string get_3d_max_pooling_kernel_name()
+		{
+			return "neural_net_3d_max_pooling_kernel";
+		}
+
 	};
 
 }

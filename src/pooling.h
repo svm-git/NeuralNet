@@ -30,7 +30,7 @@ SOFTWARE.
 
 #ifdef NEURAL_NET_ENABLE_OPEN_CL
 
-#include "opencl/layer_kernels.h"
+#include "opencl/pooling.h"
 
 #endif
 
@@ -94,6 +94,19 @@ namespace detail {
 			}
 		}
 
+#ifdef NEURAL_NET_ENABLE_OPEN_CL
+
+		template <const size_t ResultSize>
+		void dispatch_process(
+			const input& input,
+			output& result,
+			::boost::compute::command_queue&)
+		{
+			this->process(input, result);
+		}
+
+#endif
+
 	private:
 		input m_mask;
 	};
@@ -120,6 +133,9 @@ namespace detail {
 
 		generic_max_pooling()
 			: m_mask()
+#ifdef NEURAL_NET_ENABLE_OPEN_CL
+			, m_kernelProgram(), m_processKernelName()
+#endif
 		{}
 
 		void process(
@@ -169,8 +185,74 @@ namespace detail {
 			}
 		}
 
+#ifdef NEURAL_NET_ENABLE_OPEN_CL
+
+		template <const size_t ResultSize>
+		void dispatch_process(
+			const input& input,
+			output& result,
+			::boost::compute::command_queue&,
+			std::enable_if_t<
+				(ResultSize < opencl::detail::layer_kernels::min_pooling_size)
+			>* = 0)
+		{
+			this->process(input, result);
+		}
+
+		template <const size_t ResultSize>
+		void dispatch_process(
+			const input& input,
+			output& result,
+			::boost::compute::command_queue& queue,
+			std::enable_if_t<
+				!(ResultSize < opencl::detail::layer_kernels::min_pooling_size)
+			>* = 0)
+		{
+			m_mask.fill(0.0f);
+
+			reshaped_input rin = input.reshape<reshaped_input::metrics>();
+			auto rout = result.reshape<typename reshaped_output::metrics::template expand<1>::type>();
+
+			auto context = queue.get_context();
+
+			initialize_opencl(context);
+
+			opencl::detail::max_pooling::process_2d(
+				rin,
+				rout,
+				m_mask,
+				rin.size<0>(),
+				1,
+				rin.size<0>(),
+				1,
+				m_kernelProgram,
+				m_processKernelName,
+				context,
+				queue);
+		}
+
+		void initialize_opencl(
+			const ::boost::compute::context& context)
+		{
+			if (0 == m_processKernelName.size())
+			{
+				m_kernelProgram = opencl::detail::layer_kernels::make_program(context);
+
+				m_processKernelName = opencl::detail::layer_kernels::get_2d_max_pooling_kernel_name();
+			}
+		}
+
+#endif
 	private:
 		reshaped_input m_mask;
+
+#ifdef NEURAL_NET_ENABLE_OPEN_CL
+
+	private:
+		::boost::compute::program m_kernelProgram;
+		std::string m_processKernelName;
+
+#endif
 	};
 
 	template <class Metrics>
@@ -202,6 +284,9 @@ namespace detail {
 
 		max_pooling_1d()
 			: m_mask()
+#ifdef NEURAL_NET_ENABLE_OPEN_CL
+			, m_kernelProgram(), m_processKernelName()
+#endif
 		{}
 
 		void process(
@@ -254,8 +339,70 @@ namespace detail {
 			}
 		}
 
+#ifdef NEURAL_NET_ENABLE_OPEN_CL
+
+		template <const size_t ResultSize>
+		void dispatch_process(
+			const input& input,
+			output& result,
+			::boost::compute::command_queue&,
+			std::enable_if_t<
+				(ResultSize < opencl::detail::layer_kernels::min_pooling_size)
+			>* = 0)
+		{
+			this->process(input, result);
+		}
+
+		template <const size_t ResultSize>
+		void dispatch_process(
+			const input& input,
+			output& result,
+			::boost::compute::command_queue& queue,
+			std::enable_if_t<
+				!(ResultSize < opencl::detail::layer_kernels::min_pooling_size)
+			>* = 0)
+		{
+			m_mask.fill(0.0f);
+
+			auto context = queue.get_context();
+
+			initialize_opencl(context);
+
+			opencl::detail::max_pooling::process_1d(
+				input,
+				result,
+				m_mask,
+				algebra::detail::dimension<Core, 0>::size,
+				algebra::detail::dimension<Stride, 0>::size,
+				m_kernelProgram,
+				m_processKernelName,
+				context,
+				queue);
+		}
+
+		void initialize_opencl(
+			const ::boost::compute::context& context)
+		{
+			if (0 == m_processKernelName.size())
+			{
+				m_kernelProgram = opencl::detail::layer_kernels::make_program(context);
+
+				m_processKernelName = opencl::detail::layer_kernels::get_1d_max_pooling_kernel_name();
+			}
+		}
+
+#endif
+
 	private:
 		input m_mask;
+
+#ifdef NEURAL_NET_ENABLE_OPEN_CL
+
+	private:
+		::boost::compute::program m_kernelProgram;
+		std::string m_processKernelName;
+
+#endif
 	};
 
 	template <class Metrics, class Core, class Stride>
@@ -277,6 +424,9 @@ namespace detail {
 
 		max_pooling_2d()
 			: m_mask()
+#ifdef NEURAL_NET_ENABLE_OPEN_CL
+			, m_kernelProgram(), m_processKernelName()
+#endif
 		{}
 
 		void process(
@@ -345,8 +495,72 @@ namespace detail {
 			}
 		}
 
+#ifdef NEURAL_NET_ENABLE_OPEN_CL
+
+		template <const size_t ResultSize>
+		void dispatch_process(
+			const input& input,
+			output& result,
+			::boost::compute::command_queue&,
+			std::enable_if_t<
+				(ResultSize < opencl::detail::layer_kernels::min_pooling_size)
+			>* = 0)
+		{
+			this->process(input, result);
+		}
+
+		template <const size_t ResultSize>
+		void dispatch_process(
+			const input& input,
+			output& result,
+			::boost::compute::command_queue& queue,
+			std::enable_if_t<
+				!(ResultSize < opencl::detail::layer_kernels::min_pooling_size)
+			>* = 0)
+		{
+			m_mask.fill(0.0f);
+
+			auto context = queue.get_context();
+
+			initialize_opencl(context);
+
+			opencl::detail::max_pooling::process_2d(
+				input,
+				result,
+				m_mask,
+				algebra::detail::dimension<Core, 0>::size,
+				algebra::detail::dimension<Core, 1>::size,
+				algebra::detail::dimension<Stride, 0>::size,
+				algebra::detail::dimension<Stride, 1>::size,
+				m_kernelProgram,
+				m_processKernelName,
+				context,
+				queue);
+		}
+
+		void initialize_opencl(
+			const ::boost::compute::context& context)
+		{
+			if (0 == m_processKernelName.size())
+			{
+				m_kernelProgram = opencl::detail::layer_kernels::make_program(context);
+
+				m_processKernelName = opencl::detail::layer_kernels::get_2d_max_pooling_kernel_name();
+			}
+		}
+
+#endif
+
 	private:
 		input m_mask;
+
+#ifdef NEURAL_NET_ENABLE_OPEN_CL
+
+	private:
+		::boost::compute::program m_kernelProgram;
+		std::string m_processKernelName;
+
+#endif
 	};
 
 	template <class Metrics, class Core, class Stride>
@@ -368,6 +582,9 @@ namespace detail {
 
 		max_pooling_3d()
 			: m_mask()
+#ifdef NEURAL_NET_ENABLE_OPEN_CL
+			, m_kernelProgram(), m_processKernelName()
+#endif
 		{}
 
 		void process(
@@ -452,8 +669,74 @@ namespace detail {
 			}
 		}
 
+#ifdef NEURAL_NET_ENABLE_OPEN_CL
+
+		template <const size_t ResultSize>
+		void dispatch_process(
+			const input& input,
+			output& result,
+			::boost::compute::command_queue&,
+			std::enable_if_t<
+				(ResultSize < opencl::detail::layer_kernels::min_pooling_size)
+			>* = 0)
+		{
+			this->process(input, result);
+		}
+
+		template <const size_t ResultSize>
+		void dispatch_process(
+			const input& input,
+			output& result,
+			::boost::compute::command_queue& queue,
+			std::enable_if_t<
+				!(ResultSize < opencl::detail::layer_kernels::min_pooling_size)
+			>* = 0)
+		{
+			m_mask.fill(0.0f);
+
+			auto context = queue.get_context();
+
+			initialize_opencl(context);
+
+			opencl::detail::max_pooling::process_3d(
+				input,
+				result,
+				m_mask,
+				algebra::detail::dimension<Core, 0>::size,
+				algebra::detail::dimension<Core, 1>::size,
+				algebra::detail::dimension<Core, 2>::size,
+				algebra::detail::dimension<Stride, 0>::size,
+				algebra::detail::dimension<Stride, 1>::size,
+				algebra::detail::dimension<Stride, 2>::size,
+				m_kernelProgram,
+				m_processKernelName,
+				context,
+				queue);
+		}
+
+		void initialize_opencl(
+			const ::boost::compute::context& context)
+		{
+			if (0 == m_processKernelName.size())
+			{
+				m_kernelProgram = opencl::detail::layer_kernels::make_program(context);
+
+				m_processKernelName = opencl::detail::layer_kernels::get_3d_max_pooling_kernel_name();
+			}
+		}
+
+#endif
+
 	private:
 		input m_mask;
+
+#ifdef NEURAL_NET_ENABLE_OPEN_CL
+
+	private:
+		::boost::compute::program m_kernelProgram;
+		std::string m_processKernelName;
+
+#endif
 	};
 
 	template <class Metrics, class Core, class Stride>
@@ -570,9 +853,11 @@ namespace detail {
 
 		const output& process(
 			const input& input,
-			::boost::compute::command_queue&)
+			::boost::compute::command_queue& queue)
 		{
-			return this->process(input);
+			m_impl.dispatch_process<output::data_size>(
+				input, m_output, queue);
+			return m_output;
 		}
 
 		const input& compute_gradient(
@@ -633,9 +918,10 @@ namespace detail {
 
 		const output& process(
 			const input& input,
-			::boost::compute::command_queue&)
+			::boost::compute::command_queue& queue)
 		{
-			return this->process(input);
+			m_impl.dispatch_process<output::data_size>(input, m_output, queue);
+			return m_output;
 		}
 
 		const input& compute_gradient(

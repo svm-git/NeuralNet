@@ -168,6 +168,7 @@
     <ClInclude Include="..\src\opencl\convolution.h" />
     <ClInclude Include="..\src\opencl\layer_kernels.h" />
     <ClInclude Include="..\src\opencl\loss.h" />
+    <ClInclude Include="..\src\opencl\pooling.h" />
     <ClInclude Include="..\src\pooling.h" />
     <ClInclude Include="..\src\reshape.h" />
     <ClInclude Include="..\src\serialization.h" />

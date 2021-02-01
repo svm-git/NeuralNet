@@ -93,6 +93,9 @@
     <ClInclude Include="..\src\opencl\convolution.h">
       <Filter>Source Files\opencl</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\opencl\pooling.h">
+      <Filter>Source Files\opencl</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
