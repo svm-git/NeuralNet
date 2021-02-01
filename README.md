@@ -8,6 +8,7 @@ Library of building blocks for configuring, training, applying and persisting de
 - [Layers](#layers)
 - [Network Ensebles](#network-ensebles)
 - [Model Serialization](#model-serialization)
+- [Hardware Acceleration](#hardware-acceleration)
 
 ## Neural Networks
 
@@ -284,3 +285,27 @@ To load a trained model into a network, use *neural_network::serialization::read
 To get the size of a model for a network, use *neural_network::serialization::model_size* helper function.
 
     size_t modelSize = neural_network::serialization::model_size(network);
+
+## Hardware Acceleration
+
+The NeuralNet library allows you to utilize specialized hardware, such as GPU of FPGA, while training networks or using the trained networks for predictions. To enable this optional feature, define *NEURAL_NET_ENABLE_OPEN_CL* before including any of the NeuralNet headers:
+
+    #define NEURAL_NET_ENABLE_OPEN_CL
+    
+    #include <ai.h>
+
+The NeuralNet library uses [Boost.Compute](https://www.boost.org/doc/libs/1_61_0/libs/compute/doc/html/index.html) library to interact with the OpenCL-enabled devices. Therefore, when you enable the hardware acceleration mode, please make sure that Boost.Compute headers are available in your include directories list and you are linking with the proper OpenCL library for your system. For more details, please follow instructions from the [Compilation and Usage](https://www.boost.org/doc/libs/1_61_0/libs/compute/doc/html/boost_compute/getting_started.html#boost_compute.getting_started.compilation_and_usage) section of Boost.Compute library documentation.
+
+To train the network using the available hardware, please use its *train* method and pass an instance of the command queue:
+
+    ::boost::compute::device device = ::boost::compute::system::default_device();
+    ::boost::compute::context context(device);
+    ::boost::compute::command_queue queue(context, device);
+    
+    network.train(input, truth, loss, rate, queue);
+
+To use the network for prediction please use its *process* member function and pass an instance of the command queue:
+
+    auto result = network.process(input, queue);
+
+Please note that for smaller tensors it may be more efficient to execute the computations on the main system device rather than scheduling the execution on an OpenCL-enabled devices. In the cases like these the library automatically decides at the compile time which implementation to use.
