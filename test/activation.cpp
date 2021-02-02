@@ -24,6 +24,8 @@ SOFTWARE.
 
 #include "stdafx.h"
 
+#include <random>
+
 #include "unittest.h"
 #include "serializationtest.h"
 
@@ -64,6 +66,12 @@ void test_activation()
 {
 	scenario sc("Test for neural_network::*_activation classes");
 
+	std::random_device rd;
+	std::mt19937 gen(rd());
+	std::uniform_real_distribution<float> distr(-0.5, 0.5);
+
+	auto random_values = [&distr, &gen]() { return distr(gen); };
+
 	{
 		test::verbose("1D RELU Activation Tests");
 
@@ -73,7 +81,7 @@ void test_activation()
 		static_assert(std::is_same<relu_1d::input, neural_network::algebra::tensor<3>>::value, "Invalid 1D-RELU input type.");
 		static_assert(std::is_same<relu_1d::output, neural_network::algebra::tensor<3>>::value, "Invalid 1D-RELU output type.");
 
-		m3::tensor_type tmp;
+		m3::tensor_type tmp(random_values);
 		relu_1d relu = neural_network::make_relu_activation_layer<m3>();
 
 		relu.process(tmp);
@@ -91,7 +99,7 @@ void test_activation()
 		static_assert(std::is_same<relu_2d::input, neural_network::algebra::tensor<3, 2>>::value, "Invalid 2D-RELU input type.");
 		static_assert(std::is_same<relu_2d::output, neural_network::algebra::tensor<3, 2>>::value, "Invalid 2D-RELU output type.");
 
-		m3x2::tensor_type tmp;
+		m3x2::tensor_type tmp(random_values);
 		relu_2d relu = neural_network::make_relu_activation_layer<m3x2>();
 
 		relu.process(tmp);
@@ -109,7 +117,7 @@ void test_activation()
 		static_assert(std::is_same<relu_3d::input, neural_network::algebra::tensor<3, 2, 1>>::value, "Invalid 3D-RELU input type.");
 		static_assert(std::is_same<relu_3d::output, neural_network::algebra::tensor<3, 2, 1>>::value, "Invalid 3D-RELU output type.");
 
-		m3x2x1::tensor_type tmp;
+		m3x2x1::tensor_type tmp(random_values);
 		relu_3d relu = neural_network::make_relu_activation_layer<m3x2x1>();
 
 		relu.process(tmp);
@@ -127,7 +135,7 @@ void test_activation()
 		static_assert(std::is_same<logistic_1d::input, neural_network::algebra::tensor<3>>::value, "Invalid 1D-Logistic input type.");
 		static_assert(std::is_same<logistic_1d::output, neural_network::algebra::tensor<3>>::value, "Invalid 1D-Logistic output type.");
 
-		m3::tensor_type tmp;
+		m3::tensor_type tmp(random_values);
 		logistic_1d logistic = neural_network::make_logistic_activation_layer<m3>();
 
 		logistic.process(tmp);
@@ -145,7 +153,7 @@ void test_activation()
 		static_assert(std::is_same<logistic_2d::input, neural_network::algebra::tensor<3, 2>>::value, "Invalid 2D-Logistic input type.");
 		static_assert(std::is_same<logistic_2d::output, neural_network::algebra::tensor<3, 2>>::value, "Invalid 2D-Logistic output type.");
 
-		m3x2::tensor_type tmp;
+		m3x2::tensor_type tmp(random_values);
 		logistic_2d logistic = neural_network::make_logistic_activation_layer<m3x2>();
 
 		logistic.process(tmp);
@@ -163,13 +171,67 @@ void test_activation()
 		static_assert(std::is_same<logistic_3d::input, neural_network::algebra::tensor<3, 2, 1>>::value, "Invalid 3D-Logistic input type.");
 		static_assert(std::is_same<logistic_3d::output, neural_network::algebra::tensor<3, 2, 1>>::value, "Invalid 3D-Logistic output type.");
 
-		m3x2x1::tensor_type tmp;
+		m3x2x1::tensor_type tmp(random_values);
 		logistic_3d logistic = neural_network::make_logistic_activation_layer<m3x2x1>();
 
 		logistic.process(tmp);
 		logistic.compute_gradient(tmp);
 
 		test_layer_serialization("3D Logistic Activation Layer Serialization Tests", logistic);
+	}
+
+	{
+		test::verbose("1D Tanh Activation Tests");
+
+		typedef neural_network::algebra::metrics<3> m3;
+		typedef neural_network::tanh_activation<m3> tanh_1d;
+
+		static_assert(std::is_same<tanh_1d::input, neural_network::algebra::tensor<3>>::value, "Invalid 1D-Tanh input type.");
+		static_assert(std::is_same<tanh_1d::output, neural_network::algebra::tensor<3>>::value, "Invalid 1D-Tanh output type.");
+
+		m3::tensor_type tmp(random_values);
+		tanh_1d layer = neural_network::make_tanh_activation_layer<m3>();
+
+		layer.process(tmp);
+		layer.compute_gradient(tmp);
+
+		test_layer_serialization("1D Tanh Activation Layer Serialization Tests", layer);
+	}
+
+	{
+		test::verbose("2D Tanh Activation Tests");
+
+		typedef neural_network::algebra::metrics<3, 2> m3x2;
+		typedef neural_network::tanh_activation<m3x2> tanh_2d;
+
+		static_assert(std::is_same<tanh_2d::input, neural_network::algebra::tensor<3, 2>>::value, "Invalid 2D-Tanh input type.");
+		static_assert(std::is_same<tanh_2d::output, neural_network::algebra::tensor<3, 2>>::value, "Invalid 2D-Tanh output type.");
+
+		m3x2::tensor_type tmp(random_values);
+		tanh_2d layer = neural_network::make_tanh_activation_layer<m3x2>();
+
+		layer.process(tmp);
+		layer.compute_gradient(tmp);
+
+		test_layer_serialization("2D Tanh Activation Layer Serialization Tests", layer);
+	}
+
+	{
+		test::verbose("3D Tanh Activation Tests");
+
+		typedef neural_network::algebra::metrics<3, 2, 1> m3x2x1;
+		typedef neural_network::tanh_activation<m3x2x1> tanh_3d;
+
+		static_assert(std::is_same<tanh_3d::input, neural_network::algebra::tensor<3, 2, 1>>::value, "Invalid 3D-Tanh input type.");
+		static_assert(std::is_same<tanh_3d::output, neural_network::algebra::tensor<3, 2, 1>>::value, "Invalid 3D-Tanh output type.");
+
+		m3x2x1::tensor_type tmp(random_values);
+		tanh_3d layer = neural_network::make_tanh_activation_layer<m3x2x1>();
+
+		layer.process(tmp);
+		layer.compute_gradient(tmp);
+
+		test_layer_serialization("3D Tanh Activation Layer Serialization Tests", layer);
 	}
 
 	{
@@ -194,6 +256,16 @@ void test_activation()
 
 			test_activation_layer_on_device<neural_network::logistic_activation<m3x2x1>>(queue);
 			test_activation_layer_on_device<neural_network::logistic_activation<m300x20x10>>(queue);
+		}
+
+		{
+			test::verbose("OpenCL Tanh Activation Tests");
+
+			typedef neural_network::algebra::metrics<3, 2, 1> m3x2x1;
+			typedef neural_network::algebra::metrics<300, 20, 10> m300x20x10;
+
+			test_activation_layer_on_device<neural_network::tanh_activation<m3x2x1>>(queue);
+			test_activation_layer_on_device<neural_network::tanh_activation<m300x20x10>>(queue);
 		}
 	}
 

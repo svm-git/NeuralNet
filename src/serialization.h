@@ -52,6 +52,8 @@ namespace serialization {
 		fully_connected_layer,
 
 		ensemble_layer,
+
+		tanh_activation_layer,
 	};
 
 namespace detail {

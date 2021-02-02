@@ -148,6 +148,44 @@ namespace detail {
 						}
 					}
 
+					__kernel void neural_net_tanh_kernel(
+						__global const float * vIn,
+						__global float * vOut,
+						int length)
+					{
+						int pos = get_global_id(0) * BLOCK_SIZE;
+						int end = pos + BLOCK_SIZE;
+						if (length < end)
+						{
+							end = length;
+						}
+
+						for (; pos < end; ++pos)
+						{
+							vOut[pos] = tanh(vIn[pos]);
+						}
+					}
+
+					__kernel void neural_net_tanh_gradient_kernel(
+						__global const float * vOut,
+						__global const float * vGrad,
+						__global float * vRes,
+						int length)
+					{
+						int pos = get_global_id(0) * BLOCK_SIZE;
+						int end = pos + BLOCK_SIZE;
+						if (length < end)
+						{
+							end = length;
+						}
+
+						for (; pos < end; ++pos)
+						{
+							float f = vOut[pos];
+							vRes[pos] = vGrad[pos] * (1.0f - f * f);
+						}
+					}
+
 					__kernel void neural_net_fully_connected_kernel(
 						__global const float * vIn,
 						__global const float * mWeights,
@@ -571,6 +609,16 @@ namespace detail {
 		static inline std::string get_logistic_gradient_kernel_name()
 		{
 			return "neural_net_logistic_gradient_kernel";
+		}
+
+		static inline std::string get_tanh_kernel_name()
+		{
+			return "neural_net_tanh_kernel";
+		}
+
+		static inline std::string get_tanh_gradient_kernel_name()
+		{
+			return "neural_net_tanh_gradient_kernel";
 		}
 
 		static void execute_fully_connected_kernel(
