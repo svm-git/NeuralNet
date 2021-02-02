@@ -70,6 +70,7 @@ The NeuralNet library supports these layers:
 - Activation layers
   - [ReLU activation layer](#relu-activation-layer)
   - [Logistic activation layer](#logistic-activation-layer)
+  - [Hyperbolic Tangent activation layer](#hyperbolic-tangent-activation-layer)
 - [Max pooling layers](#max-pooling-layers)
 - [Convolution layers](#convolution-layers)
 - Service layers
@@ -110,6 +111,14 @@ Logistic activation layer applies logistic function f(x) = 1 / (1 + exp(-x)) to 
     typedef neural_network::algebra::metrics<10, 7> Input;
     
     auto layer = neural_network::make_logistic_activation_layer<Input>();
+
+### Hyperbolic Tangent Activation Layer
+
+Hyperbolic tangent activation layer applies tanh function f(x) = sinh(x) / cosh(x) to all elements of the input tensor, and produces the output tensor that has the same rank and dimensions. Hyperbolic tangent activation layer supports tensors of any rank and dimensions. This example creates a hyperbolic tangent activation layer for a rank-3 tensor with 10 x 7 x 5 elements using *neural_network::make_tanh_activation_layer* helper function.
+
+    typedef neural_network::algebra::metrics<10, 7, 5> Input;
+    
+    auto layer = neural_network::make_tanh_activation_layer<Input>();
 
 ### Max Pooling Layers
 
